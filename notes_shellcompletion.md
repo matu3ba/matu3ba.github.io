@@ -1,5 +1,11 @@
 ### Ideas towards standardization and speed up of shell completion
 
+tldr; completion + validation of arguments/input requires either
+1. code duplication,
+2. highly performant metaprogramming,
+3. or a transpiler for the completion + validation parts of the program.
+TODO "Completion has the same drawbacks." Is this true?
+
 #### Prior assumptions
 1. Shells are overly complex and should be bypassed by specialized programs, if possible.
  * Shell keep track of a huge chunk of state in a hacky manner
@@ -73,6 +79,117 @@ Further, there should be a keybindings to quit any currently running completion
 spawned by the shell instance.
 Obviously, there should be only 1 completion instance per shell instance.
 
-#### Show me, that it works!
+#### Enough words. Show me some code!
 
-TODO
+Assume the following code:
+```zig
+const std = @import("std");
+const process = std.process;
+const fs = std.fs;
+const stdout = std.io.getStdOut();
+const stderr = std.io.getStdErr();
+pub const Mode = enum {
+    /// only check with status code
+    CheckOnly,
+    /// ascii only check with status code
+    CheckOnlyAscii,
+    /// check with limited output
+    ShellOutput,
+    /// ascii check with limited output
+    ShellOutputAscii,
+    /// check with output to file
+    FileOutput,
+    /// ascii check with output to file
+    FileOutputAscii,
+};
+// never returns Mode, but an error to bubble up to main
+fn cleanup(write_file: *?fs.File) !Mode {
+    if (write_file.* != null) {
+        write_file.*.?.close();
+    }
+    return error.TestUnexpectedResult;
+}
+pub fn main() !u8 {
+    var write_file: ?fs.File = null;
+    var mode: Mode = Mode.ShellOutput; // default execution mode
+    // 1. read path names from cli args
+    var arena_instance = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena_instance.deinit();
+    const arena = arena_instance.allocator();
+    const args: [][:0]u8 = try process.argsAlloc(arena);
+    defer process.argsFree(arena, args);
+
+    if (args.len <= 1) {
+        try stdout.writer().print("Usage: {s} (cropped) \n", .{args[0]});
+        process.exit(1);
+    }
+    if (args.len >= 255) {
+        try stdout.writer().writeAll("At maximum 255 arguments are supported\n");
+        process.exit(1);
+    }
+
+    var i: u64 = 1; // skip program name
+    while (i < args.len) : (i += 1) {
+        if (std.mem.eql(u8, args[i], "-outfile")) {
+            mode = switch (mode) {
+                Mode.ShellOutput => Mode.FileOutput,
+                Mode.ShellOutputAscii => Mode.FileOutputAscii,
+                else => try cleanup(&write_file), // hack around stage1
+            };
+            if (i + 1 >= args.len) {
+                return error.InvalidArgument;
+            }
+            i += 1;
+            write_file = try fs.cwd().createFile(args[i], .{});
+        }
+        if (std.mem.eql(u8, args[i], "-c")) {
+            mode = switch (mode) {
+                Mode.ShellOutput => Mode.CheckOnly,
+                Mode.ShellOutputAscii => Mode.CheckOnlyAscii,
+                else => try cleanup(&write_file), // hack around stage1
+            };
+        }
+        if (std.mem.eql(u8, args[i], "-a")) {
+            mode = switch (mode) {
+                Mode.ShellOutput => Mode.ShellOutputAscii,
+                Mode.CheckOnly => Mode.CheckOnlyAscii,
+                Mode.FileOutput => Mode.FileOutputAscii,
+                else => try cleanup(&write_file), // hack around stage1
+            };
+        }
+    }
+    defer if (write_file != null)
+        write_file.?.close();
+
+    const ret = switch (mode) {
+        // program logic cropped
+        else => 0,
+    };
+    return ret;
+}
+```
+Relevant implementation questions we are tackling are:
+Can we utilize a library that offers the user 1. completion and 2. validates
+the user input?
+Can we offer completion conditionially 1. behind a cli flag and 2. in another
+binary?
+What is the effect on binary size and can we reduce it by providing a completion
+binary for multiple cli programs?
+
+How hard is it to combine multiple cli program completion functions?
+Can this be automatized and what interface would be needed?
+
+###### Further notes
+
+In a well-written application one can eliminate most branches already during writing.
+I did not get yet into the observation that a cli completion means basically
+all possible runs over the shell validation logic.
+
+The other thing is that folks did not try to build (dynamicly linked)
+libs/executables that can handle the completion logic via LD_PRELOAD or
+letting the shell dynamically load/complete the completion program/lib.
+
+I also though of a grammar spec, but such a grammar will always be annoying
+to write due to the potential graph structure of completion and complexity
+of validation.
+
