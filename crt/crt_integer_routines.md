@@ -16,9 +16,9 @@
 | ✓ | __popcountsi2      | u32  | ∅    | i32  | bit population                 |
 | ✓ | __popcountdi2      | u64  | ∅    | i32  | bit population                 |
 | ✓ | __popcountti2      | u128 | ∅    | i32  | bit population                 |
-| ✓ | __bswapsi2         | u32  | ∅    | i32  | byte swap                      |
-| ✓ | __bswapdi2         | u64  | ∅    | i32  | byte swap                      |
-| ✓ | __bswapti2         | u128 | ∅    | i32  | byte swap                      |
+| ✓ | __bswapsi2         | u32  | ∅    | u32  | byte swap                      |
+| ✓ | __bswapdi2         | u64  | ∅    | u64  | byte swap                      |
+| ✓ | __bswapti2         | u128 | ∅    | u128 | byte swap                      |
 |   |                    |      |      |      | **Integer Comparison**         |
 | ✓ | __cmpsi2           | i32  | i32  | i32  | `(a<b) -> 0, (a==b) -> 1, (a>b) -> 2` |
 | ✓ | __cmpdi2           | i64  | i64  | i32  | ..                             |
@@ -41,9 +41,9 @@
 | ✓ | __lshrdi3          | i64  | i32  | i64  | ..                             |
 | ✓ | __lshrti3          | i128 | i32  | i128 | ..                             |
 | ✓ | __aeabi_llsr       | i64  | i32  | i64  | .. ARM                         |
-| ✓ | __negsi2           | i32  | i32  | i32  | `-a` [^libgcc_compat]          |
-| ✓ | __negdi2           | i64  | i64  | i64  | ..                             |
-| ✓ | __negti2           | i128 | i128 | i128 | ..                             |
+| ✓ | __negsi2           | i32  |  ∅   | i32  | `-a` [^libgcc_compat]          |
+| ✓ | __negdi2           | i64  |  ∅   | i64  | ..                             |
+| ✓ | __negti2           | i128 |  ∅   | i128 | ..                             |
 | ✓ | __mulsi3           | i32  | i32  | i32  | `a * b`                        |
 | ✓ | __muldi3           | i64  | i64  | i64  | ..                             |
 | ✓ | __aeabi_lmul       | i64  | i64  | i64  | .. ARM                         |
@@ -73,12 +73,12 @@
 | ✓ | __aeabi_ldivmod    | i64  | i64  | i64  | .. ARM                         |
 | ✓ | __divmodti4        | i128 | i128 | i128 | .. [^libgcc_compat]            |
 |   |                    |      |      |      | **Integer Arithmetic with Trapping Overflow**|
-| ✓ | __absvsi2          | i32  | i32  | i32  | abs(a)                         |
-| ✓ | __absvdi2          | i64  | i64  | i64  | ..                             |
-| ✓ | __absvti2          | i128 | i128 | i128 | ..                             |
-| ✓ | __negvsi2          | i32  | i32  | i32  | `-a` [^libgcc_compat]          |
-| ✓ | __negvdi2          | i64  | i64  | i64  | ..                             |
-| ✓ | __negvti2          | i128 | i128 | i128 | ..                             |
+| ✓ | __absvsi2          | i32  |  ∅   | i32  | abs(a)                         |
+| ✓ | __absvdi2          | i64  |  ∅   | i64  | ..                             |
+| ✓ | __absvti2          | i128 |  ∅   | i128 | ..                             |
+| ✓ | __negvsi2          | i32  |  ∅   | i32  | `-a` [^libgcc_compat]          |
+| ✓ | __negvdi2          | i64  |  ∅   | i64  | ..                             |
+| ✓ | __negvti2          | i128 |  ∅   | i128 | ..                             |
 | ✗ | __addvsi3          | i32  | i32  | i32  | `a + b`                        |
 | ✗ | __addvdi3          | i64  | i64  | i64  | ..                             |
 | ✗ | __addvti3          | i128 | i128 | i128 | ..                             |
@@ -98,3 +98,21 @@
 | ✓ | __mulosi4          | i32  | i32  | i32  | `a * b`, overflow->ov.*=1 else 0 |
 | ✓ | __mulodi4          | i64  | i64  | i64  | ..                             |
 | ✓ | __muloti4          | i128 | i128 | i128 | ..                             |
+
+
+Missing piece:
+- [ ] __addvsi3
+- [ ] __addvdi3
+- [ ] __addvti3
+- [ ] __subvsi3
+- [ ] __subvdi3
+- [ ] __subvti3
+- [ ] __mulvsi3
+- [ ] __mulvdi3
+- [ ] __mulvti3
+- [ ] __aeabi_lcmp
+- [ ] __aeabi_ulcmp
+
+TODO:
+- check PPC
+- check SPARC

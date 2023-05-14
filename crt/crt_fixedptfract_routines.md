@@ -465,6 +465,9 @@
 | ✗ | __fractdfusa       | f64         |     ∅       | acu32       | ..                                |
 | ✗ | __fractdfuda       | f64         |     ∅       | acu64       | ..                                |
 | ✗ | __fractdfuta       | f64         |     ∅       | acu128      | ..                                |
+
+| Done | Name            | a           | b           | Out         | Comment                           |
+| ---- | -----------     | ----------- | ----------- | ----------- | --------------------------------- |
 | ✗ | __satfractqqhq2    | fri16       |     ∅       | fri32       | Fixed-Point to other with saturation |
 | ✗ | __satfractqqsq2    | fri16       |     ∅       | fri64       | ..                                |
 | ✗ | __satfractqqdq2    | fri16       |     ∅       | fri128      | ..                                |
@@ -817,7 +820,10 @@
 | ✗ | __satfractdfusa    | f64         |     ∅       | acu32       | ..                                |
 | ✗ | __satfractdfuda    | f64         |     ∅       | acu64       | ..                                |
 | ✗ | __satfractdfuta    | f64         |     ∅       | acu128      | ..                                |
-| ✗ | __fractunsqqqi     | fri16       |     ∅       | u8          | Fix-Point to otherwithout saturation |
+
+| Done | Name            | a           | b           | Out         | Comment                           |
+| ---- | -----------     | ----------- | ----------- | ----------- | --------------------------------- |
+| ✗ | __fractunsqqqi     | fri16       |     ∅       | u8          | Fix-Point to other without saturation |
 | ✗ | __fractunsqqhi     | fri16       |     ∅       | c_ushort    | ..                                |
 | ✗ | __fractunsqqsi     | fri16       |     ∅       | c_uint      | ..                                |
 | ✗ | __fractunsqqdi     | fri16       |     ∅       | c_ulong     | ..                                |
@@ -1057,6 +1063,9 @@
 | ✗ | __satfractunstiusa | c_ulonglong |     ∅       | acu32       | ..                                |
 | ✗ | __satfractunstiuda | c_ulonglong |     ∅       | acu64       | ..                                |
 | ✗ | __satfractunstiuta | c_ulonglong |     ∅       | acu128      | ..                                |
+
+| Done | Name            | a           | b           | Out         | Comment                           |
+| ---- | -----------     | ----------- | ----------- | ----------- | --------------------------------- |
 |   |                    |             |                           | **Fixed-Point Comparison**        |
 | ✗ | __cmpqq2           | fri16       | fri16       | c_int       | a<b => 0, a==b => 1, a>b=> 2      |
 | ✗ | __cmphq2           | fri32       | fri32       | c_int       | ..                                |
