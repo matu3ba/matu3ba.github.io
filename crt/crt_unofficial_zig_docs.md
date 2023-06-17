@@ -153,10 +153,13 @@ Integer and Float Operations
 | ✓ | __extendsfdf2      | f32  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_f2d        | f32  | ∅    | f64  | ..                             |
 | ✓ | __extendsftf2      | f32  | ∅    | f128 | ..                             |
+| ✓ | __extendsfkf2      | f32  | ∅    | f128 | .. PPC                         |
 | ✓ | __extendsfxf2      | f32  | ∅    | f80  | ..                             |
 | ✓ | __extenddftf2      | f64  | ∅    | f128 | ..                             |
+| ✓ | __extenddfkf2      | f64  | ∅    | f128 | .. PPC                         |
 | ✓ | __extenddfxf2      | f64  | ∅    | f80  | ..                             |
-| ✗ | __aeabi_h2f        | f16  | ∅    | f32  | .. ARM                         |
+| ✗ | __extendkftf2      | f128 | ∅    | f128 | .. PPC: not implemented obsolete IBM_TYPE |
+| ✓ | __aeabi_h2f        | f16  | ∅    | f32  | .. ARM                         |
 | ✗ | __aeabi_h2f_alt    | f16  | ∅    | f32  | .. ARM alternate [^VFPv3alt]   |
 | ✓ | __gnu_h2f_ieee     | f16  | ∅    | f32  | .. GNU naming convention       |
 | ✓ | __truncsfhf2       | f32  | ∅    | f16  | rounding towards zero          |
@@ -166,10 +169,11 @@ Integer and Float Operations
 | ✓ | __trunctfsf2       | f128 | ∅    | f32  | ..                             |
 | ✓ | __trunctfdf2       | f128 | ∅    | f64  | ..                             |
 | ✓ | __trunctfxf2       | f128 | ∅    | f80  | ..                             |
+| ✗ | __trunctfkf2       | f128 | ∅    | f128 | .. PPC: not implemented obsolete IBM_TYPE |
 | ✓ | __truncxfhf2       | f80  | ∅    | f16  | ..                             |
 | ✓ | __truncxfsf2       | f80  | ∅    | f32  | ..                             |
 | ✓ | __truncxfdf2       | f80  | ∅    | f64  | ..                             |
-| ✗ | __aeabi_f2h        | f32  | ∅    | f16  | .. ARM                         |
+| ✓ | __aeabi_f2h        | f32  | ∅    | f16  | .. ARM                         |
 | ✗ | __aeabi_f2h_alt    | f32  | ∅    | f16  | .. ARM alternate [^VFPv3alt]   |
 | ✓ | __gnu_f2h_ieee     | f32  | ∅    | f16  | .. GNU naming convention       |
 | ✓ | __aeabi_d2h        | f64  | ∅    | f16  | .. ARM                         |
@@ -185,6 +189,7 @@ Integer and Float Operations
 | ✓ | __fixdfsi          | f64  | ∅    | i32  | ..                             |
 | ✓ | __aeabi_d2iz       | f64  | ∅    | i32  | .. ARM                         |
 | ✓ | __fixtfsi          | f128 | ∅    | i32  | ..                             |
+| ✓ | __fixkfsi          | f128 | ∅    | i32  | .. PPC                         |
 | ✓ | __fixxfsi          | f80  | ∅    | i32  | ..                             |
 | ✓ | __fixhfdi          | f16  | ∅    | i64  | ..                             |
 | ✓ | __fixsfdi          | f32  | ∅    | i64  | ..                             |
@@ -192,11 +197,13 @@ Integer and Float Operations
 | ✓ | __fixdfdi          | f64  | ∅    | i64  | ..                             |
 | ✓ | __aeabi_d2lz       | f64  | ∅    | i64  | .. ARM                         |
 | ✓ | __fixtfdi          | f128 | ∅    | i64  | ..                             |
+| ✓ | __fixkfdi          | f128 | ∅    | i64  | .. PPC                         |
 | ✓ | __fixxfdi          | f80  | ∅    | i64  | ..                             |
 | ✓ | __fixhfti          | f16  | ∅    | i128 | ..                             |
 | ✓ | __fixsfti          | f32  | ∅    | i128 | ..                             |
 | ✓ | __fixdfti          | f64  | ∅    | i128 | ..                             |
 | ✓ | __fixtfti          | f128 | ∅    | i128 | ..                             |
+| ✓ | __fixkfti          | f128 | ∅    | i128 | .. PPC                         |
 | ✓ | __fixxfti          | f80  | ∅    | i128 | ..                             |
 | ✓ | __fixunshfsi       | f16  | ∅    | u32  | float to uint, rounding towards zero. negative values become 0. |
 | ✓ | __fixunssfsi       | f32  | ∅    | u32  | ..                             |
@@ -204,6 +211,7 @@ Integer and Float Operations
 | ✓ | __fixunsdfsi       | f64  | ∅    | u32  | ..                             |
 | ✓ | __aeabi_d2uiz      | f64  | ∅    | u32  | .. ARM                         |
 | ✓ | __fixunstfsi       | f128 | ∅    | u32  | ..                             |
+| ✓ | __fixunskfsi       | f128 | ∅    | u32  | .. PPC                         |
 | ✓ | __fixunsxfsi       | f80  | ∅    | u32  | ..                             |
 | ✓ | __fixunshfdi       | f16  | ∅    | u64  | ..                             |
 | ✓ | __fixunssfdi       | f32  | ∅    | u64  | ..                             |
@@ -211,11 +219,13 @@ Integer and Float Operations
 | ✓ | __fixunsdfdi       | f64  | ∅    | u64  | ..                             |
 | ✓ | __aeabi_d2ulz      | f64  | ∅    | u64  | .. ARM                         |
 | ✓ | __fixunstfdi       | f128 | ∅    | u64  | ..                             |
+| ✓ | __fixunskfdi       | f128 | ∅    | u64  | .. PPC                         |
 | ✓ | __fixunsxfdi       | f80  | ∅    | u64  | ..                             |
 | ✓ | __fixunshfti       | f16  | ∅    | u128 | ..                             |
 | ✓ | __fixunssfti       | f32  | ∅    | u128 | ..                             |
 | ✓ | __fixunsdfti       | f64  | ∅    | u128 | ..                             |
 | ✓ | __fixunstfti       | f128 | ∅    | u128 | ..                             |
+| ✓ | __fixunskfti       | f128 | ∅    | u128 | .. PPC                         |
 | ✓ | __fixunsxfti       | f80  | ∅    | u128 | ..                             |
 | ✓ | __floatsihf        | i32  | ∅    | f16  | int to float                   |
 | ✓ | __floatsisf        | i32  | ∅    | f32  | ..                             |
@@ -223,17 +233,20 @@ Integer and Float Operations
 | ✓ | __floatsidf        | i32  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_i2d        | i32  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatsitf        | i32  | ∅    | f128 | ..                             |
+| ✓ | __floatsikf        | i32  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatsixf        | i32  | ∅    | f80  | ..                             |
 | ✓ | __floatdisf        | i64  | ∅    | f32  | ..                             |
 | ✓ | __aeabi_l2f        | i64  | ∅    | f32  | .. ARM                         |
 | ✓ | __floatdidf        | i64  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_l2d        | i64  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatditf        | i64  | ∅    | f128 | ..                             |
+| ✓ | __floatdikf        | i64  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatdixf        | i64  | ∅    | f80  | ..                             |
 | ✓ | __floattihf        | i128 | ∅    | f16  | ..                             |
 | ✓ | __floattisf        | i128 | ∅    | f32  | ..                             |
 | ✓ | __floattidf        | i128 | ∅    | f64  | ..                             |
 | ✓ | __floattitf        | i128 | ∅    | f128 | ..                             |
+| ✓ | __floattikf        | i128 | ∅    | f128 | .. PPC                         |
 | ✓ | __floattixf        | i128 | ∅    | f80  | ..                             |
 | ✓ | __floatunsihf      | u32  | ∅    | f16  | uint to float                  |
 | ✓ | __floatunsisf      | u32  | ∅    | f32  | ..                             |
@@ -241,6 +254,7 @@ Integer and Float Operations
 | ✓ | __floatunsidf      | u32  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_ui2d       | u32  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatunsitf      | u32  | ∅    | f128 | ..                             |
+| ✓ | __floatunsikf      | u32  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatunsixf      | u32  | ∅    | f80  | ..                             |
 | ✓ | __floatundihf      | u64  | ∅    | f16  | ..                             |
 | ✓ | __floatundisf      | u64  | ∅    | f32  | ..                             |
@@ -248,11 +262,13 @@ Integer and Float Operations
 | ✓ | __floatundidf      | u64  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_ul2d       | u64  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatunditf      | u64  | ∅    | f128 | ..                             |
+| ✓ | __floatundikf      | u64  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatundixf      | u64  | ∅    | f80  | ..                             |
 | ✓ | __floatuntihf      | u128 | ∅    | f16  | ..                             |
 | ✓ | __floatuntisf      | u128 | ∅    | f32  | ..                             |
 | ✓ | __floatuntidf      | u128 | ∅    | f64  | ..                             |
 | ✓ | __floatuntitf      | u128 | ∅    | f128 | ..                             |
+| ✓ | __floatuntikf      | u128 | ∅    | f128 | .. PPC                         |
 | ✓ | __floatuntixf      | u128 | ∅    | f80  | ..                             |
 |   |                    |      |      |      | **Float Comparison**           |
 | ✓ | __cmphf2           | f16  | f16  | i32  | `(a<b)->-1, (a==b)->0, (a>b)->1, Nan->1` |
@@ -360,22 +376,26 @@ Integer and Float Operations
 | ✓ | __negsf2           | f32  | ∅    | f32[^unused_rl78] | -a (can be lowered directly to a xor) |
 | ✓ | __negdf2           | f64  | ∅    | f64  | ..                             |
 | ✓ | __negtf2           | f128 | ∅    | f128 | ..                             |
+| ✓ | __negkf2           | f128 | ∅    | f128 | .. PPC                         |
 | ✓ | __negxf2           | f80  | ∅    | f80  | ..                             |
 |   |                    |      |      |      | **Other** |
 | ✓ | __powihf2          | f16  | i32  | f16  | `a ^ b`                        |
 | ✓ | __powisf2          | f32  | i32  | f32  | ..                             |
 | ✓ | __powidf2          | f64  | i32  | f64  | ..                             |
 | ✓ | __powitf2          | f128 | i32  | f128 | ..                             |
+| ✓ | __powikf2          | f128 | i32  | f128 | .. PPC                         |
 | ✓ | __powixf2          | f80  | i32  | f80  | ..                             |
 | ✓ | __mulhc3           | all4 | f16  | f16  | `(a+ib) * (c+id)`              |
 | ✓ | __mulsc3           | all4 | f32  | f32  | ..                             |
 | ✓ | __muldc3           | all4 | f64  | f64  | ..                             |
 | ✓ | __multc3           | all4 | f128 | f128 | ..                             |
+| ✓ | __mulkc3           | all4 | f128 | f128 | .. PPC                         |
 | ✓ | __mulxc3           | all4 | f80  | f80  | ..                             |
 | ✓ | __divhc3           | all4 | f16  | f16  | `(a+ib) / (c+id)`              |
 | ✓ | __divsc3           | all4 | f32  | f32  | ..                             |
 | ✓ | __divdc3           | all4 | f64  | f64  | ..                             |
 | ✓ | __divtc3           | all4 | f128 | f128 | ..                             |
+| ✓ | __divkc3           | all4 | f128 | f128 | .. PPC                         |
 | ✓ | __divxc3           | all4 | f80  | f80  | ..                             |
 
 [^unused_rl78]: Unused in LLVM, but used for example by rl78.
@@ -590,7 +610,7 @@ Finally, it enables float-like behavior on targets without floating-point unit.
 All this comes at cost of more programmer care to avoid overflows in all intermediate
 values and extra code to adjust the scaling factors.
 
-See ISO/IEC DTR 18037 section "Fixed-point arithmetic" for context
+See ISO/IEC TR 18037:2008 section "Fixed-point arithmetic" for context
 like the specification of `_Fract, _Accum, _Sat`.
 To keep this documentation and implementation dense, we define abbreviations:
 Let `fri16`, `fri32`, `fri64`, `fri128` and `fru16`, `fru32`, `fru64`, `fru128`
@@ -1896,133 +1916,133 @@ are additionally supported by Zig, but not part of C standard. Alphabetically so
 | ✓ | ceil       |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __ceilx    |     f80   |    ∅      |     f80   |                            |
 | ✓ | ceilf128   |     f128  |    ∅      |     f128  | .. PPC                     |
-| ✓ | ceilq      |     f128  |    ∅      |     f128  | ..                         |
+| ✓ | ceilq      |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | ceill      |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __cosh     |     f16   |    ∅      |     f16   | `cos(a)=(e^(ia)+e^(-ia))/2`|
 | ✓ | cosf       |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | cos        |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __cosx     |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | cosf128    |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | cosq       |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | cosq       |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | cosl       |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __exph     |     f16   |    ∅      |     f16   | `e^a` with e base of natural logarithms|
 | ✓ | expf       |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | exp        |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __expx     |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | expf128    |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | expq       |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | expq       |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | expl       |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __exp2h    |     f16   |    ∅      |     f16   | `2^a`                      |
 | ✓ | exp2f      |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | exp2       |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __exp2x    |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | exp2f128   |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | exp2q      |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | exp2q      |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | exp2l      |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __fabsh    |     f16   |    ∅      |     f16   | absolute value of a        |
 | ✓ | fabsf      |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | fabs       |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __fabsx    |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | fabsf128   |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | fabsq      |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | fabsq      |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | fabsl      |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __floorh   |     f16   |    ∅      |     f16   |largest integer value not greater than a|
 | ✓ | floorf     |     f32   |    ∅      |     f32   |If a is integer, +-0, +-NaN, or +-infinite, a itself is returned.|
 | ✓ | floor      |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __floorx   |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | floorf128  |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | floorq     |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | floorq     |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | floorl     |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __fmah     |     f16   |   2xf16   |     f16   | args a,b,c result `(a*b)+c`|
 | ✓ | fmaf       |     f32   |   2xf32   |     f32   |Fused multiply-add for hardware acceleration|
 | ✓ | fma        |     f64   |   2xf64   |     f64   | ..                         |
 | ✓ | __fmax     |     f80   |   2xf80   |     f80   | ..                         |
 | ✓ | fmaf128    |     f128  |   2xf128  |     f128  | ..                         |
-| ✓ | fmaq       |     f128  |   2xf128  |     f128  | .. PPC                     |
+| ✓ | fmaq       |     f128  |   2xf128  |     f128  | .. libquadmath             |
 | ✓ | fmal       |c_longdouble|2xc_longdouble|c_longdouble| ..                    |
 | ✓ | __fmaxh    |     f16   |     f16   |     f16   | larger value of a,b        |
 | ✓ | fmaxf      |     f32   |     f32   |     f32   | ..                         |
 | ✓ | fmax       |     f64   |     f64   |     f64   | ..                         |
 | ✓ | __fmaxx    |     f80   |     f80   |     f80   | ..                         |
 | ✓ | fmaxf128   |     f128  |     f128  |     f128  | ..                         |
-| ✓ | fmaxq      |     f128  |     f128  |     f128  | .. PPC                     |
+| ✓ | fmaxq      |     f128  |     f128  |     f128  | .. libquadmath             |
 | ✓ | fmaxl      |c_longdouble|c_longdouble|c_longdouble| ..                      |
 | ✓ | __fminh    |     f16   |     f16   |     f16   | smaller value of a,b       |
 | ✓ | fminf      |     f32   |     f32   |     f32   | ..                         |
 | ✓ | fmin       |     f64   |     f64   |     f64   | ..                         |
 | ✓ | __fminx    |     f80   |     f80   |     f80   | ..                         |
 | ✓ | fminf128   |     f128  |     f128  |     f128  | ..                         |
-| ✓ | fminq      |     f128  |     f128  |     f128  | .. PPC                     |
+| ✓ | fminq      |     f128  |     f128  |     f128  | .. libquadmath             |
 | ✓ | fminl      |c_longdouble|c_longdouble|c_longdouble| ..                      |
 | ✓ | __fmodh    |     f16   |     f16   |     f16   |floating-point remainder of division a/b|
 | ✓ | fmodf      |     f32   |     f32   |     f32   | ..                         |
 | ✓ | fmod       |     f64   |     f64   |     f64   | ..                         |
 | ✓ | __fmodx    |     f80   |     f80   |     f80   | ..                         |
 | ✓ | fmodf128   |     f128  |     f128  |     f128  | ..                         |
-| ✓ | fmodq      |     f128  |     f128  |     f128  | .. PPC                     |
+| ✓ | fmodq      |     f128  |     f128  |     f128  | .. libquadmath             |
 | ✓ | fmodl      |c_longdouble|c_longdouble|c_longdouble| ..                      |
 | ✓ | __logh     |     f16   |    ∅      |     f16   |natural (base-e) logarithm of a|
 | ✓ | logf       |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | log        |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __logx     |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | logf128    |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | logq       |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | logq       |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | logl       |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __log10h   |     f16   |    ∅      |     f16   |common (base-10) logarithm of a|
 | ✓ | log10f     |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | log10      |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __log10x   |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | log10f128  |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | log10q     |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | log10q     |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | log10l     |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __log2h    |     f16   |    ∅      |     f16   | base-2 logarithm of a      |
 | ✓ | log2f      |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | log2       |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __log2x    |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | log2f128   |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | log2q      |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | log2q      |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | log2l      |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __roundh   |     f16   |    ∅      |     f16   | a rounded to next int away from zero|
 | ✓ | roundf     |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | round      |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __roundx   |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | roundf128  |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | roundq     |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | roundq     |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | roundl     |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __sinh     |     f16   |    ∅      |     f16   | `sin(a)=(e^(ia)-e^(-ia))/2`|
 | ✓ | sinf       |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | sin        |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __sinx     |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | sinf128    |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | sinq       |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | sinq       |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | sinl       |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __sincosh  |     f16   | 2x *f16   |     ∅     |sin and cos of the same angle a|
 | ✓ | sincosf    |     f32   | 2x *f32   |     ∅     |args a,*b,*c, `b.*=sin(x),c.*=cos(x)`|
 | ✓ | sincos     |     f64   | 2x *f64   |     ∅     | ..                         |
 | ✓ | __sincosx  |     f80   | 2x *f80   |     ∅     | ..                         |
 | ✓ | sincosf128 |     f128  | 2x *f128  |     ∅     | ..                         |
-| ✓ | sincosq    |     f128  | 2x *f128  |     ∅     | .. PPC                     |
+| ✓ | sincosq    |     f128  | 2x *f128  |     ∅     | .. libquadmath             |
 | ✓ | sincosl    |c_longdouble| 2x *c_longdouble|∅     | ..                       |
 | ✓ | __sqrth    |     f16   |    ∅      |     f16   | square root of a (find `r st. a=r^2`)|
 | ✓ | sqrtf      |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | sqrt       |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __sqrtx    |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | sqrtf128   |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | sqrtq      |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | sqrtq      |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | sqrtl      |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __tanh     |     f16   |    ∅      |     f16   | `tan(x)=sin(x)/cos(x)      |
 | ✓ | tanf       |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | tan        |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __tanx     |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | tanf128    |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | tanq       |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | tanq       |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | tanl       |c_longdouble|   ∅      |c_longdouble| ..                        |
 | ✓ | __trunch   |     f16   |    ∅      |     f16   | a rounded to next int towards zero|
 | ✓ | truncf     |     f32   |    ∅      |     f32   | ..                         |
 | ✓ | trunc      |     f64   |    ∅      |     f64   | ..                         |
 | ✓ | __truncx   |     f80   |    ∅      |     f80   | ..                         |
 | ✓ | truncf128  |     f128  |    ∅      |     f128  | ..                         |
-| ✓ | truncq     |     f128  |    ∅      |     f128  | .. PPC                     |
+| ✓ | truncq     |     f128  |    ∅      |     f128  | .. libquadmath             |
 | ✓ | truncl     |c_longdouble|   ∅      |c_longdouble| ..                        |
 
 Arbitrary Precision Big Integer (BigInt) library routines

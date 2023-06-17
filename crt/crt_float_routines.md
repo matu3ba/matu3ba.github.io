@@ -5,10 +5,13 @@
 | ✓ | __extendsfdf2      | f32  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_f2d        | f32  | ∅    | f64  | ..                             |
 | ✓ | __extendsftf2      | f32  | ∅    | f128 | ..                             |
+| ✓ | __extendsfkf2      | f32  | ∅    | f128 | .. PPC                         |
 | ✓ | __extendsfxf2      | f32  | ∅    | f80  | ..                             |
 | ✓ | __extenddftf2      | f64  | ∅    | f128 | ..                             |
+| ✓ | __extenddfkf2      | f64  | ∅    | f128 | .. PPC                         |
 | ✓ | __extenddfxf2      | f64  | ∅    | f80  | ..                             |
-| ✗ | __aeabi_h2f        | f16  | ∅    | f32  | .. ARM                         |
+| ✗ | __extendkftf2      | f128 | ∅    | f128 | .. PPC: not implemented obsolete IBM_TYPE |
+| ✓ | __aeabi_h2f        | f16  | ∅    | f32  | .. ARM                         |
 | ✗ | __aeabi_h2f_alt    | f16  | ∅    | f32  | .. ARM alternate [^VFPv3alt]   |
 | ✓ | __gnu_h2f_ieee     | f16  | ∅    | f32  | .. GNU naming convention       |
 | ✓ | __truncsfhf2       | f32  | ∅    | f16  | rounding towards zero          |
@@ -18,10 +21,11 @@
 | ✓ | __trunctfsf2       | f128 | ∅    | f32  | ..                             |
 | ✓ | __trunctfdf2       | f128 | ∅    | f64  | ..                             |
 | ✓ | __trunctfxf2       | f128 | ∅    | f80  | ..                             |
+| ✗ | __trunctfkf2       | f128 | ∅    | f128 | .. PPC: not implemented obsolete IBM_TYPE |
 | ✓ | __truncxfhf2       | f80  | ∅    | f16  | ..                             |
 | ✓ | __truncxfsf2       | f80  | ∅    | f32  | ..                             |
 | ✓ | __truncxfdf2       | f80  | ∅    | f64  | ..                             |
-| ✗ | __aeabi_f2h        | f32  | ∅    | f16  | .. ARM                         |
+| ✓ | __aeabi_f2h        | f32  | ∅    | f16  | .. ARM                         |
 | ✗ | __aeabi_f2h_alt    | f32  | ∅    | f16  | .. ARM alternate [^VFPv3alt]   |
 | ✓ | __gnu_f2h_ieee     | f32  | ∅    | f16  | .. GNU naming convention       |
 | ✓ | __aeabi_d2h        | f64  | ∅    | f16  | .. ARM                         |
@@ -37,6 +41,7 @@
 | ✓ | __fixdfsi          | f64  | ∅    | i32  | ..                             |
 | ✓ | __aeabi_d2iz       | f64  | ∅    | i32  | .. ARM                         |
 | ✓ | __fixtfsi          | f128 | ∅    | i32  | ..                             |
+| ✓ | __fixkfsi          | f128 | ∅    | i32  | .. PPC                         |
 | ✓ | __fixxfsi          | f80  | ∅    | i32  | ..                             |
 | ✓ | __fixhfdi          | f16  | ∅    | i64  | ..                             |
 | ✓ | __fixsfdi          | f32  | ∅    | i64  | ..                             |
@@ -44,11 +49,13 @@
 | ✓ | __fixdfdi          | f64  | ∅    | i64  | ..                             |
 | ✓ | __aeabi_d2lz       | f64  | ∅    | i64  | .. ARM                         |
 | ✓ | __fixtfdi          | f128 | ∅    | i64  | ..                             |
+| ✓ | __fixkfdi          | f128 | ∅    | i64  | .. PPC                         |
 | ✓ | __fixxfdi          | f80  | ∅    | i64  | ..                             |
 | ✓ | __fixhfti          | f16  | ∅    | i128 | ..                             |
 | ✓ | __fixsfti          | f32  | ∅    | i128 | ..                             |
 | ✓ | __fixdfti          | f64  | ∅    | i128 | ..                             |
 | ✓ | __fixtfti          | f128 | ∅    | i128 | ..                             |
+| ✓ | __fixkfti          | f128 | ∅    | i128 | .. PPC                         |
 | ✓ | __fixxfti          | f80  | ∅    | i128 | ..                             |
 | ✓ | __fixunshfsi       | f16  | ∅    | u32  | float to uint, rounding towards zero. negative values become 0. |
 | ✓ | __fixunssfsi       | f32  | ∅    | u32  | ..                             |
@@ -56,6 +63,7 @@
 | ✓ | __fixunsdfsi       | f64  | ∅    | u32  | ..                             |
 | ✓ | __aeabi_d2uiz      | f64  | ∅    | u32  | .. ARM                         |
 | ✓ | __fixunstfsi       | f128 | ∅    | u32  | ..                             |
+| ✓ | __fixunskfsi       | f128 | ∅    | u32  | .. PPC                         |
 | ✓ | __fixunsxfsi       | f80  | ∅    | u32  | ..                             |
 | ✓ | __fixunshfdi       | f16  | ∅    | u64  | ..                             |
 | ✓ | __fixunssfdi       | f32  | ∅    | u64  | ..                             |
@@ -63,11 +71,13 @@
 | ✓ | __fixunsdfdi       | f64  | ∅    | u64  | ..                             |
 | ✓ | __aeabi_d2ulz      | f64  | ∅    | u64  | .. ARM                         |
 | ✓ | __fixunstfdi       | f128 | ∅    | u64  | ..                             |
+| ✓ | __fixunskfdi       | f128 | ∅    | u64  | .. PPC                         |
 | ✓ | __fixunsxfdi       | f80  | ∅    | u64  | ..                             |
 | ✓ | __fixunshfti       | f16  | ∅    | u128 | ..                             |
 | ✓ | __fixunssfti       | f32  | ∅    | u128 | ..                             |
 | ✓ | __fixunsdfti       | f64  | ∅    | u128 | ..                             |
 | ✓ | __fixunstfti       | f128 | ∅    | u128 | ..                             |
+| ✓ | __fixunskfti       | f128 | ∅    | u128 | .. PPC                         |
 | ✓ | __fixunsxfti       | f80  | ∅    | u128 | ..                             |
 | ✓ | __floatsihf        | i32  | ∅    | f16  | int to float                   |
 | ✓ | __floatsisf        | i32  | ∅    | f32  | ..                             |
@@ -75,17 +85,20 @@
 | ✓ | __floatsidf        | i32  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_i2d        | i32  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatsitf        | i32  | ∅    | f128 | ..                             |
+| ✓ | __floatsikf        | i32  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatsixf        | i32  | ∅    | f80  | ..                             |
 | ✓ | __floatdisf        | i64  | ∅    | f32  | ..                             |
 | ✓ | __aeabi_l2f        | i64  | ∅    | f32  | .. ARM                         |
 | ✓ | __floatdidf        | i64  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_l2d        | i64  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatditf        | i64  | ∅    | f128 | ..                             |
+| ✓ | __floatdikf        | i64  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatdixf        | i64  | ∅    | f80  | ..                             |
 | ✓ | __floattihf        | i128 | ∅    | f16  | ..                             |
 | ✓ | __floattisf        | i128 | ∅    | f32  | ..                             |
 | ✓ | __floattidf        | i128 | ∅    | f64  | ..                             |
 | ✓ | __floattitf        | i128 | ∅    | f128 | ..                             |
+| ✓ | __floattikf        | i128 | ∅    | f128 | .. PPC                         |
 | ✓ | __floattixf        | i128 | ∅    | f80  | ..                             |
 | ✓ | __floatunsihf      | u32  | ∅    | f16  | uint to float                  |
 | ✓ | __floatunsisf      | u32  | ∅    | f32  | ..                             |
@@ -93,6 +106,7 @@
 | ✓ | __floatunsidf      | u32  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_ui2d       | u32  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatunsitf      | u32  | ∅    | f128 | ..                             |
+| ✓ | __floatunsikf      | u32  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatunsixf      | u32  | ∅    | f80  | ..                             |
 | ✓ | __floatundihf      | u64  | ∅    | f16  | ..                             |
 | ✓ | __floatundisf      | u64  | ∅    | f32  | ..                             |
@@ -100,11 +114,13 @@
 | ✓ | __floatundidf      | u64  | ∅    | f64  | ..                             |
 | ✓ | __aeabi_ul2d       | u64  | ∅    | f64  | .. ARM                         |
 | ✓ | __floatunditf      | u64  | ∅    | f128 | ..                             |
+| ✓ | __floatundikf      | u64  | ∅    | f128 | .. PPC                         |
 | ✓ | __floatundixf      | u64  | ∅    | f80  | ..                             |
 | ✓ | __floatuntihf      | u128 | ∅    | f16  | ..                             |
 | ✓ | __floatuntisf      | u128 | ∅    | f32  | ..                             |
 | ✓ | __floatuntidf      | u128 | ∅    | f64  | ..                             |
 | ✓ | __floatuntitf      | u128 | ∅    | f128 | ..                             |
+| ✓ | __floatuntikf      | u128 | ∅    | f128 | .. PPC                         |
 | ✓ | __floatuntixf      | u128 | ∅    | f80  | ..                             |
 |   |                    |      |      |      | **Float Comparison**           |
 | ✓ | __cmphf2           | f16  | f16  | i32  | `(a<b)->-1, (a==b)->0, (a>b)->1, Nan->1` |
@@ -212,20 +228,24 @@
 | ✓ | __negsf2           | f32  | ∅    | f32[^unused_rl78] | -a (can be lowered directly to a xor) |
 | ✓ | __negdf2           | f64  | ∅    | f64  | ..                             |
 | ✓ | __negtf2           | f128 | ∅    | f128 | ..                             |
+| ✓ | __negkf2           | f128 | ∅    | f128 | .. PPC                         |
 | ✓ | __negxf2           | f80  | ∅    | f80  | ..                             |
 |   |                    |      |      |      | **Other** |
 | ✓ | __powihf2          | f16  | i32  | f16  | `a ^ b`                        |
 | ✓ | __powisf2          | f32  | i32  | f32  | ..                             |
 | ✓ | __powidf2          | f64  | i32  | f64  | ..                             |
 | ✓ | __powitf2          | f128 | i32  | f128 | ..                             |
+| ✓ | __powikf2          | f128 | i32  | f128 | .. PPC                         |
 | ✓ | __powixf2          | f80  | i32  | f80  | ..                             |
 | ✓ | __mulhc3           | all4 | f16  | f16  | `(a+ib) * (c+id)`              |
 | ✓ | __mulsc3           | all4 | f32  | f32  | ..                             |
 | ✓ | __muldc3           | all4 | f64  | f64  | ..                             |
 | ✓ | __multc3           | all4 | f128 | f128 | ..                             |
+| ✓ | __mulkc3           | all4 | f128 | f128 | .. PPC                         |
 | ✓ | __mulxc3           | all4 | f80  | f80  | ..                             |
 | ✓ | __divhc3           | all4 | f16  | f16  | `(a+ib) / (c+id)`              |
 | ✓ | __divsc3           | all4 | f32  | f32  | ..                             |
 | ✓ | __divdc3           | all4 | f64  | f64  | ..                             |
 | ✓ | __divtc3           | all4 | f128 | f128 | ..                             |
+| ✓ | __divkc3           | all4 | f128 | f128 | .. PPC                         |
 | ✓ | __divxc3           | all4 | f80  | f80  | ..                             |
