@@ -180,9 +180,9 @@ Integer and Float Operations
 | ✗ | __aeabi_d2h_alt    | f64  | ∅    | f16  | .. ARM alternate [^VFPv3alt]   |
 | ✓ | __aeabi_d2f        | f64  | ∅    | f32  | .. ARM                         |
 | ✓ | __trunckfsf2       | f128 | ∅    | f32  | .. PPC                         |
-| ✓ | _Qp_qtos           |*f128 | ∅    | f32  | .. SPARC                       |
+| ✓ | _Qp_qtos           |*f128 | ∅    | f32  | .. SPARC64                     |
 | ✓ | __trunckfdf2       | f128 | ∅    | f64  | .. PPC                         |
-| ✓ | _Qp_qtod           |*f128 | ∅    | f64  | .. SPARC                       |
+| ✓ | _Qp_qtod           |*f128 | ∅    | f64  | .. SPARC64                     |
 | ✓ | __fixhfsi          | f16  | ∅    | i32  | float to int, rounding towards zero |
 | ✓ | __fixsfsi          | f32  | ∅    | i32  | ..                             |
 | ✓ | __aeabi_f2iz       | f32  | ∅    | i32  | .. ARM                         |
@@ -276,7 +276,7 @@ Integer and Float Operations
 | ✓ | __cmpdf2           | f64  | f64  | i32  | But: if NaN is a possibility, use another routine. |
 | ✓ | __cmptf2           | f128 | f128 | i32  | ..                             |
 | ✓ | __cmpxf2           | f80  | f80  | i32  | ..                             |
-| ✓ | _Qp_cmp            |*f128 |*f128 | i32  | .. SPARC                       |
+| ✓ | _Qp_cmp            |*f128 |*f128 | i32  | .. SPARC64                     |
 | ✓ | __unordhf2         | f16  | f16  | i32  | `(a==+-NaN or b==+-NaN) -> !=0, else -> 0` |
 | ✓ | __unordsf2         | f32  | f32  | i32  | ..                             |
 | ✓ | __unorddf2         | f64  | f64  | i32  | Note: only reliable for (input!=NaN) |
@@ -293,14 +293,14 @@ Integer and Float Operations
 | ✓ | __aeabi_fcmpeq     | f32  | f32  | i32  | .. ARM                         |
 | ✓ | __aeabi_dcmpeq     | f32  | f32  | i32  | .. ARM                         |
 | ✓ | __eqkf2            | f128 | f128 | i32  | .. PPC                         |
-| ✓ | _Qp_feq            |*f128 |*f128 | bool | .. SPARC                       |
+| ✓ | _Qp_feq            |*f128 |*f128 | bool | .. SPARC64                     |
 | ✓ | __nehf2            | f16  | f16  | i32  | `(a==NaN) or (b==Nan) or (a!=b) -> output!=0` |
 | ✓ | __nesf2            | f32  | f32  | i32  | Note: __eqXf2 and __neXf2 have same return value |
 | ✓ | __nedf2            | f64  | f64  | i32  | ..                             |
 | ✓ | __netf2            | f128 | f128 | i32  | ..                             |
 | ✓ | __nexf2            | f80  | f80  | i32  | ..                             |
 | ✓ | __nekf2            | f128 | f128 | i32  | .. PPC                         |
-| ✓ | _Qp_fne            |*f128 |*f128 | bool | .. SPARC                       |
+| ✓ | _Qp_fne            |*f128 |*f128 | bool | .. SPARC64                     |
 | ✓ | __gehf2            | f16  | f16  | i32  | `(a!=Nan) and (b!=Nan) and (a>=b) -> output>=0` |
 | ✓ | __gesf2            | f32  | f32  | i32  | ..                             |
 | ✓ | __gedf2            | f64  | f64  | i32  | ..                             |
@@ -309,7 +309,7 @@ Integer and Float Operations
 | ✓ | __aeabi_fcmpge     | f32  | f32  | i32  | .. ARM                         |
 | ✓ | __aeabi_dcmpge     | f64  | f64  | i32  | .. ARM                         |
 | ✓ | __gekf2            | f128 | f128 | i32  | .. PPC                         |
-| ✓ | _Qp_fge            |*f128 |*f128 | bool | .. SPARC                       |
+| ✓ | _Qp_fge            |*f128 |*f128 | bool | .. SPARC64                     |
 | ✓ | __lthf2            | f16  | f16  | i32  | `(a!=Nan) and (b!=Nan) and (a<b) -> output<0` |
 | ✓ | __ltsf2            | f32  | f32  | i32  | ..                             |
 | ✓ | __ltdf2            | f64  | f64  | i32  | ..                             |
@@ -318,7 +318,7 @@ Integer and Float Operations
 | ✓ | __ltkf2            | f128 | f128 | i32  | .. PPC                         |
 | ✓ | __aeabi_fcmplt     | f32  | f32  | i32  | .. ARM                         |
 | ✓ | __aeabi_dcmplt     | f32  | f32  | i32  | .. ARM                         |
-| ✓ | _Qp_flt            |*f128 |*f128 | bool | .. SPARC                       |
+| ✓ | _Qp_flt            |*f128 |*f128 | bool | .. SPARC64                     |
 | ✓ | __lehf2            | f16  | f16  | i32  | `(a!=Nan) and (b!=Nan) and (a<=b) -> output<=0` |
 | ✓ | __lesf2            | f32  | f32  | i32  | ..                             |
 | ✓ | __ledf2            | f64  | f64  | i32  | ..                             |
@@ -327,7 +327,7 @@ Integer and Float Operations
 | ✓ | __aeabi_fcmple     | f32  | f32  | i32  | .. ARM                         |
 | ✓ | __aeabi_dcmple     | f32  | f32  | i32  | .. ARM                         |
 | ✓ | __lekf2            | f128 | f128 | i32  | .. PPC                         |
-| ✓ | _Qp_fle            |*f128 |*f128 | bool | .. SPARC                       |
+| ✓ | _Qp_fle            |*f128 |*f128 | bool | .. SPARC64                     |
 | ✓ | __gthf2            | f16  | f16  | i32  | `(a!=Nan) and (b!=Nan) and (a>b) -> output>0` |
 | ✓ | __gtsf2            | f32  | f32  | i32  | ..                             |
 | ✓ | __gtdf2            | f64  | f64  | i32  | ..                             |
@@ -336,7 +336,7 @@ Integer and Float Operations
 | ✓ | __aeabi_fcmpgt     | f32  | f32  | i32  | .. ARM                         |
 | ✓ | __aeabi_dcmpgt     | f64  | f64  | i32  | .. ARM                         |
 | ✓ | __gtkf2            | f128 | f128 | i32  | .. PPC                         |
-| ✓ | _Qp_fgt            |*f128 |*f128 | bool | .. SPARC                       |
+| ✓ | _Qp_fgt            |*f128 |*f128 | bool | .. SPARC64                     |
 |   |                    |      |      |      | **Float Arithmetic**           |
 | ✓ | __addhf3           | f32  | f32  | f32  | `a + b`                        |
 | ✓ | __addsf3           | f32  | f32  | f32  | ..                             |
@@ -346,7 +346,7 @@ Integer and Float Operations
 | ✓ | __aeabi_fadd       | f32  | f32  | f32  | .. ARM                         |
 | ✓ | __aeabi_dadd       | f64  | f64  | f64  | .. ARM                         |
 | ✓ | __addkf3           | f128 | f128 | f128 | .. PPC                         |
-| ✓ | _Qp_add            |*f128 |*f128 | void | .. SPARC args *c,*a,*b c=a+b   |
+| ✓ | _Qp_add            |*f128 |*f128 | void | .. SPARC64 args *c,*a,*b c=a+b |
 | ✓ | __subhf3           | f32  | f32  | f32  | `a - b`                        |
 | ✓ | __subsf3           | f32  | f32  | f32  | ..                             |
 | ✓ | __subdf3           | f64  | f64  | f64  | ..                             |
@@ -355,7 +355,7 @@ Integer and Float Operations
 | ✓ | __aeabi_fsub       | f32  | f32  | f32  | .. ARM                         |
 | ✓ | __aeabi_dsub       | f64  | f64  | f64  | .. ARM                         |
 | ✓ | __subkf3           | f128 | f128 | f128 | .. PPC                         |
-| ✓ | _Qp_sub            |*f128 |*f128 | void | .. SPARC args *c,*a,*b c=a-b   |
+| ✓ | _Qp_sub            |*f128 |*f128 | void | .. SPARC64 args *c,*a,*b c=a-b |
 | ✓ | __mulhf3           | f32  | f32  | f32  | `a * b`                        |
 | ✓ | __mulsf3           | f32  | f32  | f32  | ..                             |
 | ✓ | __muldf3           | f64  | f64  | f64  | ..                             |
@@ -364,7 +364,7 @@ Integer and Float Operations
 | ✓ | __aeabi_fmul       | f32  | f32  | f32  | .. ARM                         |
 | ✓ | __aeabi_dmul       | f64  | f64  | f64  | .. ARM                         |
 | ✓ | __mulkf3           | f128 | f128 | f128 | .. PPC                         |
-| ✓ | _Qp_mul            |*f128 |*f128 | void | .. SPARC args *c,*a,*b c=a*b   |
+| ✓ | _Qp_mul            |*f128 |*f128 | void | .. SPARC64 args *c,*a,*b c=a*b |
 | ✓ | __divsf3           | f32  | f32  | f32  | `a / b`                        |
 | ✓ | __divdf3           | f64  | f64  | f64  | ..                             |
 | ✓ | __divtf3           | f128 | f128 | f128 | ..                             |
@@ -372,7 +372,7 @@ Integer and Float Operations
 | ✓ | __aeabi_fdiv       | f32  | f32  | f32  | .. ARM                         |
 | ✓ | __aeabi_ddiv       | f64  | f64  | f64  | .. ARM                         |
 | ✓ | __divkf3           | f128 | f128 | f128 | .. PPC                         |
-| ✓ | _Qp_div            |*f128 |*f128 | void | .. SPARC args *c,*a,*b c=a*b   |
+| ✓ | _Qp_div            |*f128 |*f128 | void | .. SPARC64 args *c,*a,*b c=a*b |
 | ✓ | __negsf2           | f32  | ∅    | f32[^unused_rl78] | -a (can be lowered directly to a xor) |
 | ✓ | __negdf2           | f64  | ∅    | f64  | ..                             |
 | ✓ | __negtf2           | f128 | ∅    | f128 | ..                             |
