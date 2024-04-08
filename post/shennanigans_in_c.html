@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><meta charset=utf-8>
+<title>Shennanigans in C</title>
+<style>
+  #contents {
+    max-width: 60em;
+    margin: auto;
+    padding: 0 1em;
+  }
+</style>
+<div style="text-align:left; padding: 1em">
+<h2>Shennanigans in C</h2>
+</div>
+<div id="contents">
+  In short: Pointers are a huge footgun in C standard unless mitigated by
+  compiler flags or implementations not using optimizations based on certain
+  types of Undefined Behavior.<br>
+  Below list provides common problems in practice and, if existing, problems of
+  their solutions.
+<ul>
+  <li>Pointers semantics in C
+// The proper fix for access a pointer with increased alignment is to use a
+// temporary with memcopy
+// https://stackoverflow.com/questions/7059299/how-to-properly-convert-an-unsigned-char-array-into-an-uint32-t.
+// To only compare pointers decrease alignment with char* pointer.
+// To prune type info for generics use void* pointer. HOWEVER, you are
+// responsible to call a function that provides or provide yourself
+// 1. proper alignment, 2. sufficient storage and 3. if nececssary
+// sufficient padding (ie within structs), 4. correct aliasing.
+// "Strict Aliasing Rule"
+// > Dereferencing a pointer that aliases an object that is not of a
+// > compatible type or one of the other types allowed by
+// > C 2011 6.5 paragraph 71 is undefined behavior.
+//
+// Except, by posix extension: casting pointers to functions (and back), because
+// that must be valid for dynamic linking etc.
+
+// TODO quote standard to show that its UB to let pointer point into undefined
+// provenance regions (ptr < &array[0], ptr > &array[len+1], ptr != 0).
+
+Typical usage:
+- reinterpret pointer to memory (reinterpret_cast)
+// SHENNANIGAN reinterpret_cast does not exist making different pointer type access UB
+// > Dereferencing a pointer that aliases an object that is not of a
+// > compatible type or one of the other types allowed by
+// > C 2011 6.5 paragraph 71 is undefined behavior.
+// => The proper fix for access a pointer with increased alignment is to use a
+// temporary with memcopy
+int no_reinterpret_cast() {
+  //impl_reinterpret_cast_usage
+  // clang-format: off
+  const char some_vals[9] = { 0
+                            , 1, 0, 0, 0
+                            , 0, 0, 0 ,0 };
+  // clang-format: on
+  // WRONG: int64_t val = *((uint64_t*)&some_vals[1]);
+	int64_t val;
+  // more type safe than reinterpret_cast, because some_vals[1] is a type error
+  memcpy(&val, &some_vals[1], 8);
+  if (val != INT64_MIN) return 1;
+  return 0;
+}
+- copy memory (memcpy)
+int ptr_no_reinterpret_cast() {
+  char arr[4] = {0,0,0,1};
+  int32_t i32_arr = 0;            // unnecessary variable hopefully elided
+  memcpy(&i32_arr, &arr[0], 4);
+  int32_t * i32_arr_ptr = &i32_arr;
+  // SHENNANIGAN dont return stack local variable here!
+  return 0;
+}
+- aliasing protection based on fn argument type equivalence
+- however, by posix extension casting to void* pointer to fn is fine
+  to make dynamic linking work
+  </li>
+</ul>
+</div>
+</html>
