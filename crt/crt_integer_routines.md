@@ -98,7 +98,12 @@
 | ✓ | __mulosi4          | i32  | i32  | i32  | `a * b`, overflow->ov.*=1 else 0 |
 | ✓ | __mulodi4          | i64  | i64  | i64  | ..                             |
 | ✓ | __muloti4          | i128 | i128 | i128 | ..                             |
+|   |                    |      |      |      | **Bit-precise Integer Arithmetic** |
+TODO explanation of semantics
+https://gcc.gnu.org/onlinedocs/gccint/Integer-library-routines.html
 
+void __mulbitint3 (UBILtype *ret, int32_t retprec, const UBILtype *u, int32_t uprec, const UBILtype *v, int32_t vprec)
+void __divmodbitint4 (UBILtype *q, int32_t qprec, UBILtype *r, int32_t rprec, const UBILtype *u, int32_t uprec, const UBILtype *v, int32_t vprec)
 
 Missing piece:
 - [ ] __addvsi3

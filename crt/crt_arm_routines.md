@@ -8,8 +8,8 @@
 |✗|__aeabi_cdcmple | f64 | f64 | void | `a <= b` ..           |
 |✗|__aeabi_cdrcmple| f64 | f64 | void | `b <= a` ..           |
 | |                |     |     |      | **Float Arithmetic**  |
-|✗|__aeabi_frsub   | f64 | f64 | f64  | `b - a`               |
-|✗|__aeabi_drsub   | f64 | f64 | f64  | ..                    |
+|✓|__aeabi_frsub   | f32 | f32 | f32  | `b - a`               |
+|✓|__aeabi_drsub   | f64 | f64 | f64  | ..                    |
 | |                |     |     |      | **Special**           |
 |✓|__aeabi_read_tp |  ∅  |  ∅  | *u8  | ret tls pointer       |
 |✗|__aeabi_idiv0   | i32 |  ∅  | i32  | div by 0 modifier     |
