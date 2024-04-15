@@ -1,77 +1,208 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<title>Shennanigans in C</title>
+<title>C shennanigans I wish would not exist.</title>
 <style>
-  #contents {
-    max-width: 60em;
-    margin: auto;
-    padding: 0 1em;
-  }
+    #contents {
+      max-width: 60em;
+      margin: auto;
+      padding: 0 1em;
+    }
+    code {
+      background: #f8f8f8;
+      border: 1px dotted silver;
+      padding-left: 0.3em;
+      padding-right: 0.3em;
+    }
+    pre > code {
+      display: block;
+      overflow: auto;
+      padding: 0.5em;
+      border: 1px solid #eee;
+      line-height: normal;
+    }
+    .tok-kw {
+        color: #333;
+        font-weight: bold;
+    }
+    .tok-str {
+        color: #d14;
+    }
+    .tok-builtin {
+        color: #005C7A;
+    }
+    .tok-comment {
+        color: #545454;
+        font-style: italic;
+    }
+    .tok-fn {
+        color: #900;
+        font-weight: bold;
+    }
+    .tok-null {
+        color: #005C5C;
+    }
+    .tok-number {
+        color: #005C5C;
+    }
+    .tok-type {
+        color: #458;
+        font-weight: bold;
+    }
+    <!-- figure -->
+    figure {
+      margin: auto 0;
+    }
+    figure pre {
+      margin-top: 0;
+    }
+
+    figcaption {
+      padding-left: 0.5em;
+      font-size: small;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+    }
+    figcaption.c-cap {
+      background: #fcdba5;
+    }
+    figcaption.peg-cap {
+      background: #fcdba5;
+    }
+    figcaption.javascript-cap {
+      background: #365d95;
+      color: #fff;
+    }
+    figcaption.shell-cap {
+      background: #ccc;
+      color: #000;
+    }
+
 </style>
-<div style="text-align:left; padding: 1em">
-<h2>Shennanigans in C</h2>
-</div>
 <div id="contents">
-  In short: Pointers are a huge footgun in C standard unless mitigated by
+<div style="text-align:left; padding up down: 1em">
+<h2>C shennanigans I wish would not exist.</h2>
+</div>
+  Pointer usage has significant potential footguns in C standard unless mitigated by
   compiler flags or implementations not using optimizations based on certain
   types of Undefined Behavior.<br>
-  Below list provides common problems in practice and, if existing, problems of
-  their solutions.
+  Other easy to make problems are sequence points and nested bit fields,
+  which can also be worked around via compiler flags or compiler
+  implementations not relying on such undefined behavior.<br>
+  Thus, when using any C code, one should always at least review used C
+  compilers with flags used including tests with platforms and used compilers.
 <ul>
-  <li>Pointers semantics in C
-// The proper fix for access a pointer with increased alignment is to use a
-// temporary with memcopy
-// https://stackoverflow.com/questions/7059299/how-to-properly-convert-an-unsigned-char-array-into-an-uint32-t.
-// To only compare pointers decrease alignment with char* pointer.
-// To prune type info for generics use void* pointer. HOWEVER, you are
-// responsible to call a function that provides or provide yourself
-// 1. proper alignment, 2. sufficient storage and 3. if nececssary
-// sufficient padding (ie within structs), 4. correct aliasing.
-// "Strict Aliasing Rule"
-// > Dereferencing a pointer that aliases an object that is not of a
-// > compatible type or one of the other types allowed by
-// > C 2011 6.5 paragraph 71 is undefined behavior.
-//
-// Except, by posix extension: casting pointers to functions (and back), because
-// that must be valid for dynamic linking etc.
+  <li>Pointers semantics in C.
+    <ul>
+      <li> Pointer access requirements.
+        <ol>
+          <li><span>Proper alignment</span></li>
+            <ul>
+              <li><span>Cleanly accessing a pointer with increased alignment requires
+                <a href="https://stackoverflow.com/questions/7059299/how-to-properly-convert-an-unsigned-char-array-into-an-uint32-t">to use a temporary with memcopy</a>.</span></li>
+              <li><span>To only compare pointers decrease alignment with <code>char*</code> pointer.</span></li>
+              <li><span>To prune type info for generics use <code>void*</code> pointer.</span></li>
+              <li><span>You are responsible to call a function that provides or provide yourself.</span></li>
+            </ul>
+          <li><span>Sufficient storage (pointer must point to valid object)</span></li>
+          <li><span>Sufficient padding (ie withing structs).</span></li>
+          <li><span>Correct aliasing</span>
+            <ul>
+              <li>"Strict Aliasing Rule"<br>
+                &gt; Dereferencing a pointer that aliases an object that is not of a<br>
+                &gt; compatible type or one of the other types allowed by<br>
+                &gt; C 2011 6.5 paragraph 71 is undefined behavior.<br>
+                What this means in practice:<br>
+                Each pointer has an associated "provenance" it is allowed to point to.
+                This mean that a pointer <code>ptr</code> must uphold
+                <code>(&amp;array[0] <= ptr && ptr &lt; &amp;array[len+1]) || ptr != 0)</code>.
+                for access with array being the "memory origin range" on stack or heap.<br>
+                Function arguments of identical pointer types are allowed to have
+                overlapping provenance regions, unless annotated with <code>__restrict__</code>,
+                but pointers of different types are not to have those regions.
+              </li>
+            </ul>
+          </li>
+        </ol>
+      </li>
+      <li> Pointer access in practice.
+        <ul>
+          <li><span>Provenance as regions pointer is allowed to point to.</span>
+            TODO
+          </li>
+          <li><span>Copy around some bytes.</span>
+            TODO
+          </li>
+          <li><span>Get underaligned pointer to subset of bytes.</span>
+            TODO
+          </li>
+          <li><span>Get overaligned pointer to supset of bytes.</span>
+            TODO
+          </li>
+          <li><span>Insufficient storage for pointer.</span>
+            TODO
+          </li>
+          <li><span>Insufficient padding storage for pointer.</span>
+            TODO
+          </li>
+          <li><span>Allowed aliasing of pointers</span>
+            TODO
+          </li>
+          <li><span>Non-Allowed aliasing of pointers</span>
+            TODO
+          </li>
+        </ul>
+      </li>
+      <li> The Exceptions.
+        <ul>
+          <li><span>Controlling the build system + compiler invocation to opt-out.</span>
+          </li>
+          <li><span>Posix extension to enable dynamic linking via casting pointers to functions and back.</span>
+          </li>
+        </ul>
+      </li>
+      <li> Sequence Points.
+      </li>
+      <li> Nested bit fields differ semantically per compiler.
+      </li>
+    </ul>
 
-// TODO quote standard to show that its UB to let pointer point into undefined
-// provenance regions (ptr < &array[0], ptr > &array[len+1], ptr != 0).
-
-Typical usage:
-- reinterpret pointer to memory (reinterpret_cast)
-// SHENNANIGAN reinterpret_cast does not exist making different pointer type access UB
-// > Dereferencing a pointer that aliases an object that is not of a
-// > compatible type or one of the other types allowed by
-// > C 2011 6.5 paragraph 71 is undefined behavior.
-// => The proper fix for access a pointer with increased alignment is to use a
-// temporary with memcopy
-int no_reinterpret_cast() {
-  //impl_reinterpret_cast_usage
-  // clang-format: off
-  const char some_vals[9] = { 0
-                            , 1, 0, 0, 0
-                            , 0, 0, 0 ,0 };
-  // clang-format: on
-  // WRONG: int64_t val = *((uint64_t*)&some_vals[1]);
-	int64_t val;
-  // more type safe than reinterpret_cast, because some_vals[1] is a type error
-  memcpy(&val, &some_vals[1], 8);
-  if (val != INT64_MIN) return 1;
-  return 0;
-}
-- copy memory (memcpy)
-int ptr_no_reinterpret_cast() {
-  char arr[4] = {0,0,0,1};
-  int32_t i32_arr = 0;            // unnecessary variable hopefully elided
-  memcpy(&i32_arr, &arr[0], 4);
-  int32_t * i32_arr_ptr = &i32_arr;
-  // SHENNANIGAN dont return stack local variable here!
-  return 0;
-}
-- aliasing protection based on fn argument type equivalence
-- however, by posix extension casting to void* pointer to fn is fine
-  to make dynamic linking work
+    <!-- TODO quote standard to show that its UB to let pointer point into undefined -->
+    <!-- provenance regions (ptr < &array[0], ptr > &array[len+1], ptr != 0). -->
+    <!---->
+    <!-- Typical usage: -->
+    <!-- - reinterpret pointer to memory (reinterpret_cast) -->
+    <!-- // SHENNANIGAN reinterpret_cast does not exist making different pointer type access UB -->
+    <!-- // > Dereferencing a pointer that aliases an object that is not of a -->
+    <!-- // > compatible type or one of the other types allowed by -->
+    <!-- // > C 2011 6.5 paragraph 71 is undefined behavior. -->
+    <!-- // => The proper fix for access a pointer with increased alignment is to use a -->
+    <!-- // temporary with memcopy -->
+    <!-- int no_reinterpret_cast() { -->
+    <!--   //impl_reinterpret_cast_usage -->
+    <!--   // clang-format: off -->
+    <!--   const char some_vals[9] = { 0 -->
+    <!--                             , 1, 0, 0, 0 -->
+    <!--                             , 0, 0, 0 ,0 }; -->
+    <!--   // clang-format: on -->
+    <!--   // WRONG: int64_t val = *((uint64_t*)&some_vals[1]); -->
+    <!-- 	int64_t val; -->
+    <!--   // more type safe than reinterpret_cast, because some_vals[1] is a type error -->
+    <!--   memcpy(&val, &some_vals[1], 8); -->
+    <!--   if (val != INT64_MIN) return 1; -->
+    <!--   return 0; -->
+    <!-- } -->
+    <!-- - copy memory (memcpy) -->
+    <!-- int ptr_no_reinterpret_cast() { -->
+    <!--   char arr[4] = {0,0,0,1}; -->
+    <!--   int32_t i32_arr = 0;            // unnecessary variable hopefully elided -->
+    <!--   memcpy(&i32_arr, &arr[0], 4); -->
+    <!--   int32_t * i32_arr_ptr = &i32_arr; -->
+    <!--   // SHENNANIGAN dont return stack local variable here! -->
+    <!--   return 0; -->
+    <!-- } -->
+    <!-- - aliasing protection based on fn argument type equivalence -->
+    <!-- - however, by posix extension casting to void* pointer to fn is fine -->
+    <!--   to make dynamic linking work -->
   </li>
 </ul>
 </div>

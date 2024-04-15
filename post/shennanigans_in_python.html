@@ -1,213 +1,303 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<title>Shennanigans in Python</title>
+<title>Python shennanigans.</title>
 <style>
-  #contents {
-    max-width: 60em;
-    margin: auto;
-    padding: 0 1em;
-  }
+    #contents {
+      max-width: 60em;
+      margin: auto;
+      padding: 0 1em;
+    }
+    code {
+      background: #f8f8f8;
+      border: 1px dotted silver;
+      padding-left: 0.3em;
+      padding-right: 0.3em;
+    }
+    pre > code {
+      display: block;
+      overflow: auto;
+      padding: 0.5em;
+      border: 1px solid #eee;
+      line-height: normal;
+    }
+    .tok-kw {
+        color: #333;
+        font-weight: bold;
+    }
+    .tok-str {
+        color: #d14;
+    }
+    .tok-builtin {
+        color: #005C7A;
+    }
+    .tok-comment {
+        color: #545454;
+        font-style: italic;
+    }
+    .tok-fn {
+        color: #900;
+        font-weight: bold;
+    }
+    .tok-null {
+        color: #005C5C;
+    }
+    .tok-number {
+        color: #005C5C;
+    }
+    .tok-type {
+        color: #458;
+        font-weight: bold;
+    }
+    <!-- figure -->
+    figure {
+      margin: auto 0;
+    }
+    figure pre {
+      margin-top: 0;
+    }
+
+    figcaption {
+      padding-left: 0.5em;
+      font-size: small;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+    }
+    figcaption.py-cap {
+      background: #fcdba5;
+    }
+    figcaption.c-cap {
+      background: #a8b9cc;
+      color: #000;
+    }
+    figcaption.peg-cap {
+      background: #fcdba5;
+    }
+    figcaption.javascript-cap {
+      background: #365d95;
+      color: #fff;
+    }
+    figcaption.shell-cap {
+      background: #ccc;
+      color: #000;
+    }
 </style>
-<div style="text-align:left; padding: 1em">
-<h2>Shennanigans in Python</h2>
-</div>
 <div id="contents">
+<div style="text-align:left; padding up down: 1em">
+<h2>Python shennanigans.</h2>
+</div>
+  The following shennanigans were collected during my work on creating a system
+  integration library and framework for hardware and software tests including
+  developer tasks like worktree management, building, target deployment and
+  configuration. Therefore it should be representative for things one
+  might want to do in absence of better tooling. The used Python version was
+  3.8.2, but most problems still persist.<p>
+
+  My <b>tldr;</b> retrospection upfront, which you may be able to reproduce
+  once you try to code long-running services, which recover from all failures,
+  cleanly reset state or generally try to debug spurious problems. Please don't.<br>
   Python on itself is great for prototyping up to a few hundred lines of code,
-  like to preprocess some C code.<br>
-  However, it is unfeasible to scale, for example library code.
+  like to quickly receive or send some json over tcp/html.
+  <b>However</b>, it is unfeasible to scale, for example to use as library code.
   Changes in a leaf function can add exceptions to higher level code paths and
   handling those via exceptions for user friendly error messages, for example
-  to collect context (information along multiple functions) becomes
-  unreasonably verbose and error prone.<br>
-  The alternative is to use C-like error handling, which requires to figure out
+  to collect context (information along multiple functions, for example from
+  different combination of traversal) becomes unreasonably verbose and error
+  prone. The alternative is to use C-like error handling, which requires to figure out
   all possible exceptions of Python libstd methods, which language servers
-  do not support (as of 20240404).<br>
-  These list of shennanigans was created during my work to create a system
-  integration library and framework for hardware and software including
-  developer tasks like worktree management, building, target deployment and
-  configuration. Therefore it should be representative for hacky things
-  one might want to do in absence of better tooling.
+  do not support (as of 20240404).<p>
+
+  Aside of these more fundamental limitations, here the list of shennanigans I have run into:
 <ul>
-  <li>
-# SHENNANIGAN do not use xml.dom.minidom, it breaks space and newlines:
-# https://bugs.python.org/issue5752
-# solved with TODO
-# use instead ElementTree
+  <li> <code>xml.dom.minidom</code> <a href="https://bugs.python.org/issue5752">breaks space and newlines</a>.
+    Use <code>ElementTree</code>.
+  </li>
+
+  <li> <code>.strip()</code> is necessary after file read,
+    because Python automatically adds <code>'\n'</code> and there is no way to read without
+     newlines into a list.
+  </li>
+
+  <li> Checking subdictionary is unreadable and there are multiple ways of doing the same.
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-fn">def</span> is_subdict(small: dict, big: dict) -&gt; bool:</span>
+<span class="line">    <span class="tok-str">&quot;&quot;&quot;</span></span>
+<span class="line">    <span class="tok-str">Test, if 'small' is subdict of 'big'</span></span>
+<span class="line">    <span class="tok-str">Example: big = {'pl' : 'key1': {'key2': 'value2'}}</span></span>
+<span class="line">    <span class="tok-str">Then small = {'pl' : 'key1': {'key2': 'value2'}, 'otherkey'..} matches,</span></span>
+<span class="line">    <span class="tok-str">but small = {'pl' : 'key1': {'key2': 'value2', 'otherkey'..}}</span></span>
+<span class="line">    <span class="tok-str">or small = {'pl' : 'key1': {'key2': {'value2', 'otherkey'..}}} not.</span></span>
+<span class="line">    <span class="tok-str">&quot;&quot;&quot;</span></span>
+<span class="line">    <span class="tok-comment"># since python3.9:</span></span>
+<span class="line">    <span class="tok-comment"># return big | small == big</span></span>
+<span class="line">    <span class="tok-comment"># also:</span></span>
+<span class="line">    <span class="tok-comment"># return {**big, **small} == big</span></span>
+<span class="line">    <span class="tok-kw">return</span> dict(big, **small) == big</span></span>
+</code></pre>
+      </figure>
+  </li>
+
+  <li> Dictionary is missing this common method
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-fn">def</span> has_fieldsvals(small: dict, big: dict) -&gt; bool:</span>
+<span class="line">  <span class="tok-str">"""</span></span>
+<span class="line">  <span class="tok-str">Test, if 'small' has all values of of 'big'</span></span>
+<span class="line">  <span class="tok-str">Example: big = {'pl' : 'key1': {'key2': 'value2'}}</span></span>
+<span class="line">  <span class="tok-str">Then small = {'pl' : 'key1': {'key2': 'value2'}, 'otherkey'..} matches,</span></span>
+<span class="line">  <span class="tok-str">small = {'pl' : 'key1': {'key2': 'value2', 'otherkey'..}} matches,</span></span>
+<span class="line">  <span class="tok-str">and small = {'pl' : 'key1': {'key2': {'value2', 'otherkey'..}}} matches.</span></span>
+<span class="line">  <span class="tok-str">"""</span></span>
+<span class="line">  <span class="tok-kw">for</span> key, value <span class="tok-kw">in</span> small.items():</span>
+<span class="line">    <span class="tok-kw">if</span> key <span class="tok-kw">in</span> big:</span>
+<span class="line">      <span class="tok-kw">if</span> <span class="tok-kw">isinstance</span>(small[key], dict):</span>
+<span class="line">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> has_fieldsvals(small[key], big[key]):</span>
+<span class="line">          <span class="tok-kw">return</span> False</span>
+<span class="line">        <span class="tok-kw">else</span>:</span>
+<span class="line">          <span class="tok-kw">return</span> True</span>
+<span class="line">      <span class="tok-kw">elif</span> value != big[key]:</span>
+<span class="line">        <span class="tok-kw">return</span> False</span>
+<span class="line">      <span class="tok-kw">else</span>:</span>
+<span class="line">        <span class="tok-kw">return</span> True</span>
+<span class="line">    <span class="tok-kw">else</span>:</span>
+<span class="line">      <span class="tok-kw">return</span> False</span>
+<span class="line">  <span class="tok-kw">return</span> True</span>
+</code></pre>
+      </figure>
+  </li>
+
+  <li> Dictionary is missing this common method
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-fn">def</span> merge_dicts(alpha: dict = {}, beta: dict = {}) -&gt; dict:</span>
+<span class="line">  <span class="tok-str">"""</span></span>
+<span class="line">  <span class="tok-str">Recursive merge dicts. Not multi-threading safe.</span></span>
+<span class="line">  <span class="tok-str">"""</span></span>
+<span class="line">  <span class="tok-kw">return</span> _merge_dicts_aux(alpha, beta, copy.copy(alpha))</span>
+<span class="line"><span class="tok-fn">def</span> _merge_dicts_aux(alpha: dict = {}, beta: dict = {}, result: dict = {}, path: Optional[List[str]] = None) -&gt; dict:</span>
+<span class="line">  <span class="tok-kw">if</span> path <span class="tok-kw">is</span> None:</span>
+<span class="line">    path = []</span>
+<span class="line">  <span class="tok-kw">for</span> key <span class="tok-kw">in</span> beta:</span>
+<span class="line">    <span class="tok-kw">if</span> key <span class="tok-kw">not</span> <span class="tok-kw">in</span> alpha:</span>
+<span class="line">      result[key] = beta[key]</span>
+<span class="line">    else:</span>
+<span class="line">      <span class="tok-kw">if</span> <span class="tok-kw">isinstance</span>(alpha[key], dict) <span class="tok-kw">and</span> isinstance(beta[key], dict):</span>
+<span class="line">        # key value is dict in A and B => merge the dicts</span>
+<span class="line">        _merge_dicts_aux(alpha[key], beta[key], result[key], path + [str(key)])</span>
+<span class="line">      <span class="tok-kw">elif</span> alpha[key] == beta[key]:</span>
+<span class="line">        # key value is same in A and B => ignore</span>
+<span class="line">        <span class="tok-kw">pass</span></span>
+<span class="line">      <span class="tok-kw">else</span>:</span>
+<span class="line">        # key value differs in A and B => raise error</span>
+<span class="line">        err: str = f"Conflict at {'.'.join(path + [str(key)])}"</span>
+<span class="line">        raise <span class="tok-kw">Exception</span>(err)</span>
+<span class="line">  <span class="tok-kw">return</span> result</span>
+</code></pre>
+      </figure>
+  </li>
+
+  <li> Tuples and dicts are annoying to differentiate
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"># dictionary</span>
+<span class="line">dict1 = {</span>
+<span class="line">  "m1": "cp",</span>
+<span class="line">  "m2": "cp"</span>
+<span class="line">}</span>
+<span class="line"># tuple</span>
+<span class="line">tup1 = {</span>
+<span class="line">  "m1": "cp",</span>
+<span class="line">  "m2": "cp"</span>
+<span class="line">},</span>
+<span class="line"></span>
+<span class="line"># at least getting the intention correct, but python is still unhelpful with error message</span>
+<span class="line">dict2 = dict({</span>
+<span class="line">  "m1": "cp",</span>
+<span class="line">  "m2": "cp"</span>
+<span class="line">})</span>
+<span class="line"># tuple</span>
+<span class="line">tup2 = tuple({</span>
+<span class="line">  "m1": "cp",</span>
+<span class="line">  "m2": "cp"</span>
+<span class="line">}),</span>
+</code></pre>
+      </figure>
   </li>
 
   <li>
-# SHENNANIGAN
-# .strip() is necessary after file read, because Python automatically adds "\n"
+  Stack trace formatting is inefficient and one can not use <code>gf</code> or <code>gF</code> vim shortcuts to jump to location
+  function to write status + trace to variable.
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-fn">def</span> getStackTrace() -&gt; str:</span>
+<span class="line">  <span class="tok-kw">return</span> repr(traceback.format_stack())</span>
+  </li>
+
+  <li> Mixed " and ' strings are invalid json
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"># Dict -&gt; str is inconsistent to json -&gt; str, so workaround with</span>
+<span class="line"># dict_asjson_lower = str(dict1).replace("'", '"')</span>
+<span class="line"><span class="tok-fn">def</span> combineDictsFromStr() -&gt; None:</span>
+<span class="line">  dict1 = {"t1":"val1","t2arr":[{"t2_int":0,"t2_str":"12.0"}],"t3int":30}</span>
+<span class="line">  dict1_str_raw = str(dict1)</span>
+<span class="line">  dict1_str = dict1_str_raw.replace("'", '"')</span>
+<span class="line">  dict2_str = '{"anotherone":"yes", '</span>
+<span class="line">  dict2_str +=  '"t3int":30,"t4str":'</span>
+<span class="line">  dict2_str += dict1_str + '}'</span>
+<span class="line">  dict2 = json.loads(dict2_str)</span>
+<span class="line">  _ = dict2</span>
+</code></pre>
+      </figure>
+  </li>
+
+  <li> <code>os.kill()</code> does not call registered cleanup function `atexit.register(exit_cleanup)`
+by deamonized threads. Must store pids of child processes and clean them explicitly or
+signal main thread via
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-fn">def</span> signalMainThread(self) -&gt; None:</span>
+<span class="line">    <span class="tok-kw">pass</span></span>
+<span class="line">    # before Python 3.10: _thread.interrupt_main()</span>
+<span class="line">    # since Python 3.10: _thread.interrupt_main(signum=signal.SIGKILL)</span>
+</code></pre>
+      </figure>
   </li>
 
   <li>
-# SHENNANIGAN Dictionary is missing this common method
-def is_subdict(small: dict, big: dict) -> bool:
-    """
-    Test, if 'small' is subdict of 'big'
-    Example: big = {'pl' : 'key1': {'key2': 'value2'}}
-    Then small = {'pl' : 'key1': {'key2': 'value2'}, 'otherkey'..} matches,
-    but small = {'pl' : 'key1': {'key2': 'value2', 'otherkey'..}}
-    or small = {'pl' : 'key1': {'key2': {'value2', 'otherkey'..}}} not.
-    """
-    # since python3.9:
-    # return big | small == big
-    # also:
-    # return {**big, **small} == big
-    return dict(big, **small) == big
+<code>readline()</code> with timeout io file api might drop data on timeout, see https://github.com/python/cpython/issues/51571
+<ol>
+  <li>Read from Kernel structure and append chunk-wise to buffer from socket until stop event (via select).</li>
+  <li>After each read, <code>try line = readline()</code> from the buffer and remove the line on success (being utf-8 etc).</li>
+  <li>On failure of reading line, continue with 1.</li>
+  <li>Teardown should read socket until being empty, if a stop was obtained.</li>
+</ol>
   </li>
 
   <li>
-# SHENNANIGAN Dictionary is missing this common method
-def has_fieldsvals(small: dict, big: dict) -> bool:
-  """
-  Test, if 'small' has all values of of 'big'
-  Example: big = {'pl' : 'key1': {'key2': 'value2'}}
-  Then small = {'pl' : 'key1': {'key2': 'value2'}, 'otherkey'..} matches,
-  small = {'pl' : 'key1': {'key2': 'value2', 'otherkey'..}} matches,
-  and small = {'pl' : 'key1': {'key2': {'value2', 'otherkey'..}}} matches.
-  """
-  for key, value in small.items():
-    if key in big:
-      if isinstance(small[key], dict):
-        if not has_fieldsvals(small[key], big[key]):
-          return False
-        else:
-          return True
-      elif value != big[key]:
-        return False
-      else:
-        return True
-    else:
-      return False
-  return True
+Generic module annotation is not allowed and mypy has no explicit docs for this.
+The following does not work and 'module: object' is the closest we can get as simple annotation.
+      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-fn">def</span> check_fn(module: ModuleType) -&gt; int:</span>
+<span class="line">    <span class="tok-kw">if</span> str(type(module)) != "<class 'module'>": <span class="tok-kw">return</span> 1</span>
+<span class="line">    <span class="tok-kw">return</span> 0</span>
+</code></pre>
+      </figure>
   </li>
 
   <li>
-# SHENNANIGAN Dictionary is missing this common method
-def merge_dicts(alpha: dict = {}, beta: dict = {}) -> dict:
-  """
-  Recursive merge dicts. Not multi-threading safe.
-  """
-  return _merge_dicts_aux(alpha, beta, copy.copy(alpha))
-def _merge_dicts_aux(alpha: dict = {}, beta: dict = {}, result: dict = {}, path: Optional[List[str]] = None) -> dict:
-  if path is None:
-    path = []
-  for key in beta:
-    if key not in alpha:
-      result[key] = beta[key]
-    else:
-      if isinstance(alpha[key], dict) and isinstance(beta[key], dict):
-        # key value is dict in A and B => merge the dicts
-        _merge_dicts_aux(alpha[key], beta[key], result[key], path + [str(key)])
-      elif alpha[key] == beta[key]:
-        # key value is same in A and B => ignore
-        pass
-      else:
-        # key value differs in A and B => raise error
-        err: str = f"Conflict at {'.'.join(path + [str(key)])}"
-        raise Exception(err)
-  return result
-
+    There are no scheduling and watchdog methods, which makes Python thread scheduling very unreliable. Unlucky schedules may cause fatal
+    delay for shuffling data between daemon thread and main thread.
+    As example, an application using 1 main thread and 2 deamon threads may
+    cause the relevant deamon thread not being scheduled for 2 seconds.
+    Empirically 3 seconds work.
   </li>
 
   <li>
-### SHENNANIGAN tuples and dicts are annoying to differentiate
-# dictionary
-dict1 = {
-  "m1": "cp",
-  "m2": "cp"
-}
-# tuple
-tup1 = {
-  "m1": "cp",
-  "m2": "cp"
-},
-
-# at least getting the intention correct, but python is still unhelpful with error message
-dict2 = dict({
-  "m1": "cp",
-  "m2": "cp"
-})
-# tuple
-tup2 = tuple({
-  "m1": "cp",
-  "m2": "cp"
-}),
-
+    Trailing comma in dictionary or json.dumps generated string has silent failures,
+    for example on parsing the output as json via php.
   </li>
-
-  <li>
-# SHENNANIGAN stack trace formatting is inefficient and one can not use g[f|F] to jump to location
-# function to write status + trace to variable
-def getStackTrace() -> str:
-  return repr(traceback.format_stack())
-  </li>
-
-  <li>
-# SHENNANIGAN: Mixed " and ' strings are invalid json
-# Dict -> str is inconsistent to json -> str, so workaround with
-# dict_asjson_lower = str(dict1).replace("'", '"')
-def combineDictsFromStr():
-  dict1 = {"t1":"val1","t2arr":[{"t2_int":0,"t2_str":"12.0"}], \
-    "t3int":30}
-  dict1_str_raw = str(dict1)
-  dict1_str = dict1_str_raw.replace("'", '"')
-  dict2_str = '{"anotherone":"yes", '
-  dict2_str +=  '"t3int":30,"t4str":'
-  dict2_str += dict1_str + '}'
-  dict2 = json.loads(dict2_str)
-  _ = dict2
-  </li>
-
-  <li>
-# SHENNANIGAN os.kill() does not call registered cleanup function `atexit.register(exit_cleanup)`
-# by deamonzed threads. Must store pids of child processes and clean them explicitly or
-# signal main thread via
-def signalMainThread(self) -> None:
-    pass
-    # before Python 3.10: _thread.interrupt_main()
-    # since Python 3.10: _thread.interrupt_main(signum=signal.SIGKILL)
-  </li>
-
-  <li>
-# SHENNANIGAN
-# readline() with timeout io file api is broken, see https://github.com/python/cpython/issues/51571
-# Workaround
-# * 1. Read from Kernel structure and append chunk-wise to buffer from socket until stop event.
-# * 2. After each read, try line = readline() from the buffer and remove the line on success.
-# * 3. On failure of reading line, continue with 1.
-# * 4. Teardown should also use readSocket to read all Kernel memory, if a stop was signaled.
-# Note: utf-8 decoding must also be done and select or an equivalent should be used to check,
-# if data for reading exists.
-  </li>
-
-  <li>
-# SHENNANIGAN Generic module annotation not allowed
-# Also, mypy has no explicit docs for this.
-# possible error messages + solution patterns. The following does not work:
-#   from typing import ModuleType
-#   def check_fn(module: ModuleType) -> int:
-#     if str(type(module)) != "<class 'module'>": return 1
-#     return 0
-# 'module: object' is the closest we can get as simple annotation
-  </li>
-
-  <li>
-# SHENNANIGAN
-# No explicit scheduling methods + watchdogs. Unlucky schedules may cause fatal
-# delay for shuffling data between daemon thread and main thread.
-# As example: 1 main thread, 2 deamon threads may cause the relevant deamon thread
-# not being scheduled for 2 seconds. Empirically 3 seconds work.
-# In other words: Python thread scheduling is extremely unreliable.
-  </li>
-
-  <li>
-# SHENNANIGAN
-# Must not use trailing comma in dictionary or json.dumps generated string has
-# silent failures, for example on parsing the output as json via php.
-  </li>
-
 </ul>
 </div>
 </html>

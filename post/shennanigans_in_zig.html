@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<!-- TODO certing to the left -->
-<title>Shennanigans in Zig</title>
+<title>Some shennanigans in Zig.</title>
 <style>
     #contents {
       max-width: 60em;
@@ -13,6 +12,13 @@
       border: 1px dotted silver;
       padding-left: 0.3em;
       padding-right: 0.3em;
+    }
+    pre > code {
+      display: block;
+      overflow: auto;
+      padding: 0.5em;
+      border: 1px solid #eee;
+      line-height: normal;
     }
     .tok-kw {
         color: #333;
@@ -78,14 +84,16 @@
 </style>
 <div id="contents">
 <div style="text-align:left; padding down up: 1em">
-<h2>Shennanigans in Zig</h2>
+<h2>Zig inconveniences</h2>
 </div>
-  zig version 0.12.0-dev.3562+96bc8f17c<br>
+  As of 20240404 (zig version 0.12.0-dev.3562+96bc8f17c), Zig provides
+  one of the best possible semantics to optimize memory details, while
+  offering widely portable source code with reasonable safety in a
+  relative concise and readable way.<p>
   Aside of optional slices to multi-pointer and nested errors, I found
-  personally no major footguns that are too annoying to handle.<br>
-  Picking up nested slices and some build system things is inconvenient
-  with the former feeling unnecessary at this point and the latter necessary
-  until things are more fledged out.
+  personally no permanent major annoying parts.<br>
+  For example, picking up nested slices and some build system parts might be
+  inconvenient, but those are one time things and no footguns.<br>
   The rest of the language feels very smooth to me in contrast to the potential
   very flexible and cryptic syntax of C (see <a href="https://github.com/JadLevesque/PPMP-Iceberg">preprocessor iceberg</a>).
   <ul>
@@ -112,15 +120,15 @@
     <li> APIs with optional slices to multi-pointer are unflexible, because the
       pointer can not be null for the field to be unset and to be set in the
       called fn. This can introduce semantic problems and has a superfluos load
-      into register instead of on most archs register-less 0-load. Example
-      infered from Windows <code>LookupAccountSidW</code> which has parameter name
+      into register instead of on most CPU architectures register-less 0-load.
+      Example infered from Windows <code>LookupAccountSidW</code> which has parameter name
       <code>?win.LPWSTR</code>.
       <figure><figcaption class="zig-cap"><cite class="file">unflexible_opt_multi_ptr_api.zig</cite></figcaption>
       <pre><code>
-<span class="line"><span class="tok-kw">fn</span> some_opt_multi_ptr_api(val: ?[*:0]<span class="tok-kw">u8</span>) <span class="tok-kw">void</span> {</span>
+<span class="line"><span class="tok-fn">fn</span> some_opt_multi_ptr_api(val: ?[*:0]<span class="tok-kw">u8</span>) <span class="tok-kw">void</span> {</span>
 <span class="line">    _ = val;
 <span class="line">}</span>
-<span class="line"><span class="tok-kw">fn</span> unflexible_opt_multi_ptr_api() <span class="tok-kw">void</span> {</span>
+<span class="line"><span class="tok-fn">fn</span> unflexible_opt_multi_ptr_api() <span class="tok-kw">void</span> {</span>
 <span class="line">    <span class="tok-comment">// option 1
 <span class="line">    <span class="tok-comment">// const acc_name: ?[*:0]u8 = undefined;</span></span>
 <span class="line">    <span class="tok-comment">// var raw_acc_name = @as([*:0]u8, @ptrCast(acc_name));</span></span>
@@ -138,8 +146,7 @@
 
 <span class="line"><span class="tok-kw">test</span> <span class="tok-str">&quot;unflexible_opt_multi_ptr_api&quot;</span> {</span>
 <span class="line">    unflexible_opt_multi_ptr_api();</span>
-<span class="line">}</span>
-      </code></pre>
+<span class="line">}</span></code></pre>
       </figure>
     </li>
 
@@ -178,7 +185,7 @@
 <span class="line">    <span class="tok-comment">// ..</span></span>
 
 <span class="line">    <span class="tok-comment">// Example 2: Catch printing error
-<span class="line">    <span class="tok-comment">// const err_printed = std.fmt.bufPrint(&buf, "err: {!}\n", .{err}) catch |errinner| {</span></span>
+<span class="line">    <span class="tok-comment">// const err_printed = std.fmt.bufPrint(&amp;buf, "err: {!}\n", .{err}) catch |errinner| {</span></span>
 <span class="line">    <span class="tok-comment">//     try stderr.print("{!}\n", .{errinner});</span></span>
 <span class="line">    <span class="tok-comment">//     return error.CouldNotPrint;</span></span>
 <span class="line">    <span class="tok-comment">// };</span></span>
@@ -199,24 +206,11 @@
 <span class="line">    <span class="tok-comment">//                    ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~</span></span>
 <span class="line">    <span class="tok-comment">// referenced by:</span></span>
 <span class="line">    <span class="tok-comment">// ..</span></span>
+<span class="line">}</span></code></pre></figure></li>
 
-<span class="line">}</span>
-      </code></pre>
-      </figure>
-    </li>
-
-    <li> Signaling: Test runner allows no signaling to qemu -g 4242 (debugger mode). It
-      uses gdb server semantics meaning SIGKILL to kill the debugger server
-      process.
-    </li>
-
-    <li>
-      TODO: Explain nested slices
-    </li>
-
-    <li>
-      TODO: Very inconvenient build system functionality: API to make packages
-      public and reuse them.
+    <li> Signaling: Test runner allows no signaling to <code>qemu -g
+        4242</code> (debugger mode). It uses gdb server semantics meaning
+      SIGKILL to kill the debugger server process.
     </li>
 </div>
 </html>
