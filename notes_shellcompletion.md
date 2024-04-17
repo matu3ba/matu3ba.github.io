@@ -186,7 +186,7 @@ I did not get yet into the observation that a cli completion means basically
 all possible runs over the shell validation logic.
 
 The other thing is that folks did not try to build (dynamicly linked)
-libs/executables that can handle the completion logic via LD_PRELOAD or
+libs/executables that can handle the completion logic via LD\_PRELOAD or
 letting the shell dynamically load/complete the completion program/lib.
 
 I also though of a grammar spec, but such a grammar will always be annoying

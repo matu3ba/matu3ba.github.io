@@ -25,7 +25,7 @@ Source code formatting ensures stylistic consistency to improve readability
 and eases on refactoring and writing code.
 All formatters that enable custom user data come with an escape hatch for
 visualization:
-```zig
+```
 // zig fmt: off
 const matrix = {{1, 1, 1},
                 {2, 2, 2},
@@ -33,7 +33,7 @@ const matrix = {{1, 1, 1},
 // zig fmt: on
 ```
 is more readable as matrix than
-```zig
+```
 const matrix = {{1, 1, 1}, {2, 2, 2}, {3, 3, 3}};
 ```
 
@@ -43,13 +43,13 @@ TODO: improve end of section
 
 However, the user expects an input without `zig fmt: off` and `on` lines to
 convert the input
-```zig
+```
 const matrix = {{1, 1, 1},
                 {2, 2, 2},
                 {3, 3, 3}};
 ```
 on running `zig fmt` to
-```zig
+```
 const matrix = {{1, 1, 1}, {2, 2, 2}, {3, 3, 3}};
 ```
 
@@ -63,7 +63,7 @@ In between, are either 1 newline with white spaces or only 1 white space.
 
 More complex is utilizing optional brackets, as they require a lookahead to
 count number of statements between {}-brackets.
-```zig
+```
 if (condition) runFunction();
 if (condition)
   runFunction();
@@ -78,11 +78,11 @@ TODO: improve end of section
 #### Special in Zig
 Zig specifically has one design aspect, which makes it very nice to use, but
 limits formatting performance (in theory):
-```zig
+```
 const matrix = {{1, 1, 1}, {2, 2, 2}, {3, 3, 3},};
 ```
 is formatted to
-```zig
+```
 const matrix = {{1, 1, 1},
                 {2, 2, 2},
                 {3, 3, 3},};
