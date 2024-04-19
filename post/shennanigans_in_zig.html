@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<title>Some shennanigans in Zig.</title>
+<title>Zig shennanigans.</title>
 <style>
     #contents {
       max-width: 60em;
@@ -84,133 +84,38 @@
 </style>
 <div id="contents">
 <div style="text-align:left; padding down up: 1em">
-<h2>Zig inconveniences</h2>
+<h2>Zig shennanigans.</h2>
 </div>
   As of 20240404 (zig version 0.12.0-dev.3562+96bc8f17c), Zig provides
   one of the best possible semantics to optimize memory details, while
   offering widely portable source code with reasonable safety in a
   relative concise and readable way.<p>
-  Aside of optional slices to multi-pointer and nested errors, I found
-  personally no permanent major annoying parts.<br>
+  Aside of signaling for toolings, I found personally no major annoying
+  parts.<br>
   For example, picking up nested slices and some build system parts might be
   inconvenient, but those are one time things and no footguns.<br>
   The rest of the language feels very smooth to me in contrast to the potential
   very flexible and cryptic syntax of C (see <a href="https://github.com/JadLevesque/PPMP-Iceberg">preprocessor iceberg</a>).
   <ul>
     <li>
-      Bottlenecks of array assignments not obvious via <code>@memcpy</code><br>
+      Bottlenecks of array assignments not obvious via <code>@memcpy</code>.<br>
       <figure><figcaption class="zig-cap"><cite class="file">perf_array_assignment.zig</cite></figcaption>
-      <pre><code>
-<span class="line"><span class="tok-kw">test</span> <span class="tok-str">&quot;perf array assignment&quot;</span> {</span>
+<pre><code><span class="line"><span class="tok-kw">test</span> <span class="tok-str">&quot;perf array assignment&quot;</span> {</span>
 <span class="line">    <span class="tok-kw">const</span> x: <span class="tok-kw">u8</span> = <span class=tok-number>100</span>;</span>
 <span class="line">    <span class="tok-kw">const</span> x: [<span class=tok-number>1_000_000</span>]<span class="tok-kw">u8</span> = .{x} ** <span class=tok-number>1_000_000</span>;</span>
 <span class="line">    <span class="tok-kw">var</span> b: [<span class=tok-number>1_000_000</span>]<span class="tok-kw">u8</span> = <span class="tok-kw">undefined</span>;</span>
-<span class="line"></span>
 <span class="line">    <span class="tok-comment">// pile of code</span></span>
 <span class="line"></span>
 <span class="line">    b = a; <span class="tok-comment">// spot the performance issue</span></span>
 <span class="line"></span>
 <span class="line">    <span class="tok-comment">// pile of code</span></span>
-<span class="line"></span>
-<span class="line">}</span>
-      </code></pre>
-      </figure>
-    </li>
-
-    <li> APIs with optional slices to multi-pointer are unflexible, because the
-      pointer can not be null for the field to be unset and to be set in the
-      called fn. This can introduce semantic problems and has a superfluos load
-      into register instead of on most CPU architectures register-less 0-load.
-      Example infered from Windows <code>LookupAccountSidW</code> which has parameter name
-      <code>?win.LPWSTR</code>.
-      <figure><figcaption class="zig-cap"><cite class="file">unflexible_opt_multi_ptr_api.zig</cite></figcaption>
-      <pre><code>
-<span class="line"><span class="tok-fn">fn</span> some_opt_multi_ptr_api(val: ?[*:0]<span class="tok-kw">u8</span>) <span class="tok-kw">void</span> {</span>
-<span class="line">    _ = val;
-<span class="line">}</span>
-<span class="line"><span class="tok-fn">fn</span> unflexible_opt_multi_ptr_api() <span class="tok-kw">void</span> {</span>
-<span class="line">    <span class="tok-comment">// option 1
-<span class="line">    <span class="tok-comment">// const acc_name: ?[*:0]u8 = undefined;</span></span>
-<span class="line">    <span class="tok-comment">// var raw_acc_name = @as([*:0]u8, @ptrCast(acc_name));</span></span>
-<span class="line">    <span class="tok-comment">// templates\common.zig:373:46: error: use of undefined value here causes undefined behavior</span></span>
-
-<span class="line">    <span class="tok-comment">// option 2
-<span class="line">    <span class="tok-comment">// var raw_acc_name = @as([*:0]u8, @ptrCast(acc_name));</span></span>
-<span class="line">    <span class="tok-comment">// templates\common.zig:377:46: error: null pointer casted to type '[*:0]u8'</span></span>
-
-<span class="line">    <span class="tok-comment">// option 3
-<span class="line">    <span class="tok-kw">var</span> acc_name: [*:0]<span class="tok-kw">u8</span> = <span class="tok-kw">@as</span>([*:0]<span class="tok-kw">u8</span>, <span class="tok-kw">@constCast</span>(""));
-
-<span class="line">    some_opt_multi_ptr_api(acc_name([0..]);</span>
-<span class="line">}</span>
-
-<span class="line"><span class="tok-kw">test</span> <span class="tok-str">&quot;unflexible_opt_multi_ptr_api&quot;</span> {</span>
-<span class="line">    unflexible_opt_multi_ptr_api();</span>
 <span class="line">}</span></code></pre>
       </figure>
     </li>
 
-    <li> Error origins can be very hard to decipher in catch block, for example if
-      an error union was forgotten and multiple are used.
-      <figure><figcaption class="zig-cap"><cite class="file">unflexible_opt_multi_ptr_api.zig</cite></figcaption>
-      <pre><code>
-<span class="line"><span class="tok-kw">test</span> <span class="tok-str">&quot;print optional and error union&quot;</span> {</span>
-<span class="line">    <span class="tok-kw">var</span> buf: [100]u8 = <span class="tok-kw">undefined</span>;</span>
-<span class="line">    <span class="tok-kw">const</span> opt_num: ?<span class="tok-kw">u8</span> = <span class="tok-kw">null</span>;</span>
-<span class="line">    <span class="tok-kw">const</span> err = error.Some;</span>
-<span class="line">    _ = <span class="tok-kw">try</span> std.fmt.bufPrint(&amp;buf, <span class="tok-str">&quot;opt_num: {?d}\n&quot;</span>, .{opt_num});</span>
-<span class="line">    _ = <span class="tok-kw">try</span> std.fmt.bufPrint(&amp;buf, <span class="tok-str">&quot;err: {!}\n&quot;</span>, .{err});</span>
-
-<span class="line">    <span class="tok-comment">// Example 1: Only catch inner error
-<span class="line">    <span class="tok-comment">// const stderr = std.io.getStdErr().writer();</span></span>
-<span class="line">    <span class="tok-comment">// stderr.print("{!}\n", .{err}) catch |errinner| {</span></span>
-<span class="line">    <span class="tok-comment">//     try stderr.print("{!}\n", .{errinner});</span></span>
-<span class="line">    <span class="tok-comment">//     return error.CouldNotPrint;</span></span>
-<span class="line">    <span class="tok-comment">// };</span></span>
-
-<span class="line">    <span class="tok-comment">// $ZIGLIB/zig/std/start.zig:496:45: error: root struct of file 'opt_err_union'</span></span>
-<span class="line">    <span class="tok-comment">//     has no member named 'main'</span></span>
-<span class="line">    <span class="tok-comment">//     switch (@typeInfo(@typeInfo(@TypeOf(root.main)).Fn.return_type.?)) {</span></span>
-<span class="line">    <span class="tok-comment">//                                         ~~~~^~~~~</span></span>
-<span class="line">    <span class="tok-comment">// opt_err_union.zig:1:1: note: struct declared here</span></span>
-<span class="line">    <span class="tok-comment">// test "print optional and error union" {</span></span>
-<span class="line">    <span class="tok-comment">// ^~~~</span></span>
-<span class="line">    <span class="tok-comment">// $ZIGLIB/zig/std/start.zig:469:20: note: called from here</span></span>
-<span class="line">    <span class="tok-comment">//     return callMain();</span></span>
-<span class="line">    <span class="tok-comment">//            ~~~~~~~~^~</span></span>
-<span class="line">    <span class="tok-comment">// $ZIGLIB/zig/std/start.zig:425:36: note: called from here</span></span>
-<span class="line">    <span class="tok-comment">//     std.posix.exit(callMainWithArgs(argc, argv, envp));</span></span>
-<span class="line">    <span class="tok-comment">//                    ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~</span></span>
-<span class="line">    <span class="tok-comment">// referenced by:</span></span>
-<span class="line">    <span class="tok-comment">// ..</span></span>
-
-<span class="line">    <span class="tok-comment">// Example 2: Catch printing error
-<span class="line">    <span class="tok-comment">// const err_printed = std.fmt.bufPrint(&amp;buf, "err: {!}\n", .{err}) catch |errinner| {</span></span>
-<span class="line">    <span class="tok-comment">//     try stderr.print("{!}\n", .{errinner});</span></span>
-<span class="line">    <span class="tok-comment">//     return error.CouldNotPrint;</span></span>
-<span class="line">    <span class="tok-comment">// };</span></span>
-<span class="line">    <span class="tok-comment">// std.debug.print("err_printed: {s}\n", .{err_printed});</span></span>
-
-<span class="line">    <span class="tok-comment">// $ZIGLIB/zig/std/start.zig:496:45: error: root struct of file 'opt_err_union' has no</span></span>
-<span class="line">    <span class="tok-comment">//  member named 'main'</span></span>
-<span class="line">    <span class="tok-comment">//     switch (@typeInfo(@typeInfo(@TypeOf(root.main)).Fn.return_type.?)) {</span></span>
-<span class="line">    <span class="tok-comment">//                                         ~~~~^~~~~</span></span>
-<span class="line">    <span class="tok-comment">// opt_err_union.zig:1:1: note: struct declared here</span></span>
-<span class="line">    <span class="tok-comment">// test "print optional and error union" {</span></span>
-<span class="line">    <span class="tok-comment">// ^~~~</span></span>
-<span class="line">    <span class="tok-comment">// $ZIGLIB/zig/std/start.zig:469:20: note: called from here</span></span>
-<span class="line">    <span class="tok-comment">//     return callMain();</span></span>
-<span class="line">    <span class="tok-comment">//            ~~~~~~~~^~</span></span>
-<span class="line">    <span class="tok-comment">// $ZIGLIB/zig/std/start.zig:425:36: note: called from here</span></span>
-<span class="line">    <span class="tok-comment">//     std.posix.exit(callMainWithArgs(argc, argv, envp));</span></span>
-<span class="line">    <span class="tok-comment">//                    ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~</span></span>
-<span class="line">    <span class="tok-comment">// referenced by:</span></span>
-<span class="line">    <span class="tok-comment">// ..</span></span>
-<span class="line">}</span></code></pre></figure></li>
-
     <li> Signaling: Test runner allows no signaling to <code>qemu -g
-        4242</code> (debugger mode). It uses gdb server semantics meaning
-      SIGKILL to kill the debugger server process.
+        4242</code> (debugger mode). Qemu uses gdb server signaling, which means
+      sending SIGKILL is necessary to kill the debugging server process.
     </li>
 </div>
 </html>

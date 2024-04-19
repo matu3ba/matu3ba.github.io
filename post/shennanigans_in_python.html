@@ -117,10 +117,9 @@
      newlines into a list.
   </li>
 
-  <li> Checking subdictionary is unreadable and there are multiple ways of doing the same.
+  <li> Dictionary is missing this common method, because the implementation is unreadable.
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"><span class="tok-fn">def</span> is_subdict(small: dict, big: dict) -&gt; bool:</span>
+<pre><code><span class="line"><span class="tok-fn">def</span> is_subdict(small: <span class="tok-type">dict</span>, big: <span class="tok-type">dict</span>) -&gt; <span class="tok-type">bool</span>:</span>
 <span class="line">    <span class="tok-str">&quot;&quot;&quot;</span></span>
 <span class="line">    <span class="tok-str">Test, if 'small' is subdict of 'big'</span></span>
 <span class="line">    <span class="tok-str">Example: big = {'pl' : 'key1': {'key2': 'value2'}}</span></span>
@@ -132,15 +131,14 @@
 <span class="line">    <span class="tok-comment"># return big | small == big</span></span>
 <span class="line">    <span class="tok-comment"># also:</span></span>
 <span class="line">    <span class="tok-comment"># return {**big, **small} == big</span></span>
-<span class="line">    <span class="tok-kw">return</span> dict(big, **small) == big</span></span>
+<span class="line">    <span class="tok-kw">return</span> <span class="tok-type">dict</span>(big, **small) == big</span></span>
 </code></pre>
       </figure>
   </li>
 
-  <li> Dictionary is missing this common method
+  <li> Dictionary is missing this common method.
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"><span class="tok-fn">def</span> has_fieldsvals(small: dict, big: dict) -&gt; bool:</span>
+<pre><code><span class="line"><span class="tok-fn">def</span> has_fieldsvals(small: <span class="tok-type">dict</span>, big: <span class="tok-type">dict</span>) -&gt; <span class="tok-type">bool</span>:</span>
 <span class="line">  <span class="tok-str">"""</span></span>
 <span class="line">  <span class="tok-str">Test, if 'small' has all values of of 'big'</span></span>
 <span class="line">  <span class="tok-str">Example: big = {'pl' : 'key1': {'key2': 'value2'}}</span></span>
@@ -150,45 +148,44 @@
 <span class="line">  <span class="tok-str">"""</span></span>
 <span class="line">  <span class="tok-kw">for</span> key, value <span class="tok-kw">in</span> small.items():</span>
 <span class="line">    <span class="tok-kw">if</span> key <span class="tok-kw">in</span> big:</span>
-<span class="line">      <span class="tok-kw">if</span> <span class="tok-kw">isinstance</span>(small[key], dict):</span>
+<span class="line">      <span class="tok-kw">if</span> isinstance(small[key], <span class="tok-type">dict</span>):</span>
 <span class="line">        <span class="tok-kw">if</span> <span class="tok-kw">not</span> has_fieldsvals(small[key], big[key]):</span>
-<span class="line">          <span class="tok-kw">return</span> False</span>
+<span class="line">          <span class="tok-kw">return</span> <span class="tok-kw">False</span></span>
 <span class="line">        <span class="tok-kw">else</span>:</span>
-<span class="line">          <span class="tok-kw">return</span> True</span>
+<span class="line">          <span class="tok-kw">return</span> <span class="tok-kw">True</span></span>
 <span class="line">      <span class="tok-kw">elif</span> value != big[key]:</span>
-<span class="line">        <span class="tok-kw">return</span> False</span>
+<span class="line">        <span class="tok-kw">return</span> <span class="tok-kw">False</span></span>
 <span class="line">      <span class="tok-kw">else</span>:</span>
-<span class="line">        <span class="tok-kw">return</span> True</span>
+<span class="line">        <span class="tok-kw">return</span> <span class="tok-kw">True</span></span>
 <span class="line">    <span class="tok-kw">else</span>:</span>
-<span class="line">      <span class="tok-kw">return</span> False</span>
-<span class="line">  <span class="tok-kw">return</span> True</span>
+<span class="line">      <span class="tok-kw">return</span> <span class="tok-kw">False</span></span>
+<span class="line">  <span class="tok-kw">return</span> <span class="tok-kw">True</span></span>
 </code></pre>
       </figure>
   </li>
 
-  <li> Dictionary is missing this common method
+  <li> Dictionary is missing this common method.
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"><span class="tok-fn">def</span> merge_dicts(alpha: dict = {}, beta: dict = {}) -&gt; dict:</span>
+<pre><code><span class="line"><span class="tok-fn">def</span> merge_dicts(alpha: <span class="tok-type">dict</span> = {}, beta: <span class="tok-type">dict</span> = {}) -&gt; <span class="tok-type">dict</span>:</span>
 <span class="line">  <span class="tok-str">"""</span></span>
 <span class="line">  <span class="tok-str">Recursive merge dicts. Not multi-threading safe.</span></span>
 <span class="line">  <span class="tok-str">"""</span></span>
 <span class="line">  <span class="tok-kw">return</span> _merge_dicts_aux(alpha, beta, copy.copy(alpha))</span>
-<span class="line"><span class="tok-fn">def</span> _merge_dicts_aux(alpha: dict = {}, beta: dict = {}, result: dict = {}, path: Optional[List[str]] = None) -&gt; dict:</span>
-<span class="line">  <span class="tok-kw">if</span> path <span class="tok-kw">is</span> None:</span>
+<span class="line"><span class="tok-fn">def</span> _merge_dicts_aux(alpha: <span class="tok-type">dict</span> = {}, beta: <span class="tok-type">dict</span> = {}, result: <span class="tok-type">dict</span> = {}, path: Optional[List[str]] = <span class="tok-type">None</span>) -&gt; <span class="tok-type">dict</span>:</span>
+<span class="line">  <span class="tok-kw">if</span> path <span class="tok-kw">is</span> <span class="tok-type">None</span>:</span>
 <span class="line">    path = []</span>
 <span class="line">  <span class="tok-kw">for</span> key <span class="tok-kw">in</span> beta:</span>
 <span class="line">    <span class="tok-kw">if</span> key <span class="tok-kw">not</span> <span class="tok-kw">in</span> alpha:</span>
 <span class="line">      result[key] = beta[key]</span>
 <span class="line">    else:</span>
-<span class="line">      <span class="tok-kw">if</span> <span class="tok-kw">isinstance</span>(alpha[key], dict) <span class="tok-kw">and</span> isinstance(beta[key], dict):</span>
-<span class="line">        # key value is dict in A and B => merge the dicts</span>
+<span class="line">      <span class="tok-kw">if</span> isinstance(alpha[key], <span class="tok-type">dict</span>) <span class="tok-kw">and</span> isinstance(beta[key], <span class="tok-type">dict</span>):</span>
+<span class="line">        # key value is dict in A and B =&gt; merge the dicts</span>
 <span class="line">        _merge_dicts_aux(alpha[key], beta[key], result[key], path + [str(key)])</span>
 <span class="line">      <span class="tok-kw">elif</span> alpha[key] == beta[key]:</span>
-<span class="line">        # key value is same in A and B => ignore</span>
+<span class="line">        # key value is same in A and B =&gt; ignore</span>
 <span class="line">        <span class="tok-kw">pass</span></span>
 <span class="line">      <span class="tok-kw">else</span>:</span>
-<span class="line">        # key value differs in A and B => raise error</span>
+<span class="line">        # key value differs in A and B =&gt; raise error</span>
 <span class="line">        err: str = f"Conflict at {'.'.join(path + [str(key)])}"</span>
 <span class="line">        raise <span class="tok-kw">Exception</span>(err)</span>
 <span class="line">  <span class="tok-kw">return</span> result</span>
@@ -198,8 +195,7 @@
 
   <li> Tuples and dicts are annoying to differentiate
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"># dictionary</span>
+<pre><code><span class="line"># dictionary</span>
 <span class="line">dict1 = {</span>
 <span class="line">  "m1": "cp",</span>
 <span class="line">  "m2": "cp"</span>
@@ -211,7 +207,7 @@
 <span class="line">},</span>
 <span class="line"></span>
 <span class="line"># at least getting the intention correct, but python is still unhelpful with error message</span>
-<span class="line">dict2 = dict({</span>
+<span class="line">dict2 = <span class="tok-type">dict</span>({</span>
 <span class="line">  "m1": "cp",</span>
 <span class="line">  "m2": "cp"</span>
 <span class="line">})</span>
@@ -228,17 +224,17 @@
   Stack trace formatting is inefficient and one can not use <code>gf</code> or <code>gF</code> vim shortcuts to jump to location
   function to write status + trace to variable.
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"><span class="tok-fn">def</span> getStackTrace() -&gt; str:</span>
+<pre><code><span class="line"><span class="tok-fn">def</span> getStackTrace() -&gt; str:</span>
 <span class="line">  <span class="tok-kw">return</span> repr(traceback.format_stack())</span>
+</code></pre>
+      </figure>
   </li>
 
-  <li> Mixed " and ' strings are invalid json
+  <li> Mixed <code>"</code> and <code>'</code> strings are invalid json
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"># Dict -&gt; str is inconsistent to json -&gt; str, so workaround with</span>
+<pre><code><span class="line"># Dict -&gt; str is inconsistent to json -&gt; str, so workaround with</span>
 <span class="line"># dict_asjson_lower = str(dict1).replace("'", '"')</span>
-<span class="line"><span class="tok-fn">def</span> combineDictsFromStr() -&gt; None:</span>
+<span class="line"><span class="tok-fn">def</span> combineDictsFromStr() -&gt; <span class="tok-type">None</span>:</span>
 <span class="line">  dict1 = {"t1":"val1","t2arr":[{"t2_int":0,"t2_str":"12.0"}],"t3int":30}</span>
 <span class="line">  dict1_str_raw = str(dict1)</span>
 <span class="line">  dict1_str = dict1_str_raw.replace("'", '"')</span>
@@ -255,8 +251,7 @@
 by deamonized threads. Must store pids of child processes and clean them explicitly or
 signal main thread via
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"><span class="tok-fn">def</span> signalMainThread(self) -&gt; None:</span>
+<pre><code><span class="line"><span class="tok-fn">def</span> signalMainThread(self) -&gt; <span class="tok-type">None</span>:</span>
 <span class="line">    <span class="tok-kw">pass</span></span>
 <span class="line">    # before Python 3.10: _thread.interrupt_main()</span>
 <span class="line">    # since Python 3.10: _thread.interrupt_main(signum=signal.SIGKILL)</span>
@@ -265,10 +260,10 @@ signal main thread via
   </li>
 
   <li>
-<code>readline()</code> with timeout io file api might drop data on timeout, see https://github.com/python/cpython/issues/51571
+    <a href="https://github.com/python/cpython/issues/51571">Socket timeout can cause file-like readline() method to lose data</a>.
 <ol>
   <li>Read from Kernel structure and append chunk-wise to buffer from socket until stop event (via select).</li>
-  <li>After each read, <code>try line = readline()</code> from the buffer and remove the line on success (being utf-8 etc).</li>
+  <li>After each read, try to line a line from the buffer and remove the line on success (being utf-8 etc).</li>
   <li>On failure of reading line, continue with 1.</li>
   <li>Teardown should read socket until being empty, if a stop was obtained.</li>
 </ol>
@@ -278,8 +273,7 @@ signal main thread via
 Generic module annotation is not allowed and mypy has no explicit docs for this.
 The following does not work and 'module: object' is the closest we can get as simple annotation.
       <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
-<pre><code>
-<span class="line"><span class="tok-fn">def</span> check_fn(module: ModuleType) -&gt; int:</span>
+<pre><code><span class="line"><span class="tok-fn">def</span> check_fn(module: ModuleType) -&gt; <span class="tok-type">int</span>:</span>
 <span class="line">    <span class="tok-kw">if</span> str(type(module)) != "<class 'module'>": <span class="tok-kw">return</span> 1</span>
 <span class="line">    <span class="tok-kw">return</span> 0</span>
 </code></pre>
@@ -295,7 +289,7 @@ The following does not work and 'module: object' is the closest we can get as si
   </li>
 
   <li>
-    Trailing comma in dictionary or json.dumps generated string has silent failures,
+    Trailing comma in dictionary or <code>json.dumps</code> generated string has silent failures,
     for example on parsing the output as json via php.
   </li>
 </ul>

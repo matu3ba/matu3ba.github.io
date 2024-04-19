@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<title>C shennanigans I wish would not exist.</title>
+<title>C shennanigans.</title>
 <style>
     #contents {
       max-width: 60em;
@@ -80,16 +80,20 @@
 </style>
 <div id="contents">
 <div style="text-align:left; padding up down: 1em">
-<h2>C shennanigans I wish would not exist.</h2>
+<h2>C shennanigans.</h2>
 </div>
-  Pointer usage has significant potential footguns in C standard unless mitigated by
-  compiler flags or implementations not using optimizations based on certain
-  types of Undefined Behavior.<br>
-  Other easy to make problems are sequence points and nested bit fields,
-  which can also be worked around via compiler flags or compiler
-  implementations not relying on such undefined behavior.<br>
-  Thus, when using any C code, one should always at least review used C
-  compilers with flags used including tests with platforms and used compilers.
+  This text focuses on some of the non-obvious and easy to make mistakes
+  non-experienced C programmers are likely to make and are/can not completely
+  be covered by tooling without going into edge cases relevant to performance:
+  <ol>
+    <li>Pointer semantics</li>
+    <li>Sequence points</li>
+    <li>Nested bit fields</li>
+  </ol>
+  Compiler flags or implementation may provide workarounds to these problems
+  to prevent optimizations based on introduced Unedefined Behavior (UB).
+  Review used C compilers with flags used including tests and and platforms before
+  reusing of any code.
 <ul>
   <li>Pointers semantics in C.
     <ul>
@@ -114,11 +118,11 @@
                 What this means in practice:<br>
                 Each pointer has an associated "provenance" it is allowed to point to.
                 This mean that a pointer <code>ptr</code> must uphold
-                <code>(&amp;array[0] <= ptr && ptr &lt; &amp;array[len+1]) || ptr != 0)</code>.
+                <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt; &amp;array[len+1]) || ptr != 0)</code>.
                 for access with array being the "memory origin range" on stack or heap.<br>
                 Function arguments of identical pointer types are allowed to have
                 overlapping provenance regions, unless annotated with <code>__restrict__</code>,
-                but pointers of different types are not to have those regions.
+                but pointers of different types are not allowed to have those regions.
               </li>
             </ul>
           </li>
@@ -166,17 +170,6 @@
       </li>
     </ul>
 
-    <!-- TODO quote standard to show that its UB to let pointer point into undefined -->
-    <!-- provenance regions (ptr < &array[0], ptr > &array[len+1], ptr != 0). -->
-    <!---->
-    <!-- Typical usage: -->
-    <!-- - reinterpret pointer to memory (reinterpret_cast) -->
-    <!-- // SHENNANIGAN reinterpret_cast does not exist making different pointer type access UB -->
-    <!-- // > Dereferencing a pointer that aliases an object that is not of a -->
-    <!-- // > compatible type or one of the other types allowed by -->
-    <!-- // > C 2011 6.5 paragraph 71 is undefined behavior. -->
-    <!-- // => The proper fix for access a pointer with increased alignment is to use a -->
-    <!-- // temporary with memcopy -->
     <!-- int no_reinterpret_cast() { -->
     <!--   //impl_reinterpret_cast_usage -->
     <!--   // clang-format: off -->
