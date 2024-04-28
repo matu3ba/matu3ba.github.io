@@ -88,12 +88,16 @@
   <ol>
     <li>Pointer semantics</li>
     <li>Sequence points</li>
-    <li>Nested bit fields</li>
+    <li>Bit-fields</li>
   </ol>
   Compiler flags or implementation may provide workarounds to these problems
   to prevent optimizations based on introduced Unedefined Behavior (UB).
   Review used C compilers with flags used including tests and and platforms before
-  reusing of any code.
+  reusing of any code. The
+  <a href="https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152200">SEI wiki covers these cases</a>
+  without covering compiler workarounds leading to footguns, if code is used by
+  other compiler implementations or with different compiler flags and is more verbose
+  on rules how pointers are allowed to be used.
 <ul>
   <li>Pointers semantics in C.
     <ul>
@@ -119,10 +123,14 @@
                 Each pointer has an associated "provenance" it is allowed to point to.
                 This mean that a pointer <code>ptr</code> must uphold
                 <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt; &amp;array[len+1]) || ptr != 0)</code>.
-                for access with array being the "memory origin range" on stack or heap.<br>
+                for access with array being the "memory origin range" on stack or heap.
+                Pointers must point ot the same array, when being used for arithmetic.<br>
                 Function arguments of identical pointer types are allowed to have
                 overlapping provenance regions, unless annotated with <code>__restrict__</code>,
                 but pointers of different types are not allowed to have those regions.
+                Pointer comparison must be done via identical alignments, for
+                example to compare a pointer against pointer to 0 (usually
+                abbreviated via maro <code>NULL</code>).<br>
               </li>
             </ul>
           </li>
@@ -130,72 +138,157 @@
       </li>
       <li> Pointer access in practice.
         <ul>
-          <li><span>Provenance as regions pointer is allowed to point to.</span>
-            TODO
+          <!-- <span class="tok-kw"></span> -->
+          <li><span>Provenance as regions pointer is allowed to point to for access.</span>
+      <figure><figcaption class="c-cap"><cite class="file">provenance.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">void</span> use_ptr(<span class="tok-kw">int</span> * ptr) {</span>
+<span class="line">  <span class="tok-kw">printf</span>("0: %d, 9: %d\n", arr[0], arr[9]);</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-type">void</span> main() {</span>
+<span class="line">  <span class="tok-type">int</span> arr1[10]</span>
+<span class="line">  use_ptr(arr1);</span>
+<span class="line">  <span class="tok-type">int</span> * arr2 = <span class="tok-kw">malloc</span>(<span class="tok-kw">sizeof</span>(int));</span>
+<span class="line">  use_ptr(arr2);</span>
+<span class="line">  <span class="tok-kw">free</span>(arr2);</span>
+<span class="line">}</span>
+</code></pre></figure>
           </li>
-          <li><span>Copy around some bytes.</span>
-            TODO
+          <li><span>Copy around some bytes from not overlapping regions (otherwise use memmove).</span>
+      <figure><figcaption class="c-cap"><cite class="file">copy_bytes.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">void</span> use_bytes(uint8_t * bytes, int32_t len_bytes, uint32_t * output, int32_t len_output) {</span>
+<span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i*4&lt;len_bytes &amp;&amp; i&lt;len_output; i+=4) {</span>
+<span class="line">    <span class="tok-kw">memcpy</span>(&amp;output[i], &amp;bytes[4*i], <span class="tok-kw">sizeof</span>(len_output));
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></figure>
           </li>
-          <li><span>Get underaligned pointer to subset of bytes.</span>
-            TODO
+          <li><span>Correct alignment of pointers with temporary, when necessary.</span>
+      <figure><figcaption class="c-cap"><cite class="file">correct_alignment.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">int</span> ptr_no_reinterpret_cast() {</span>
+<span class="line">  <span class="tok-type">uint8_t</span> arr[4] = {0,0,0,1};</span>
+<span class="line">  <span class="tok-comment">// unnecessary variable hopefully elided</span></span>
+<span class="line">  <span class="tok-type">uint32_t</span> u32_arr = 0;</span>
+<span class="line">  <span class="tok-kw">memcpy</span>(&amp;u32_arr, &amp;arr[0], 4);</span>
+<span class="line">  <span class="tok-type">uint32_t</span> * u32_arr_ptr = &amp;u32_arr;</span>
+<span class="line">  <span class="tok-comment">// &lt;use u32_arr_ptr here&gt;</span></span>
+<span class="line">  <span class="tok-comment">// Footgun: Dont return stack local variables</span></span>
+<span class="line">  <span class="tok-kw">return</span> 0;
+<span class="line">}
+</code></pre></figure>
           </li>
-          <li><span>Get overaligned pointer to supset of bytes.</span>
-            TODO
-          </li>
-          <li><span>Insufficient storage for pointer.</span>
-            TODO
-          </li>
-          <li><span>Insufficient padding storage for pointer.</span>
-            TODO
+          <li><span>Ensure correct storage and padding size for pointers via sizeof.</span>
+      <figure><figcaption class="c-cap"><cite class="file">storage_padding.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">struct</span> sStruct1 {</span>
+<span class="line">  uint8_t a1;</span>
+<span class="line">  uint8_t a2;</span>
+<span class="line">  uint32 b1;</span>
+<span class="line">  uint32 b2;</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-type">void</span> padding() {</span>
+<span class="line">  <span class="tok-kw">struct</span> sStruct1 * str1 = <span class="tok-kw">malloc</span>(<span class="tok-kw">sizeof</span>(sStruct1)); </span>
+<span class="line">  str1.a1 = 5;</span>
+<span class="line">  <span class="tok-kw">free</span>(str1);</span>
+<span class="line">}</span>
+</code></pre></figure>
           </li>
           <li><span>Allowed aliasing of pointers</span>
-            TODO
+      <figure><figcaption class="c-cap"><cite class="file">allowed_aliasing.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">void</span> allowed_aliasing(uint16_t * bytes, int32_t len_bytes, uint16_t * lim) {</span>
+<span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
+<span class="line">    <span class="tok-kw">if</span> (bytes == lim) break</span>;
+<span class="line">    bytes[i] = 42;</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></figure>
           </li>
-          <li><span>Non-Allowed aliasing of pointers</span>
-            TODO
-          </li>
+          <li><span>Non-Allowed aliasing of pointers: See example correct_alignment.c</span></li>
         </ul>
       </li>
       <li> The Exceptions.
         <ul>
-          <li><span>Controlling the build system + compiler invocation to opt-out.</span>
+          <li>
+            <span>Controlling the build system + compiler invocation to opt-out.</span><br>
+            <ol>
+              <li><span>Clang and gcc have <code>-fno-strict-aliasing</code>, msvc and tcc do not implement strict aliasing based optimizations.</span></li>
+              <li><span>Usage of <code>restrict</code> can be en/disabled in all compilers via <code>#pragma optimize("", on/off)</code>.</span></li>
+              It can also be disabled in all compilers via <code>#define restrict</code>, using an according optimization level
+                (typical -O1) or via separating header and implementation and disabling link time optimziations.</span></li>
+            </ol>
           </li>
-          <li><span>Posix extension to enable dynamic linking via casting pointers to functions and back.</span>
+          <li><span>Posix extension and Windows in practice enable dynamic linking via casting pointers <code>void *</code>to function pointers and back.
+              This also means that <code>sizeof (function pointer) == sizeof (void *)</code> must be uphold, which is not true for microcontrollers
+              with separate address space for code and data or
+              <a href="https://cnlelema.github.io/memo/en/cheri/cheri-c-model/">CHERI in mixed capability mode/hybrid compilation mode</a>.
+              Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 20240428.
+            </span>
+      <figure><figcaption class="c-cap"><cite class="file">aliasing_exceptions_uniform_address_space.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">void</span> aliasing_exceptions_uniform_address_space() {</span>
+<span class="line">  <span class="tok-kw">typedef</span> <span class="tok-type">int</span>(*pfn_add_one)(<span class="tok-type">int</span>);</span>
+<span class="line">  <span class="tok-type">int</span> add_one(<span class="tok-type">int</span> x) = { return x+1; } </span>
+<span class="line">  <span class="tok-type">void</span> usage(<span class="tok-type">int</span> x) {</span>
+<span class="line">    // read fn ptr from external code
+<span class="line">    <span class="tok-type">void</span> * pv_add_one = (void*)external_memory;</span>
+<span class="line">    <span class="tok-kw">pfn_add_one</span> pfn_add_one_casted = (pfn_add_one)pv_add_one;</span>
+<span class="line">    <span class="tok-kw">int</span> res = pfn_add_one_casted(1);</span>
+<span class="line">    assert(res == 1);</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></figure>
           </li>
         </ul>
       </li>
-      <li> Sequence Points.
-      </li>
-      <li> Nested bit fields differ semantically per compiler.
-      </li>
     </ul>
-
-    <!-- int no_reinterpret_cast() { -->
-    <!--   //impl_reinterpret_cast_usage -->
-    <!--   // clang-format: off -->
-    <!--   const char some_vals[9] = { 0 -->
-    <!--                             , 1, 0, 0, 0 -->
-    <!--                             , 0, 0, 0 ,0 }; -->
-    <!--   // clang-format: on -->
-    <!--   // WRONG: int64_t val = *((uint64_t*)&some_vals[1]); -->
-    <!-- 	int64_t val; -->
-    <!--   // more type safe than reinterpret_cast, because some_vals[1] is a type error -->
-    <!--   memcpy(&val, &some_vals[1], 8); -->
-    <!--   if (val != INT64_MIN) return 1; -->
-    <!--   return 0; -->
-    <!-- } -->
-    <!-- - copy memory (memcpy) -->
-    <!-- int ptr_no_reinterpret_cast() { -->
-    <!--   char arr[4] = {0,0,0,1}; -->
-    <!--   int32_t i32_arr = 0;            // unnecessary variable hopefully elided -->
-    <!--   memcpy(&i32_arr, &arr[0], 4); -->
-    <!--   int32_t * i32_arr_ptr = &i32_arr; -->
-    <!--   // SHENNANIGAN dont return stack local variable here! -->
-    <!--   return 0; -->
-    <!-- } -->
-    <!-- - aliasing protection based on fn argument type equivalence -->
-    <!-- - however, by posix extension casting to void* pointer to fn is fine -->
-    <!--   to make dynamic linking work -->
+  </li>
+  <li> Sequence Points in simple case and with storage lifetime extension.
+  <figure><figcaption class="c-cap"><cite class="file">sequence_points.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">int</span> f(<span class="tok-type">int</span>* a) {</span>
+<span class="line">  *a=*a+1;</span>
+<span class="line">  return *a;</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-type">void</span> simple_sequence_points() {</span>
+<span class="line">  <span class="tok-type">int</span> a = 0;</span>
+<span class="line">  <span class="tok-comment">// warning: Multiple unsequenced modifications to a</span></span>
+<span class="line">  <span class="tok-comment">// a = a++ + a++;</span></span>
+<span class="line">  <span class="tok-comment">// Problem without warnings</span></span>
+<span class="line">  <span class="tok-comment">a = f(&amp;a) + f(&amp;a);</span></span>
+<span class="line">  a = f(&amp;a);</span>
+<span class="line">  a += f(&amp;a);</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-type">struct</span> sExample { <span class="tok-type">int32_t</span> a[1]; };</span>
+<span class="line"><span class="tok-type">struct</span> sExample create_sExample(void) {</span>
+<span class="line">  <span class="tok-type">struct</span>t X res = { { 1 } };</span>
+<span class="line">  <span class="tok-kw">return</span> res;</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-type">int</span> storage_lifetime_footgun(void) {</span>
+<span class="line">  <span class="tok-comment">// undefined behavior introduced if temporary is missing</span>
+<span class="line">  <span class="tok-comment">// printf("%x", ++(create_fail().a[0]));</span></span>
+<span class="line">  <span class="tok-type">struct</span> sExample res = create_sExample();</span>
+<span class="line">  <span class="tok-kw">printf</span>("%x", ++(res.a[0]));</span>
+<span class="line">  return 0;</span>
+<span class="line">}</span>
+</code></pre></figure>
+  </li>
+  <li> Do not use bit-fields unless for non-portable code regarding compilers
+    and CPUs and do not make assumptions regarding the layout of structures
+    with bit-fields and use <code>static_assert/_Static_assert</code> on every struct.
+    Keep bit-fields as simple as possible, meaning prefer not to nest them or also
+    <code>static_assert</code> the layout.<br>
+    <a href="https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf">Reasons from ISO/IEC 9899:TC3</a><br>
+    &gt;  An implementation may allocate any addressable storage unit large enough to hold a bit<br>
+    &gt;  field. If enough space remains, a bit-field that immediately follows another bit-field in a<br>
+    &gt;  structure shall be packed into adjacent bits of the same unit. If insufficient space remains,<br>
+    &gt;  whether a bit-field that does not fit is put into the next unit or overlaps adjacent units is<br>
+    &gt;  implementation-defined. The order of allocation of bit-fields within a unit (high-order to<br>
+    &gt;  low-order or low-order to high-order) is implementation-defined. The alignment of the<br>
+    &gt;  addressable storage unit is unspecified.<br>
+    or in other words:
+    <ol>
+      <li>Order of allocation not specified.</li>
+      <li>Most significant bit not specified.</li>
+      <li>Alignment is not specified.</li>
+      <li>Implementations can determine, whether bit-fields cross a storage unit boundary.</li>
+      <li>Structs may contain padding bytes anywhere.</li>
+    </ol>
   </li>
 </ul>
 </div>
