@@ -86,22 +86,33 @@
   non-experienced C programmers are likely to make and are/can not completely
   be covered by tooling without going into edge cases relevant to performance:
   <ol>
-    <li>Pointer semantics</li>
-    <li>Sequence points</li>
-    <li>Bit-fields</li>
+    <li><a href="#pointer_semantics">Pointer semantics</a></li>
+    <li><a href="#seq_pts">Sequence points</a></li>
+    <li><a href="#bitfields">Bit-fields</a></li>
   </ol>
   Compiler flags or implementation may provide workarounds to these problems
   to prevent optimizations based on introduced Unedefined Behavior (UB).
   Review used C compilers with flags used including tests and and platforms before
   reusing of any code. The
-  <a href="https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152200">SEI wiki covers these cases</a>
-  without covering compiler workarounds leading to footguns, if code is used by
-  other compiler implementations or with different compiler flags and is more verbose
-  on rules how pointers are allowed to be used.
-<ul>
-  <li>Pointers semantics in C.
-    <ul>
-      <li> Pointer access requirements.
+  <a href="https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152200">SEI wiki covers some basic cases</a>
+  without covering compiler workarounds.
+  Pointer construction is widely unspecified in earlier C standards before
+  C11 and up to this day with C23 pointer semantics have no formal model, see also
+  item <a href="#pointer_construction">pointer construction</a>.
+<ol>
+  <li><a id ="pointer_semantics"><b>Pointer semantics</b> in C</a>.
+    <ol>
+      <li><a href="#pointer_access_requirements">Pointer access requirements</a></li>
+      <li><a href="#pointer_access_practice">Pointer access in practice</a></li>
+      <li><a href="#pointer_exceptions">The Exceptions</a></li>
+      <li><a href="#pointer_construction_reqirements">Pointer construction requirements</a></li>
+      <li><a href="#pointer_construction_practice">Pointer construction in practice</a></li>
+    </ol>
+    <br>
+    <ol>
+      <li> <a id="pointer_access_requirements"><b>Pointer access requirements</b></a> are fairly well specified from C89 on in
+        strong contrast to pointer construction and programmers with knowledge
+        of how processing hardware works can derive below information.
         <ol>
           <li><span>Proper alignment</span></li>
             <ul>
@@ -134,9 +145,10 @@
               </li>
             </ul>
           </li>
+          <li>TODO double check if this is sufficient.</li>
         </ol>
       </li>
-      <li> Pointer access in practice.
+      <li> <a id="pointer_access_practice"><b>Pointer access</b> in <b>practice</b></a>.
         <ul>
           <!-- <span class="tok-kw"></span> -->
           <li><span>Provenance as regions pointer is allowed to point to for access.</span>
@@ -204,7 +216,7 @@
           <li><span>Non-Allowed aliasing of pointers: See example correct_alignment.c</span></li>
         </ul>
       </li>
-      <li> The Exceptions.
+      <li> <a id="pointer_exceptions"><b>The Exceptions</b></a>.
         <ul>
           <li>
             <span>Controlling the build system + compiler invocation to opt-out.</span><br>
@@ -237,9 +249,56 @@
           </li>
         </ul>
       </li>
-    </ul>
-  </li>
-  <li> Sequence Points in simple case and with storage lifetime extension.
+      <li> <a id="pointer_construction_reqirements"><b>Pointer construction requirements</b></a>
+        are widely unspecified in earlier C standards before
+        C11 and up to this day with C23 pointer semantics have no formal model,
+        but at least a few possible formal models exist
+        (paper VIP: Verifying Real-World C Idioms with Integer-Pointer Casts,
+        N2676, P2318R1: A Provenance-aware Memory Object Model for C) so far without
+        taking into account CHERI in mixed capability mode/hybrid compilation mode
+        and from what I understand without taking all equivalence classes of
+        pointer operations into account.<br>
+        Therefore it is best to use the most conservative approach xor to provide
+        the set of chosen (non-portable) compiler semantics in the build system
+        next to the code to remove room for ambiguity.<br>
+        For further information about this, take a look into paper "Subtleties of
+        the ANSI/ISO C standard" and "n2263: Clarifying Pointer Provenance v4".<br>
+        Generally, the following cases of pointer creation disable pointer based optimizations
+        unless the optimizer can prove sufficient properties are uphold for the special cases:
+        <ol>
+          <li><a href="#ptrintconv">Pointer to integer and integer to pointer conversion</a>.</li>
+          <li><a href="#opaque">Opaque type and pointer conversion with usage</a>.</li>
+          <li><a href="#headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a>.</li>
+          <li><a href="#intrinsics">Compiler intrinsics for IO: memcpy, memset, memmove, [m,c]alloc</a>.</li>
+          <li>TODO double check if this is sufficient.</li>
+        </ol>
+        Besides that, LTO and more aggressive optimizations without overhead of
+        pointer escape analysis mandate that each created pointer must remain
+        within the provenance region sketched in LINK.
+
+      <li> <a id="pointer_construction_practice"><b>Pointer construction</b> in <b>practice</b></a>.
+        <ol>
+          <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
+                TODO
+          </li>
+          <li><span><a id="opaque">Opaque type and pointer conversion with usage.<span>
+                TODO
+          </li>
+          <li><span><a id="headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a><span>
+                TODO
+          </li>
+          <li><span><a id="intrinsics">Compiler intrinsics for IO: memcpy, memset, memmove, [m,c]alloc</a>.<span>
+                TODO
+          </li>
+          <!-- I'd be very curious about weird embedded compiler semantics in C89 and C99 due -->
+          <!-- to reading paper "Subtleties of the ANSI/ISO C standard". -->
+          <!-- https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1637.pdf and how much stuff -->
+          <!-- https://www.cl.cam.ac.uk/~pes20/cerberus/clarifying-provenance-v4.html#q3.-can-one-make-a-usable-pointer-via-casts-to-intptr_t-and-back -->
+          <!-- https://cs61.seas.harvard.edu/site/2018/Datarep4/ -->
+        </ol>
+      </li>
+    </ol>
+  <li> <a id="seq_pts"><b>Sequence Points</b></a> in simple case and with storage lifetime extension.
   <figure><figcaption class="c-cap"><cite class="file">sequence_points.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">int</span> f(<span class="tok-type">int</span>* a) {</span>
 <span class="line">  *a=*a+1;</span>
@@ -268,7 +327,7 @@
 <span class="line">}</span>
 </code></pre></figure>
   </li>
-  <li> Do not use bit-fields unless for non-portable code regarding compilers
+  <li> <a id="bitfields"><b>Bit-fields</b></a> should not be used unless for non-portable code regarding compilers
     and CPUs and do not make assumptions regarding the layout of structures
     with bit-fields and use <code>static_assert/_Static_assert</code> on every struct.
     Keep bit-fields as simple as possible, meaning prefer not to nest them or also
@@ -290,6 +349,6 @@
       <li>Structs may contain padding bytes anywhere.</li>
     </ol>
   </li>
-</ul>
+</ol>
 </div>
 </html>
