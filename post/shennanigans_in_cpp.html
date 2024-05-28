@@ -212,7 +212,7 @@
     </li>
 
     <li>
-      <code>auto</code> does verbatim replacement of the return type, which can hide a stack-local copy.
+      <code>auto</code> does verbatim replacement of the return type, which can hide a stack-local copy or move.
       <b>Only</b> use 'auto' for well-known iterators, status tuples, shared pointers etc, but <b>never</b> for
       objects and object references.
     </li>
@@ -285,6 +285,12 @@
       bitset and has horrible naming. Accidental byte operations on
       it like <code>memcpy</code> will be UB.
     </li>
+
+TODO
+* SHENNANIGAN streams do not enforce C abi and are overly complex for printing memory
+* SHENNANIGAN circular template expansion debugging
+* SHENNANIGAN missing virtual destructor for non-final methods in classes technically UB
+* why_exceptions_dont_scale
 
   </ul>
 </div>

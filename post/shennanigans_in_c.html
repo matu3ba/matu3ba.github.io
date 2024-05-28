@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<title>C shennanigans.</title>
+<title>Pointers, sequence points and bit fields in C.</title>
 <style>
     #contents {
       max-width: 60em;
@@ -84,21 +84,22 @@
 </div>
   This text focuses on some of the non-obvious and easy to make mistakes
   non-experienced C programmers are likely to make and are/can not completely
-  be covered by tooling without going into edge cases relevant to performance:
+  be covered by tooling without going into edge cases relevant to performance
+  and covering the most simple and conservative approach:
   <ol>
     <li><a href="#pointer_semantics">Pointer semantics</a></li>
     <li><a href="#seq_pts">Sequence points</a></li>
     <li><a href="#bitfields">Bit-fields</a></li>
   </ol>
   Compiler flags or implementation may provide workarounds to these problems
-  to prevent optimizations based on introduced Unedefined Behavior (UB).
-  Review used C compilers with flags used including tests and and platforms before
+  to prevent optimizations based on introduced Undefined Behavior (UB).
+  Review used C compilers with flags used including tests and platforms before
   reusing of any code. The
   <a href="https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152200">SEI wiki covers some basic cases</a>
   without covering compiler workarounds.
   Pointer construction is widely unspecified in earlier C standards before
   C11 and up to this day with C23 pointer semantics have no formal model, see also
-  item <a href="#pointer_construction">pointer construction</a>.
+  item <a href="#pointer_construction_reqirements">pointer construction requirements</a>.
 <ol>
   <li><a id ="pointer_semantics"><b>Pointer semantics</b> in C</a>.
     <ol>
@@ -111,7 +112,7 @@
     <br>
     <ol>
       <li> <a id="pointer_access_requirements"><b>Pointer access requirements</b></a> are fairly well specified from C89 on in
-        strong contrast to pointer construction and programmers with knowledge
+        strong contrast to <a href="#pointer_construction_reqirements">pointer construction requirements</a> and programmers with knowledge
         of how processing hardware works can derive below information.
         <ol>
           <li><span>Proper alignment</span></li>
@@ -126,26 +127,34 @@
           <li><span>Sufficient padding (ie withing structs).</span></li>
           <li><span>Correct aliasing</span>
             <ul>
-              <li>"Strict Aliasing Rule"<br>
-                &gt; Dereferencing a pointer that aliases an object that is not of a<br>
-                &gt; compatible type or one of the other types allowed by<br>
-                &gt; C 2011 6.5 paragraph 71 is undefined behavior.<br>
+              <li><a id="strict_aliasing_rule"><b>"Strict Aliasing Rule"</b></a><br>
+<!-- https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8 -->
+                &gt; An object shall have its stored value accessed only by an lvalue expression
+                &gt; that has one of the following types
+                &gt; — a type compatible with the effective type of the object,
+                &gt; — a qualified version of a type compatible with the effective type of the object,
+                &gt; — a type that is the signed or unsigned type corresponding to the effective type of the
+                &gt; object,
+                &gt; — a type that is the signed or unsigned type corresponding to a qualified version of the
+                &gt; effective type of the object,
+                &gt; — an aggregate or union type that includes one of the aforementioned types among its
+                &gt; members (including, recursively, a member of a subaggregate or contained union), or
+                &gt; — a character type.
                 What this means in practice:<br>
                 Each pointer has an associated "provenance" it is allowed to point to.
                 This mean that a pointer <code>ptr</code> must uphold
                 <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt; &amp;array[len+1]) || ptr != 0)</code>.
                 for access with array being the "memory origin range" on stack or heap.
-                Pointers must point ot the same array, when being used for arithmetic.<br>
+                Pointers must point to the same array, when being used for arithmetic.<br>
                 Function arguments of identical pointer types are allowed to have
                 overlapping provenance regions, unless annotated with <code>__restrict__</code>,
                 but pointers of different types are not allowed to have those regions.
                 Pointer comparison must be done via identical alignments, for
                 example to compare a pointer against pointer to 0 (usually
-                abbreviated via maro <code>NULL</code>).<br>
+                abbreviated via macro <code>NULL</code>).<br>
               </li>
             </ul>
           </li>
-          <li>TODO double check if this is sufficient.</li>
         </ol>
       </li>
       <li> <a id="pointer_access_practice"><b>Pointer access</b> in <b>practice</b></a>.
@@ -219,7 +228,7 @@
       <li> <a id="pointer_exceptions"><b>The Exceptions</b></a>.
         <ul>
           <li>
-            <span>Controlling the build system + compiler invocation to opt-out.</span><br>
+            <span>Controlling the build system + compiler invocation to opt-out of provenance based optimizations.</span><br>
             <ol>
               <li><span>Clang and gcc have <code>-fno-strict-aliasing</code>, msvc and tcc do not implement strict aliasing based optimizations.</span></li>
               <li><span>Usage of <code>restrict</code> can be en/disabled in all compilers via <code>#pragma optimize("", on/off)</code>.</span></li>
@@ -250,45 +259,118 @@
         </ul>
       </li>
       <li> <a id="pointer_construction_reqirements"><b>Pointer construction requirements</b></a>
-        are widely unspecified in earlier C standards before
-        C11 and up to this day with C23 pointer semantics have no formal model,
-        but at least a few possible formal models exist
+        are unspecified in all C standards with potentially some hints and nothing
+        concrete up to including C23 which further implies that pointer
+        semantics have no formal model.
+        At least a few possible formal models exist
         (paper VIP: Verifying Real-World C Idioms with Integer-Pointer Casts,
         N2676, P2318R1: A Provenance-aware Memory Object Model for C) so far without
         taking into account CHERI in mixed capability mode/hybrid compilation mode
         and from what I understand without taking all equivalence classes of
-        pointer operations into account.<br>
+        pointer operations into account.
+        <br>
         Therefore it is best to use the most conservative approach xor to provide
         the set of chosen (non-portable) compiler semantics in the build system
         next to the code to remove room for ambiguity.<br>
         For further information about this, take a look into paper "Subtleties of
         the ANSI/ISO C standard" and "n2263: Clarifying Pointer Provenance v4".<br>
-        Generally, the following cases of pointer creation disable pointer based optimizations
-        unless the optimizer can prove sufficient properties are uphold for the special cases:
+        To simplify things, we can however extend the
+        <a href="#strict_aliasing_rule">strict aliasing rule</a>
+        pointer construction with shortcomings regarding
+        "effective type" on type punning for hardware related programming.
+        TODO quote pointer comparison rule
+        * equal only for identical provenance and inside the boundaries or
+        NULL
+        * justify why "undefined pointers" from external code is reasonable
+        on worst case fat LTO
+        Strictly applying the This means that generated pointers must uphold
+        <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt;= &amp;array[len+1]) || ptr == 0 || ptr = undefined)</code>
+        with <code>ptr == 0</code> and undefined pointers being the exceptions.<br>
+        TODO double check https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8
+        <br>
+        Besides that, the following special cases of pointer operations are to be taken into
+        account, when discussing provenance based optimizations
+        unless the optimizer can prove sufficient properties are uphold:
         <ol>
-          <li><a href="#ptrintconv">Pointer to integer and integer to pointer conversion</a>.</li>
-          <li><a href="#opaque">Opaque type and pointer conversion with usage</a>.</li>
+          <li><a href="#ptrintconv">Pointer to integer and integer to pointer conversion</a>.
+            <b>Pointer/integer to integer/pointer conversion</b> mandates in all suggested
+            models for pointer semantics (of C) to prevent provenance based
+            optimizations unless the optimizer can prove with certainty the origin
+            of pointer provenance <b>and/or</b> programmers must/can annotate
+            provenance information to pointers to guide the optimizer about which
+            memory relations can and can not be optimized.
+          </li>
+          <li><a href="#opaque">Opaque type and pointer conversion with usage</a>.
+            <b>Opaque</b> types provide a way to guarantee correct usage of object and
+            pointer properties for a library or API user
+            and thus should be preferred, if feasible.
+          </li>
           <li><a href="#headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a>.</li>
-          <li><a href="#intrinsics">Compiler intrinsics for IO: memcpy, memset, memmove, [m,c]alloc</a>.</li>
-          <li>TODO double check if this is sufficient.</li>
+            <b>Link time optimization (LTO</b>) works across across header and
+            object boundaries if sufficient information/artefacts for caller and
+            callee are given, so usage of aliasing pointers in headers may lead to
+            undefined behavior due to applied optimizations as motivated in
+            <a href="#pointer_construction_reqirements">pointer construction requirements</a>.
+          <li><a href="#intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.</li>
+            <b>IO Compiler intrinsics</b> semantics are yet to be taken portably into account
+            due to a lot legacy code relying on certain properties and pointer properties
+            like alignment being implicit.
+            Technically optimizations are possible with annotating sufficient pointer information
+            and useful for accelerating intrinsics via SIMD or SWAR techniques and
+            tracking provenance along pointers, like for different addressing modes or
+            capabilities in CHERI, would be further useful.
         </ol>
-        Besides that, LTO and more aggressive optimizations without overhead of
-        pointer escape analysis mandate that each created pointer must remain
-        within the provenance region sketched in LINK.
-
       <li> <a id="pointer_construction_practice"><b>Pointer construction</b> in <b>practice</b></a>.
         <ol>
           <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
-                TODO
+
+// careful with segmented address spaces (lookup uintptr_t semantics in this case)
+void ptrtointtoptr() {
+  void *mem = malloc(1024+15);
+  // C89: void *ptr = ((char *)mem+15) & ~0x0F;
+  void *ptr = ((uintptr_t)mem+15) & ~ (uintptr_t)0x0F;
+  memset_16aligned(ptr, 0, 1024);
+  free(mem);
+}
           </li>
           <li><span><a id="opaque">Opaque type and pointer conversion with usage.<span>
-                TODO
+// opaque.h
+struct item;
+size_t item_size(void);
+voitem id_setid(struct item * it, int32_t id);
+int item_getid(struct item * it);
+// opaque.c
+#include opaque.h
+struct item { int32_t id; };
+size_t item_size(void) { return sizeof(struct item); }
+voitem id_setid(struct item * it, int32_t id) { it->id = id; }
+int item_getid(struct item * it) { return it->id; }
           </li>
           <li><span><a id="headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a><span>
-                TODO
+          Headers/exports prevent aliasing based optimizations, if LTO is not used, but
+// lto_breaks_this.h
+// TODO same provenance example across headers
+// lto_breaks_this.c
+#include lto_breaks_this.h
+     struct item;
+     size_t item_size(void);
+     voitem id_setid(struct item * it, int32_t id);
+     int item_getid(struct item * it);
+
+     struct item { int32_t id; };
+     size_t item_size(void) { return sizeof(struct item); }
+     voitem id_setid(struct item * it, int32_t id) { it->id = id; }
+     int item_getid(struct item * it) { return it->id; }
+
           </li>
-          <li><span><a id="intrinsics">Compiler intrinsics for IO: memcpy, memset, memmove, [m,c]alloc</a>.<span>
-                TODO
+          <li><span><a id="intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.<span>
+TODO list the intrinsics
+memcmp
+memcpy
+memmove
+memset
+check zig compiler_rt for other needed c routines
+
           </li>
           <!-- I'd be very curious about weird embedded compiler semantics in C89 and C99 due -->
           <!-- to reading paper "Subtleties of the ANSI/ISO C standard". -->
