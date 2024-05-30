@@ -212,7 +212,7 @@
 <span class="line">}</span>
 </code></pre></figure>
           </li>
-          <li><span>Allowed aliasing of pointers</span>
+          <li><span>Allowed aliasing of pointers (type-based aliasing analysis)</span>
       <figure><figcaption class="c-cap"><cite class="file">allowed_aliasing.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">void</span> allowed_aliasing(uint16_t * bytes, int32_t len_bytes, uint16_t * lim) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
@@ -222,7 +222,7 @@
 <span class="line">}</span>
 </code></pre></figure>
           </li>
-          <li><span>Non-Allowed aliasing of pointers: See example correct_alignment.c</span></li>
+          <li><span>Non-Allowed aliasing of pointers (type-based aliasing analysis): See example correct_alignment.c</span></li>
         </ul>
       </li>
       <li> <a id="pointer_exceptions"><b>The Exceptions</b></a>.
@@ -230,7 +230,8 @@
           <li>
             <span>Controlling the build system + compiler invocation to opt-out of provenance based optimizations.</span><br>
             <ol>
-              <li><span>Clang and gcc have <code>-fno-strict-aliasing</code>, msvc and tcc do not implement strict aliasing based optimizations.</span></li>
+              <li><span>Clang and gcc have <code>-fno-strict-aliasing</code>, msvc and tcc do disable type-based aliasing analysis based optimizations.</span></li>
+              <li><span>As of now, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).</span></li>
               <li><span>Usage of <code>restrict</code> can be en/disabled in all compilers via <code>#pragma optimize("", on/off)</code>.</span></li>
               It can also be disabled in all compilers via <code>#define restrict</code>, using an according optimization level
                 (typical -O1) or via separating header and implementation and disabling link time optimziations.</span></li>
@@ -277,41 +278,40 @@
         To simplify things, we can however extend the
         <a href="#strict_aliasing_rule">strict aliasing rule</a>
         pointer construction with shortcomings regarding
-        "effective type" on type punning for hardware related programming.
-        TODO quote pointer comparison rule
-        * equal only for identical provenance and inside the boundaries or
-        NULL
-        * justify why "undefined pointers" from external code is reasonable
-        on worst case fat LTO
-        Strictly applying the This means that generated pointers must uphold
+        "effective type" on type punning for hardware related programming:
+        This would mean that generated pointers must uphold
         <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt;= &amp;array[len+1]) || ptr == 0 || ptr = undefined)</code>
         with <code>ptr == 0</code> and undefined pointers being the exceptions.<br>
-        TODO double check https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8
-        <br>
-        Besides that, the following special cases of pointer operations are to be taken into
-        account, when discussing provenance based optimizations
-        unless the optimizer can prove sufficient properties are uphold:
+        The underlying motivation is given in (cross-language) Link Time Optimization (LTO)
+        in <a href="#headers">headers/exports exposing data structures, pointers to data structures and void pointers</a>.
+        Standards up to including C23 do not specify this behavior yet.<br>
+        <!--idea double check https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8-->
+        It is not discussed here how the optimizer would prove how serialized and deserialized pointer have the same
+        provenance regions (integer cast, memory copy or external usage), because there are multiple algorithms and
+        this article is already too long.<br>
+        The following special cases of pointer operations can be taken into account, when discussing
+        provenance-based optimizations (in contrast to type-based aliasing analysis).
         <ol>
-          <li><a href="#ptrintconv">Pointer to integer and integer to pointer conversion</a>.
+          <li><span><a href="#ptrintconv">Pointer to integer and integer to pointer conversion</a>.</span><br>
             <b>Pointer/integer to integer/pointer conversion</b> mandates in all suggested
-            models for pointer semantics (of C) to prevent provenance based
+            models for pointer semantics (of C) to prevent provenance-based
             optimizations unless the optimizer can prove with certainty the origin
             of pointer provenance <b>and/or</b> programmers must/can annotate
             provenance information to pointers to guide the optimizer about which
             memory relations can and can not be optimized.
           </li>
-          <li><a href="#opaque">Opaque type and pointer conversion with usage</a>.
+          <li><span><a href="#opaque">Opaque type and pointer conversion with usage</a>.</span><br>
             <b>Opaque</b> types provide a way to guarantee correct usage of object and
-            pointer properties for a library or API user
-            and thus should be preferred, if feasible.
+            pointer properties for a library or API user and thus should be preferred, if feasible.
           </li>
-          <li><a href="#headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a>.</li>
+          <li><span><a href="#headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a>.</span><br>
             <b>Link time optimization (LTO</b>) works across across header and
             object boundaries if sufficient information/artefacts for caller and
             callee are given, so usage of aliasing pointers in headers may lead to
-            undefined behavior due to applied optimizations as motivated in
-            <a href="#pointer_construction_reqirements">pointer construction requirements</a>.
-          <li><a href="#intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.</li>
+            undefined behavior.
+          </li>
+            <!--<a href="#pointer_construction_reqirements">pointer construction requirements</a>.-->
+          <li><span><a href="#intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.</span><br>
             <b>IO Compiler intrinsics</b> semantics are yet to be taken portably into account
             due to a lot legacy code relying on certain properties and pointer properties
             like alignment being implicit.
@@ -319,57 +319,64 @@
             and useful for accelerating intrinsics via SIMD or SWAR techniques and
             tracking provenance along pointers, like for different addressing modes or
             capabilities in CHERI, would be further useful.
+          </li>
+          <li><span><a href="#cheri">CHERI rules for pointers</a>.</span><br>
+            In <b>CHERI</b> mixed-capability mode pointers may be raw pointers
+            inclusive or pointer with annotated capabilities, which can include
+            things like lower and upper address bound, permissions masks,
+            flags usable for OS or application tasks, see
+            "Capability Hardware Enhanced RISC Instructions: CHERI Instruction-Set Architecture (Version 9)".
+            Since there is no formal model on how CHERI pointer semantics work, examples are not included.
+          </li>
         </ol>
       <li> <a id="pointer_construction_practice"><b>Pointer construction</b> in <b>practice</b></a>.
         <ol>
           <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
 
-// careful with segmented address spaces (lookup uintptr_t semantics in this case)
-void ptrtointtoptr() {
-  void *mem = malloc(1024+15);
-  // C89: void *ptr = ((char *)mem+15) & ~0x0F;
-  void *ptr = ((uintptr_t)mem+15) & ~ (uintptr_t)0x0F;
-  memset_16aligned(ptr, 0, 1024);
-  free(mem);
-}
+<!--// careful with segmented address spaces (lookup uintptr_t semantics in this case)-->
+<!--void ptrtointtoptr() {-->
+<!--  void *mem = malloc(1024+15);-->
+<!--  // C89: void *ptr = ((char *)mem+15) & ~0x0F;-->
+<!--  void *ptr = ((uintptr_t)mem+15) & ~ (uintptr_t)0x0F;-->
+<!--  memset_16aligned(ptr, 0, 1024);-->
+<!--  free(mem);-->
+<!--}-->
           </li>
           <li><span><a id="opaque">Opaque type and pointer conversion with usage.<span>
-// opaque.h
-struct item;
-size_t item_size(void);
-voitem id_setid(struct item * it, int32_t id);
-int item_getid(struct item * it);
-// opaque.c
-#include opaque.h
-struct item { int32_t id; };
-size_t item_size(void) { return sizeof(struct item); }
-voitem id_setid(struct item * it, int32_t id) { it->id = id; }
-int item_getid(struct item * it) { return it->id; }
+<!--// opaque.h-->
+<!--struct item;-->
+<!--size_t item_size(void);-->
+<!--voitem id_setid(struct item * it, int32_t id);-->
+<!--int item_getid(struct item * it);-->
+<!--// opaque.c-->
+<!--#include opaque.h-->
+<!--struct item { int32_t id; };-->
+<!--size_t item_size(void) { return sizeof(struct item); }-->
+<!--voitem id_setid(struct item * it, int32_t id) { it->id = id; }-->
+<!--int item_getid(struct item * it) { return it->id; }-->
           </li>
           <li><span><a id="headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a><span>
-          Headers/exports prevent aliasing based optimizations, if LTO is not used, but
-// lto_breaks_this.h
-// TODO same provenance example across headers
-// lto_breaks_this.c
-#include lto_breaks_this.h
-     struct item;
-     size_t item_size(void);
-     voitem id_setid(struct item * it, int32_t id);
-     int item_getid(struct item * it);
-
-     struct item { int32_t id; };
-     size_t item_size(void) { return sizeof(struct item); }
-     voitem id_setid(struct item * it, int32_t id) { it->id = id; }
-     int item_getid(struct item * it) { return it->id; }
-
+          Headers/exports prevent aliasing based optimizations, unless LTO is used.
+<!--// lto_breaks_this.h-->
+<!--// TODO same provenance example across headers-->
+<!--// lto_breaks_this.c-->
+<!--#include lto_breaks_this.h-->
+<!--     struct item;-->
+<!--     size_t item_size(void);-->
+<!--     voitem id_setid(struct item * it, int32_t id);-->
+<!--     int item_getid(struct item * it);-->
+<!---->
+<!--     struct item { int32_t id; };-->
+<!--     size_t item_size(void) { return sizeof(struct item); }-->
+<!--     voitem id_setid(struct item * it, int32_t id) { it->id = id; }-->
+<!--     int item_getid(struct item * it) { return it->id; }-->
           </li>
           <li><span><a id="intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.<span>
-TODO list the intrinsics
-memcmp
-memcpy
-memmove
-memset
-check zig compiler_rt for other needed c routines
+<!--memcmp-->
+<!--memcpy-->
+<!--memmove-->
+<!--memset-->
+<!--idea check zig compiler_rt for other needed c routines-->
 
           </li>
           <!-- I'd be very curious about weird embedded compiler semantics in C89 and C99 due -->
