@@ -99,20 +99,20 @@
   without covering compiler workarounds.
   Pointer construction is widely unspecified in earlier C standards before
   C11 and up to this day with C23 pointer semantics have no formal model, see also
-  item <a href="#pointer_construction_reqirements">pointer construction requirements</a>.
+  item <a href="#pointer_construction_requirements">pointer construction requirements</a>.
 <ol>
   <li><a id ="pointer_semantics"><b>Pointer semantics</b> in C</a>.
     <ol>
       <li><a href="#pointer_access_requirements">Pointer access requirements</a></li>
       <li><a href="#pointer_access_practice">Pointer access in practice</a></li>
       <li><a href="#pointer_exceptions">The Exceptions</a></li>
-      <li><a href="#pointer_construction_reqirements">Pointer construction requirements</a></li>
+      <li><a href="#pointer_construction_requirements">Pointer construction requirements</a></li>
       <li><a href="#pointer_construction_practice">Pointer construction in practice</a></li>
     </ol>
     <br>
     <ol>
       <li> <a id="pointer_access_requirements"><b>Pointer access requirements</b></a> are fairly well specified from C89 on in
-        strong contrast to <a href="#pointer_construction_reqirements">pointer construction requirements</a> and programmers with knowledge
+        strong contrast to <a href="#pointer_construction_requirements">pointer construction requirements</a> and programmers with knowledge
         of how processing hardware works can derive below information.
         <ol>
           <li><span>Proper alignment</span></li>
@@ -168,17 +168,17 @@
 <span class="line"><span class="tok-type">void</span> main() {</span>
 <span class="line">  <span class="tok-type">int</span> arr1[10]</span>
 <span class="line">  use_ptr(arr1);</span>
-<span class="line">  <span class="tok-type">int</span> * arr2 = <span class="tok-kw">malloc</span>(<span class="tok-kw">sizeof</span>(int));</span>
+<span class="line">  <span class="tok-type">int</span> * arr2 = malloc(<span class="tok-builtin">sizeof</span>(int));</span>
 <span class="line">  use_ptr(arr2);</span>
-<span class="line">  <span class="tok-kw">free</span>(arr2);</span>
+<span class="line">  free(arr2);</span>
 <span class="line">}</span>
 </code></pre></figure>
           </li>
           <li><span>Copy around some bytes from not overlapping regions (otherwise use memmove).</span>
       <figure><figcaption class="c-cap"><cite class="file">copy_bytes.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">void</span> use_bytes(uint8_t * bytes, int32_t len_bytes, uint32_t * output, int32_t len_output) {</span>
+<pre><code><span class="line"><span class="tok-type">void</span> use_bytes(<span class="tok-type">uint8_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint32_t</span> * output, <span class="tok-type">int32_t</span> len_output) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i*4&lt;len_bytes &amp;&amp; i&lt;len_output; i+=4) {</span>
-<span class="line">    <span class="tok-kw">memcpy</span>(&amp;output[i], &amp;bytes[4*i], <span class="tok-kw">sizeof</span>(len_output));
+<span class="line">    <span class="tok-kw">memcpy</span>(&amp;output[i], &amp;bytes[4*i], <span class="tok-builtin">sizeof</span>(len_output));
 <span class="line">  }</span>
 <span class="line">}</span>
 </code></pre></figure>
@@ -199,22 +199,22 @@
           </li>
           <li><span>Ensure correct storage and padding size for pointers via sizeof.</span>
       <figure><figcaption class="c-cap"><cite class="file">storage_padding.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">struct</span> sStruct1 {</span>
+<pre><code><span class="line"><span class="tok-kw">struct</span> sStruct1 {</span>
 <span class="line">  uint8_t a1;</span>
 <span class="line">  uint8_t a2;</span>
 <span class="line">  uint32 b1;</span>
 <span class="line">  uint32 b2;</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-type">void</span> padding() {</span>
-<span class="line">  <span class="tok-kw">struct</span> sStruct1 * str1 = <span class="tok-kw">malloc</span>(<span class="tok-kw">sizeof</span>(sStruct1)); </span>
+<span class="line">  <span class="tok-kw">struct</span> sStruct1 * str1 = malloc(<span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> sStruct1)); </span>
 <span class="line">  str1.a1 = 5;</span>
-<span class="line">  <span class="tok-kw">free</span>(str1);</span>
+<span class="line">  free(str1);</span>
 <span class="line">}</span>
 </code></pre></figure>
           </li>
           <li><span>Allowed aliasing of pointers (type-based aliasing analysis)</span>
       <figure><figcaption class="c-cap"><cite class="file">allowed_aliasing.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">void</span> allowed_aliasing(uint16_t * bytes, int32_t len_bytes, uint16_t * lim) {</span>
+<pre><code><span class="line"><span class="tok-type">void</span> allowed_aliasing(<span class="tok-type">uint16_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint16_t</span> * lim) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
 <span class="line">    <span class="tok-kw">if</span> (bytes == lim) break</span>;
 <span class="line">    bytes[i] = 42;</span>
@@ -222,7 +222,17 @@
 <span class="line">}</span>
 </code></pre></figure>
           </li>
-          <li><span>Non-Allowed aliasing of pointers (type-based aliasing analysis): See example correct_alignment.c</span></li>
+          <li><span>Non-allowed aliasing of pointers (type-based aliasing analysis)
+      <figure><figcaption class="c-cap"><cite class="file">non_allowed_aliasing.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-type">void</span> non_allowed_aliasing(<span class="tok-type">uint16_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint8_t</span> * lim) {</span>
+<span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
+<span class="line">    <span class="tok-kw">if</span> (bytes == lim) break</span>;
+<span class="line">    bytes[i] = 42;</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></figure>
+              <!--See example correct_alignment.c</span>-->
+          </li>
         </ul>
       </li>
       <li> <a id="pointer_exceptions"><b>The Exceptions</b></a>.
@@ -248,7 +258,7 @@
 <span class="line">  <span class="tok-kw">typedef</span> <span class="tok-type">int</span>(*pfn_add_one)(<span class="tok-type">int</span>);</span>
 <span class="line">  <span class="tok-type">int</span> add_one(<span class="tok-type">int</span> x) = { return x+1; } </span>
 <span class="line">  <span class="tok-type">void</span> usage(<span class="tok-type">int</span> x) {</span>
-<span class="line">    // read fn ptr from external code
+<span class="line">    <span class="tok-comment">// read fn ptr from external code</span>
 <span class="line">    <span class="tok-type">void</span> * pv_add_one = (void*)external_memory;</span>
 <span class="line">    <span class="tok-kw">pfn_add_one</span> pfn_add_one_casted = (pfn_add_one)pv_add_one;</span>
 <span class="line">    <span class="tok-kw">int</span> res = pfn_add_one_casted(1);</span>
@@ -259,7 +269,7 @@
           </li>
         </ul>
       </li>
-      <li> <a id="pointer_construction_reqirements"><b>Pointer construction requirements</b></a>
+      <li> <a id="pointer_construction_requirements"><b>Pointer construction requirements</b></a>
         are unspecified in all C standards with potentially some hints and nothing
         concrete up to including C23 which further implies that pointer
         semantics have no formal model.
@@ -292,17 +302,17 @@
         The following special cases of pointer operations can be taken into account, when discussing
         provenance-based optimizations (in contrast to type-based aliasing analysis).
         <ol>
+          <li><span><a href="#opaque">Opaque type idiom</a>.</span><br>
+            <b>Opaque</b> types provide a way to guarantee correct usage of object and
+            pointer properties for a library or API user and thus should be preferred, if feasible.
+          </li>
           <li><span><a href="#ptrintconv">Pointer to integer and integer to pointer conversion</a>.</span><br>
             <b>Pointer/integer to integer/pointer conversion</b> mandates in all suggested
             models for pointer semantics (of C) to prevent provenance-based
             optimizations unless the optimizer can prove with certainty the origin
             of pointer provenance <b>and/or</b> programmers must/can annotate
             provenance information to pointers to guide the optimizer about which
-            memory relations can and can not be optimized.
-          </li>
-          <li><span><a href="#opaque">Opaque type and pointer conversion with usage</a>.</span><br>
-            <b>Opaque</b> types provide a way to guarantee correct usage of object and
-            pointer properties for a library or API user and thus should be preferred, if feasible.
+            memory relations can and can not be optimized (unstandardised).
           </li>
           <li><span><a href="#headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a>.</span><br>
             <b>Link time optimization (LTO</b>) works across across header and
@@ -310,7 +320,6 @@
             callee are given, so usage of aliasing pointers in headers may lead to
             undefined behavior.
           </li>
-            <!--<a href="#pointer_construction_reqirements">pointer construction requirements</a>.-->
           <li><span><a href="#intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.</span><br>
             <b>IO Compiler intrinsics</b> semantics are yet to be taken portably into account
             due to a lot legacy code relying on certain properties and pointer properties
@@ -327,36 +336,58 @@
             flags usable for OS or application tasks, see
             "Capability Hardware Enhanced RISC Instructions: CHERI Instruction-Set Architecture (Version 9)".
             Since there is no formal model on how CHERI pointer semantics work, examples are not included.
+            A work in progress CHERI C is given in paper "Formal Mechanised Semantics of CHERI C:
+            Capabilities, Undefined Behaviour, and Provenance".
+            CHERI offers (scalable) compartmentalization, spatial memory safety
+            with opt-in temporal memory safety via runtime support mandating
+            pointer capability revocation on freeing memory with latest example
+            being CheriBSD experimental userspace temporal memory safety (20240602).
           </li>
         </ol>
       <li> <a id="pointer_construction_practice"><b>Pointer construction</b> in <b>practice</b></a>.
         <ol>
-          <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
-
-<!--// careful with segmented address spaces (lookup uintptr_t semantics in this case)-->
-<!--void ptrtointtoptr() {-->
-<!--  void *mem = malloc(1024+15);-->
-<!--  // C89: void *ptr = ((char *)mem+15) & ~0x0F;-->
-<!--  void *ptr = ((uintptr_t)mem+15) & ~ (uintptr_t)0x0F;-->
-<!--  memset_16aligned(ptr, 0, 1024);-->
-<!--  free(mem);-->
-<!--}-->
+          <li><span><a id="opaque">Opaque type idiom.<span>
+      <figure><figcaption class="c-cap"><cite class="file">opaque.h</cite></figcaption>
+<pre><code><span class="line"><span class="tok-kw">struct</span> item;</span>
+<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);
+<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id);
+<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it);
+</code></pre></figure>
+      <figure><figcaption class="c-cap"><cite class="file">opaque.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"opaque.h"</span></span>
+<span class="line"><span class="tok-kw">struct</span> item { <span class="tok-type">int32_t</span> id; };
+<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { return <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }
+<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id) { it-&gt;id = id; }
+<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it) { <span class="tok-kw">return</span> it-&gt;id; }
+</code></pre></figure>
           </li>
-          <li><span><a id="opaque">Opaque type and pointer conversion with usage.<span>
-<!--// opaque.h-->
-<!--struct item;-->
-<!--size_t item_size(void);-->
-<!--voitem id_setid(struct item * it, int32_t id);-->
-<!--int item_getid(struct item * it);-->
-<!--// opaque.c-->
-<!--#include opaque.h-->
-<!--struct item { int32_t id; };-->
-<!--size_t item_size(void) { return sizeof(struct item); }-->
-<!--voitem id_setid(struct item * it, int32_t id) { it->id = id; }-->
-<!--int item_getid(struct item * it) { return it->id; }-->
+          <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
+      <figure><figcaption class="c-cap"><cite class="file">ptrtoint_inttoptr.c</cite></figcaption>
+<pre><code><span class="line">// careful with segmented address spaces: lookup uintptr_t semantics</span>
+<span class="line">  <span class="tok-type">void</span> ptrtointtoptr() {</span>
+<span class="line">  <span class="tok-type">void</span> *mem = malloc(1024+15);</span>
+<span class="line">  <span class="tok-comment">// C89: void *ptr = ((char *)mem+15) &amp; ~0x0F;</span></span>
+<span class="line">  <span class="tok-type">void</span> *ptr = ((<span class="tok-type">uintptr_t</span>)mem+15) & ~ (<span class="tok-type">uintptr_t</span>)0x0F;</span>
+<span class="line">  memset_16aligned(ptr, 0, 1024);</span>
+<span class="line">  free(mem);</span>
+<span class="line">}
+</code></pre></figure>
           </li>
           <li><span><a id="headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a><span>
-          Headers/exports prevent aliasing based optimizations, unless LTO is used.
+          Headers/exports prevent provenance-based aliasing optimizations, unless LTO is used.
+      <figure><figcaption class="c-cap"><cite class="file">lto_breaks_this.h</cite></figcaption>
+<pre><code><span class="line"><span class="tok-kw">struct</span> item;</span>
+<!--<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);-->
+<!--<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id);-->
+<!--<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it);-->
+</code></pre></figure>
+      <figure><figcaption class="c-cap"><cite class="file">lto_breaks_this.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"lto_breaks_this.h"</span></span>
+<!--<span class="line"><span class="tok-kw">struct</span> item { <span class="tok-type">int32_t</span> id; };-->
+<!--<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { return <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }-->
+<!--<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id) { it-&gt;id = id; }-->
+<!--<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it) { <span class="tok-kw">return</span> it-&gt;id; }-->
+</code></pre></figure>
 <!--// lto_breaks_this.h-->
 <!--// TODO same provenance example across headers-->
 <!--// lto_breaks_this.c-->
@@ -372,6 +403,11 @@
 <!--     int item_getid(struct item * it) { return it->id; }-->
           </li>
           <li><span><a id="intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.<span>
+      <figure><figcaption class="c-cap"><cite class="file">io_intrinsics.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-comment">// IO has call convention annotations, which could specify level of LTO</span></span>
+<span class="line"><span class="tok-type">void</span> intrinsics_affecting_provenance(<span class="tok-type">void</span>) {
+<span class="line">}</span>
+</code></pre></figure>
 <!--memcmp-->
 <!--memcpy-->
 <!--memmove-->
