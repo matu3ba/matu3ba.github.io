@@ -115,7 +115,7 @@
         strong contrast to <a href="#pointer_construction_requirements">pointer construction requirements</a> and programmers with knowledge
         of how processing hardware works can derive below information.
         <ol>
-          <li><span>Proper alignment</span></li>
+          <li><span>Proper <b>alignment</b></span></li>
             <ul>
               <li><span>Cleanly accessing a pointer with increased alignment requires
                 <a href="https://stackoverflow.com/questions/7059299/how-to-properly-convert-an-unsigned-char-array-into-an-uint32-t">to use a temporary with memcopy</a>.</span></li>
@@ -123,24 +123,25 @@
               <li><span>To prune type info for generics use <code>void*</code> pointer.</span></li>
               <li><span>You are responsible to call a function that provides or provide yourself.</span></li>
             </ul>
-          <li><span>Sufficient storage (pointer must point to valid object)</span></li>
-          <li><span>Sufficient padding (ie withing structs).</span></li>
-          <li><span>Correct aliasing</span>
+          <li><span>Sufficient <b>storage</b> (pointer must point to valid object)</span></li>
+          <li><span>Sufficient <b>padding</b> (ie withing structs).</span></li>
+          <li><span>Correct <b>aliasing</b> (<a id="strict_aliasing_rule"><b>"Strict Aliasing Rule"</b></a>)</span>
             <ul>
-              <li><a id="strict_aliasing_rule"><b>"Strict Aliasing Rule"</b></a><br>
 <!-- https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8 -->
-                &gt; An object shall have its stored value accessed only by an lvalue expression
-                &gt; that has one of the following types
-                &gt; — a type compatible with the effective type of the object,
-                &gt; — a qualified version of a type compatible with the effective type of the object,
-                &gt; — a type that is the signed or unsigned type corresponding to the effective type of the
-                &gt; object,
-                &gt; — a type that is the signed or unsigned type corresponding to a qualified version of the
-                &gt; effective type of the object,
-                &gt; — an aggregate or union type that includes one of the aforementioned types among its
-                &gt; members (including, recursively, a member of a subaggregate or contained union), or
-                &gt; — a character type.
-                What this means in practice:<br>
+              <li><span>TODO quote C standard</span><br>
+                "An object shall have its stored value accessed only by an lvalue expression<br>
+                that has one of the following types
+                &#45; a type compatible with the effective type of the object,<br>
+                &#45; a qualified version of a type compatible with the effective type of the object,<br>
+                &#45; a type that is the signed or unsigned type corresponding to the effective type of the
+                object,<br>
+                &#45; a type that is the signed or unsigned type corresponding to a qualified version of the
+                effective type of the object,<br>
+                &#45; an aggregate or union type that includes one of the aforementioned types among its
+                members (including, recursively, a member of a subaggregate or contained union), or<br>
+                &#45; a character type."<br>
+              </li>
+              <li><span>What does this means in <b>practice</b>?</span><br>
                 Each pointer has an associated "provenance" it is allowed to point to.
                 This mean that a pointer <code>ptr</code> must uphold
                 <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt; &amp;array[len+1]) || ptr != 0)</code>.
@@ -149,9 +150,9 @@
                 Function arguments of identical pointer types are allowed to have
                 overlapping provenance regions, unless annotated with <code>__restrict__</code>,
                 but pointers of different types are not allowed to have those regions.
-                Pointer comparison must be done via identical alignments, for
-                example to compare a pointer against pointer to 0 (usually
-                abbreviated via macro <code>NULL</code>).<br>
+                Pointer comparison must be done via identical alignments unless comparison
+                of a pointer against pointer to 0 usually
+                abbreviated via macro <code>NULL</code>.<br>
               </li>
             </ul>
           </li>
@@ -241,7 +242,7 @@
             <span>Controlling the build system + compiler invocation to opt-out of provenance based optimizations.</span><br>
             <ol>
               <li><span>Clang and gcc have <code>-fno-strict-aliasing</code>, msvc and tcc do disable type-based aliasing analysis based optimizations.</span></li>
-              <li><span>As of now, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).</span></li>
+              <li><span>As of 20240603, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).</span></li>
               <li><span>Usage of <code>restrict</code> can be en/disabled in all compilers via <code>#pragma optimize("", on/off)</code>.</span></li>
               It can also be disabled in all compilers via <code>#define restrict</code>, using an according optimization level
                 (typical -O1) or via separating header and implementation and disabling link time optimziations.</span></li>
@@ -294,13 +295,26 @@
         with <code>ptr == 0</code> and undefined pointers being the exceptions.<br>
         The underlying motivation is given in (cross-language) Link Time Optimization (LTO)
         in <a href="#headers">headers/exports exposing data structures, pointers to data structures and void pointers</a>.
-        Standards up to including C23 do not specify this behavior yet.<br>
+<!--In ISO C, it is undefined behaviour to use pointer arithmetic-->
+<!--to construct a pointer value that is either below or more than-->
+<!--one byte past the footprint of the object [21, 6.5.6p8].-->
+<!--SO WG14. Programming languages – C, ISO/IEC 9899:2018 edition, July 2018-->
+<!--https://www.cl.cam.ac.uk/~pes20/asplos24spring-paper110.pdf-->
+        Standards up to including C23 do not specify this behavior explicitly.
+        For example C23 specifies that operations on pointers to a object must
+        remain in the above given range and temporal pointer overflow behavior
+        is undefined.
+        Expected behavior of exposed (externally readable and writable) addresses
+        via headers and object files including possible
+        future C standard direction can be found in "A Provenance-aware Memory Object Model for C".<br>
+        Temporal out of bounds behavior, linker semantics with guaranteed addresses
+        or address regions and all other constrains remain unspecified.<br>
         <!--idea double check https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8-->
         It is not discussed here how the optimizer would prove how serialized and deserialized pointer have the same
         provenance regions (integer cast, memory copy or external usage), because there are multiple algorithms and
         this article is already too long.<br>
         The following special cases of pointer operations can be taken into account, when discussing
-        provenance-based optimizations (in contrast to type-based aliasing analysis).
+        provenance-based optimizations (in contrast to type-based aliasing analysis):
         <ol>
           <li><span><a href="#opaque">Opaque type idiom</a>.</span><br>
             <b>Opaque</b> types provide a way to guarantee correct usage of object and
@@ -317,8 +331,8 @@
           <li><span><a href="#headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a>.</span><br>
             <b>Link time optimization (LTO</b>) works across across header and
             object boundaries if sufficient information/artefacts for caller and
-            callee are given, so usage of aliasing pointers in headers may lead to
-            undefined behavior.
+            callee are given, so construction of aliasing pointers in headers may lead to
+            undefined behavior depending on the build system flags and used compiler.
           </li>
           <li><span><a href="#intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.</span><br>
             <b>IO Compiler intrinsics</b> semantics are yet to be taken portably into account
@@ -364,10 +378,10 @@
           <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
       <figure><figcaption class="c-cap"><cite class="file">ptrtoint_inttoptr.c</cite></figcaption>
 <pre><code><span class="line">// careful with segmented address spaces: lookup uintptr_t semantics</span>
-<span class="line">  <span class="tok-type">void</span> ptrtointtoptr() {</span>
+<span class="line"><span class="tok-type">void</span> ptrtointtoptr() {</span>
 <span class="line">  <span class="tok-type">void</span> *mem = malloc(1024+15);</span>
 <span class="line">  <span class="tok-comment">// C89: void *ptr = ((char *)mem+15) &amp; ~0x0F;</span></span>
-<span class="line">  <span class="tok-type">void</span> *ptr = ((<span class="tok-type">uintptr_t</span>)mem+15) & ~ (<span class="tok-type">uintptr_t</span>)0x0F;</span>
+<span class="line">  <span class="tok-type">void</span> *ptr = ((<span class="tok-type">uintptr_t</span>)mem+15) &amp; ~ (<span class="tok-type">uintptr_t</span>)0x0F;</span>
 <span class="line">  memset_16aligned(ptr, 0, 1024);</span>
 <span class="line">  free(mem);</span>
 <span class="line">}
@@ -375,14 +389,14 @@
           </li>
           <li><span><a id="headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a><span>
           Headers/exports prevent provenance-based aliasing optimizations, unless LTO is used.
-      <figure><figcaption class="c-cap"><cite class="file">lto_breaks_this.h</cite></figcaption>
+      <figure><figcaption class="c-cap"><cite class="file">lto_may_break_this.h</cite></figcaption>
 <pre><code><span class="line"><span class="tok-kw">struct</span> item;</span>
 <!--<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);-->
 <!--<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id);-->
 <!--<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it);-->
 </code></pre></figure>
-      <figure><figcaption class="c-cap"><cite class="file">lto_breaks_this.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"lto_breaks_this.h"</span></span>
+      <figure><figcaption class="c-cap"><cite class="file">lto_may_break_this.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"lto_may_break_this.h"</span></span>
 <!--<span class="line"><span class="tok-kw">struct</span> item { <span class="tok-type">int32_t</span> id; };-->
 <!--<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { return <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }-->
 <!--<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id) { it-&gt;id = id; }-->
