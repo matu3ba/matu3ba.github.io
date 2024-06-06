@@ -128,7 +128,7 @@
           <li><span>Correct <b>aliasing</b> (<a id="strict_aliasing_rule"><b>"Strict Aliasing Rule"</b></a>)</span>
             <ul>
 <!-- https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8 -->
-              <li><span>TODO quote C standard</span><br>
+              <li><span>C23 6.5 Expressions paragraph 7</span><br>
                 "An object shall have its stored value accessed only by an lvalue expression<br>
                 that has one of the following types
                 &#45; a type compatible with the effective type of the object,<br>
@@ -293,8 +293,6 @@
         This would mean that generated pointers must uphold
         <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt;= &amp;array[len+1]) || ptr == 0 || ptr = undefined)</code>
         with <code>ptr == 0</code> and undefined pointers being the exceptions.<br>
-        The underlying motivation is given in (cross-language) Link Time Optimization (LTO)
-        in <a href="#headers">headers/exports exposing data structures, pointers to data structures and void pointers</a>.
 <!--In ISO C, it is undefined behaviour to use pointer arithmetic-->
 <!--to construct a pointer value that is either below or more than-->
 <!--one byte past the footprint of the object [21, 6.5.6p8].-->
@@ -313,6 +311,10 @@
         It is not discussed here how the optimizer would prove how serialized and deserialized pointer have the same
         provenance regions (integer cast, memory copy or external usage), because there are multiple algorithms and
         this article is already too long.<br>
+        Rust decided to allow programmers experimental low level control over provenance
+        with experimenting on CHERI and an interpreter for iterating on the provenance model
+        and to work(around) with backends, see Rust RFC 3559 title "rust_has_provenance"
+        and section "Drawbacks".<br>
         The following special cases of pointer operations can be taken into account, when discussing
         provenance-based optimizations (in contrast to type-based aliasing analysis):
         <ol>
@@ -328,13 +330,13 @@
             provenance information to pointers to guide the optimizer about which
             memory relations can and can not be optimized (unstandardised).
           </li>
-          <li><span><a href="#headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a>.</span><br>
+          <li><span>Headers/exports exposing data structures, pointers to data structures and void pointers.</span><br>
             <b>Link time optimization (LTO</b>) works across across header and
             object boundaries if sufficient information/artefacts for caller and
             callee are given, so construction of aliasing pointers in headers may lead to
             undefined behavior depending on the build system flags and used compiler.
           </li>
-          <li><span><a href="#intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.</span><br>
+          <li><span>Compiler intrinsics for IO: memcmp, memcpy, memmove, memset.</span><br>
             <b>IO Compiler intrinsics</b> semantics are yet to be taken portably into account
             due to a lot legacy code relying on certain properties and pointer properties
             like alignment being implicit.
@@ -343,7 +345,7 @@
             tracking provenance along pointers, like for different addressing modes or
             capabilities in CHERI, would be further useful.
           </li>
-          <li><span><a href="#cheri">CHERI rules for pointers</a>.</span><br>
+          <li><span>CHERI rules for pointers.</span><br>
             In <b>CHERI</b> mixed-capability mode pointers may be raw pointers
             inclusive or pointer with annotated capabilities, which can include
             things like lower and upper address bound, permissions masks,
@@ -359,6 +361,17 @@
           </li>
         </ol>
       <li> <a id="pointer_construction_practice"><b>Pointer construction</b> in <b>practice</b></a>.
+        The original intention was to explain provenance based rules, but due to
+        long standing bugs in LLVM and gcc and no formal model with performance
+        safety, compilation time and other implications, I would suggest the reader
+        to write thorough tests and on doubts about testability to disable
+        provenance based optimizations, especially in production code.<br>
+        Optimizers with provenance based optimization steps are unfortunately
+        not build with controllability and debuggability in mind and standard
+        bodies so far can not recommend any extensive test corpus to derive
+        how frontend and backend optimizer tests would need to be designed.<br>
+        Other more elaborative examples can be seen in the github gist
+        "What is the Strict Aliasing Rule and Why do we care?".
         <ol>
           <li><span><a id="opaque">Opaque type idiom.<span>
       <figure><figcaption class="c-cap"><cite class="file">opaque.h</cite></figcaption>
@@ -387,53 +400,6 @@
 <span class="line">}
 </code></pre></figure>
           </li>
-          <li><span><a id="headers">Headers/exports exposing data structures, pointers to data structures and void pointers</a><span>
-          Headers/exports prevent provenance-based aliasing optimizations, unless LTO is used.
-      <figure><figcaption class="c-cap"><cite class="file">lto_may_break_this.h</cite></figcaption>
-<pre><code><span class="line"><span class="tok-kw">struct</span> item;</span>
-<!--<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);-->
-<!--<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id);-->
-<!--<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it);-->
-</code></pre></figure>
-      <figure><figcaption class="c-cap"><cite class="file">lto_may_break_this.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"lto_may_break_this.h"</span></span>
-<!--<span class="line"><span class="tok-kw">struct</span> item { <span class="tok-type">int32_t</span> id; };-->
-<!--<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { return <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }-->
-<!--<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id) { it-&gt;id = id; }-->
-<!--<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it) { <span class="tok-kw">return</span> it-&gt;id; }-->
-</code></pre></figure>
-<!--// lto_breaks_this.h-->
-<!--// TODO same provenance example across headers-->
-<!--// lto_breaks_this.c-->
-<!--#include lto_breaks_this.h-->
-<!--     struct item;-->
-<!--     size_t item_size(void);-->
-<!--     voitem id_setid(struct item * it, int32_t id);-->
-<!--     int item_getid(struct item * it);-->
-<!---->
-<!--     struct item { int32_t id; };-->
-<!--     size_t item_size(void) { return sizeof(struct item); }-->
-<!--     voitem id_setid(struct item * it, int32_t id) { it->id = id; }-->
-<!--     int item_getid(struct item * it) { return it->id; }-->
-          </li>
-          <li><span><a id="intrinsics">Compiler intrinsics for IO: memcmp, memcpy, memmove, memset</a>.<span>
-      <figure><figcaption class="c-cap"><cite class="file">io_intrinsics.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-comment">// IO has call convention annotations, which could specify level of LTO</span></span>
-<span class="line"><span class="tok-type">void</span> intrinsics_affecting_provenance(<span class="tok-type">void</span>) {
-<span class="line">}</span>
-</code></pre></figure>
-<!--memcmp-->
-<!--memcpy-->
-<!--memmove-->
-<!--memset-->
-<!--idea check zig compiler_rt for other needed c routines-->
-
-          </li>
-          <!-- I'd be very curious about weird embedded compiler semantics in C89 and C99 due -->
-          <!-- to reading paper "Subtleties of the ANSI/ISO C standard". -->
-          <!-- https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1637.pdf and how much stuff -->
-          <!-- https://www.cl.cam.ac.uk/~pes20/cerberus/clarifying-provenance-v4.html#q3.-can-one-make-a-usable-pointer-via-casts-to-intptr_t-and-back -->
-          <!-- https://cs61.seas.harvard.edu/site/2018/Datarep4/ -->
         </ol>
       </li>
     </ol>
