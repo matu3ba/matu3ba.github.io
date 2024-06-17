@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<title>Some practical C++ footgun avoidance.</title>
+<title>Some C++ footgun avoidance.</title>
 <style>
     #contents {
       max-width: 60em;
@@ -85,10 +85,11 @@
 </style>
 <div id="contents">
 <div style="text-align:left; padding up down: 1em">
-<h2>Some practical C++ footgun avoidance.</h2>
+<h2>Some C++ footgun avoidance.</h2>
 </div>
-  Here is a list of problems I found worthwhile to write up to remind myself
-  not to do the same mistake again or how to workaround various compiler problems.
+  Here is a list of footguns taken from my notes I found worthwhile to write up
+  to remind myself not to do the same mistake again or how to workaround
+  various compiler problems.
   It consists of type problems, easy to make memory issues mostly around
   uninitialized memory and stack-local values,
   low quality library code, problems with virtual classes,
@@ -106,7 +107,7 @@
 <pre><code>
 <span class="line"><span class="tok-kw">class</span> T1 {</span>
 <span class="line"><span class="tok-kw">public</span>:</span>
-<span class="line">    T1(); // needed to allow convenient random access via [] operator</span>
+<span class="line">    T1(); <span class="tok-comment">// needed to allow convenient random access via [] operator</span></span>
 <span class="line">    T1(const std::string &amp;t1): mName(t1) {};</span>
 <span class="line">    std::string mName;</span>
 <span class="line">    std::string prop1;</span>
@@ -114,10 +115,10 @@
 <span class="line"><span class="tok-kw">class</span> T2 {</span>
 <span class="line"><span class="tok-kw">public</span>:</span>
 <span class="line">    std::map<std::string, T1> mapex1;</span>
-<span class="line">    void AddT1 (const std::string &amp;t1str) {</span>
+<span class="line">    <span class="tok-kw">void</span> AddT1 (const std::string &amp;t1str) {</span>
 <span class="line">        T1 t1obj(t1str);</span>
 <span class="line">        mapex1.emplace(t1str, t1obj);</span>
-<span class="line">        mapex1[t1str].prop1 = "blabla"; // potential footgun!</span>
+<span class="line">        mapex1[t1str].prop1 = <span class="tok-str">"blabla"</span>; <span class="tok-comment">// potential footgun</span></span>
 <span class="line">    }</span>
 <span class="line">};</span>
 </code></pre>
@@ -139,30 +140,31 @@
       </ol>
     </li>
 
-    <li> There is no type safety in <code>reinterpret_cast</code> usage, which is worse than <code>memcpy</code>.
+    <li> There is no type safety in <code><span class="tok-builtin">reinterpret_cast</span></code> usage, which is worse than <code>memcpy</code>.
       However, the prevention of another temporary for portable code may be worth it.
       <figure><figcaption class="cpp-cap"><cite class="file">hashmap_simple_ub.cpp</cite></figcaption>
 <pre><code>
-<span class="line">int64_t usage_ptr(int64_t * val) {</span>
-<span class="line">  return *val;</span>
+<span class="line"><span class="tok-type">int64_t</span> usage_ptr(<span class="tok-type">int64_t</span> * val) {</span>
+<span class="line">  <span class="tok-kw">return</span> *val;</span>
 <span class="line">}</span>
-<span class="line">int reinterpret_cast_usage() {</span>
-<span class="line">  // clang-format: off</span>
-<span class="line">  uint8_t some_vals[9] = { 0</span>
+<span class="line"><span class="tok-type">int32_t</span> reinterpret_cast_usage() {</span>
+<span class="line">  <span class="tok-comment">// clang-format: off</span></span>
+<span class="line">  <span class="tok-type"><span class="tok-type">uint8_t</span></span> some_vals[9] = { 0</span>
 <span class="line">                         , 1, 0, 0, 0</span>
 <span class="line">                         , 0, 0, 0, 0 };</span>
-<span class="line">  // clang-format: on</span>
-<span class="line">  int64_t val_mcpy;
-<span class="line">  // val_mcpy = memcpy(&amp;val_mcpy, some_vals[1], sizeof(val_mcpy);  // refusal to compile</span>
-<span class="line">  val_mcpy = memcpy(&amp;val_mcpy, &amp;some_vals[1], sizeof(val_mcpy);   // refusal to compile</span>
-<span class="line">  int64_t val_wrong = *reinterpret_cast<int64_t*>(some_vals[1]);            // runtime error</span>
-<span class="line">  int64_t val_ok = *reinterpret_cast<int64_t*>(&amp;some_vals[1]);              // correct usage</span>
-<span class="line">  int64_t * val_ok_ptr = reinterpret_cast<int64_t*>(&amp;some_vals[1]);         // correct usage</span>
+<span class="line">  <span class="tok-comment">// clang-format: on</span></span>
+<span class="line">  <span class="tok-type">int64_t</span> val_mcpy;
+<span class="line">  <span class="tok-comment">// val_mcpy = memcpy(&amp;val_mcpy, some_vals[1], sizeof(val_mcpy);  // refusal to compile</span></span>
+<span class="line">  val_mcpy = <span class="tok-builtin">memcpy</span>(&amp;val_mcpy, &amp;some_vals[1], sizeof(val_mcpy);   // refusal to compile</span>
+<span class="line">  <span class="tok-type">int64_t</span> val_wrong = *<span class="tok-builtin">reinterpret_cast</span>&lt;<span class="tok-type">int64_t</span>*&gt;(some_vals[1]);            <span class="tok-comment">// runtime error</span></span>
+<span class="line">  <span class="tok-type">int64_t</span> val_ok = *<span class="tok-builtin">reinterpret_cast</span>&lt;<span class="tok-type">int64_t</span>*&gt;(&amp;some_vals[1]);              <span class="tok-comment">// correct usage</span></span>
+<span class="line">  <span class="tok-type">int64_t</span> * val_ok_ptr = <span class="tok-builtin">reinterpret_cast</span>&lt;<span class="tok-type">int64_t</span>*&gt;(&amp;some_vals[1]);         <span class="tok-comment">// correct usage</span></span>
 <span class="line">  usage_ptr(val_ok_ptr);</span>
-<span class="line">  usage_ptr(&amp;val_mcpy);                              // necessary temporary copy hopefully elided</span>
-<span class="line">  <span class="tok-kw">if</span> (val != INT64_MIN) <span class="tok-kw">return</span> 1;</span>
+<span class="line">  usage_ptr(&amp;val_mcpy);                              <span class="tok-comment">// necessary temporary copy hopefully elided</span></span>
+<span class="line">  <span class="tok-kw">if</span> (val != <span class="tok-number">INT64_MIN</span>) <span class="tok-kw">return</span> 1;</span>
 <span class="line">  <span class="tok-kw">return</span> 0;</span>
 <span class="line">}</span>
+</code></pre>
     </li>
 
     <li> <a href="https://stackoverflow.com/questions/11598990/is-stdstoi-actually-safe-to-use">
@@ -192,17 +194,17 @@
     <li> Checking, if typename is a string is complex (even with C++17 extension).
       <figure><figcaption class="cpp-cap"><cite class="file">hashmap_simple_ub.cpp</cite></figcaption>
 <pre><code>
-<span class="line">template&lt;typename STR&gt;</span>
-<span class="line">inline</span> constexpr bool is_string_class_decayed = false;</span>
-<span class="line">template&lt;typename... STR&gt;</span>
-<span class="line">inline constexpr bool is_string_class_decayed&lt;std::basic_string&lt;STR...&gt;&gt; = true;</span>
-<span class="line">// decay_t will remove const, &amp; and volatile from the type</span>
-<span class="line">template&lt;typename STR&gt;</span>
-<span class="line">inline</span> constexpr bool is_string_class = is_string_class_decayed<std::decay_t<STR&gt;&gt;</span>
-<span class="line">template &lt;typename TChar, typename TString&gt;</span>
-<span class="line">inline constexpr bool is_string = is_string_class&lt;TString&gt; &amp;&amp; std::is_same_v&lt;TChar, typename TString::value_type&gt;;</span>
+<span class="line"><span class="tok-type">template</span>&lt;typename STR&gt;</span>
+<span class="line"><span class="tok-type">inline</span></span> <span class="tok-type">constexpr</span> bool is_string_class_decayed = false;</span>
+<span class="line"><span class="tok-type">template</span>&lt;typename... STR&gt;</span>
+<span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> bool is_string_class_decayed&lt;std::basic_string&lt;STR...&gt;&gt; = true;</span>
+<span class="line"><span class="tok-comment">// decay_t will remove const, &amp; and volatile from the type</span></span>
+<span class="line"><span class="tok-type">template</span>&lt;typename STR&gt;</span>
+<span class="line"><span class="tok-type">inline</span></span> <span class="tok-type">constexpr</span> bool is_string_class = is_string_class_decayed&lt;std::decay_t&lt;STR&gt;&gt;</span>
+<span class="line"><span class="tok-type">template</span> &lt;typename TChar, typename TString&gt;</span>
+<span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> bool is_string = is_string_class&lt;TString&gt; &amp;&amp; std::is_same_v&lt;TChar, typename TString::value_type&gt;;</span>
 <span class="line"><span class="tok-kw">static_assert</span>(is_string_class&lt;std::string&gt;);</span>
-<span class="line"><span class="tok-kw">static_assert</span>(is_string_class&lt;const std::wstring&amp;&gt;); // that's why we need decay_t</span>
+<span class="line"><span class="tok-kw">static_assert</span>(is_string_class&lt;const std::wstring&amp;&gt;); <span class="tok-comment">// that's why decay_t is needed</span></span>
 <span class="line"><span class="tok-kw">static_assert</span>(!is_string_class&lt;int&gt;);</span>
 <span class="line"><span class="tok-kw">static_assert</span>(!is_string_class&lt;const double&gt;);</span>
 <span class="line"><span class="tok-kw">static_assert</span>(!is_string_class&lt;const char*&gt;);</span>
@@ -220,47 +222,46 @@
     <li> Interoperating type safe with c strings is cumbersome.
       <figure><figcaption class="cpp-cap"><cite class="file">hashmap_simple_ub.cpp</cite></figcaption>
 <pre><code>
-<span class="line">void cstring_string_interop() {</span>
-<span class="line">  const char * cmd = "ls";</span>
-<span class="line">  char const * buffer[] = {"ls", "-l", NULL};</span>
-<span class="line">  char * const * argv = const_cast<char * const *>(buffer);</span>
+<span class="line"><span class="tok-kw">void</span> cstring_string_interop() {</span>
+<span class="line">  const char * cmd = <span class="tok-str">"ls"</span>;</span>
+<span class="line">  char const * buffer[] = {<span class="tok-str">"ls"</span>, <span class="tok-str">"-l"</span>, NULL};</span>
+<span class="line">  char * const * argv = <span class="tok-builtin">const_cast</span><char * const *>(buffer);</span>
 <span class="line">  int execed = execve(cmd, argv, NULL);</span>
-<span class="line">  (void)execed;</span>
+<span class="line">  (<span class="tok-kw">void</span>)execed;</span>
 <span class="line">}</span>
 </code></pre>
       </figure>
     </li>
 
     <li> MSVC has no reliable relative paths as macro yet (see experimental:deterministic mode).
-        Workaround get filename by Andry https://stackoverflow.com/a/54335644.
+      <a href="https://stackoverflow.com/a/54335644">Workaround to get filename by Andry</a>.
       <figure><figcaption class="cpp-cap"><cite class="file">hashmap_simple_ub.cpp</cite></figcaption>
 <pre><code>
-<span class="line">template <typename T, size_t S></span>
-<span class="line">inline constexpr size_t fname_offs(const T(&amp;str)[S], size_t i = S - 1) {</span>
-<span class="line">  return (str[i] == '/' || str[i] == '\\') ? i + 1 : (i &gt; 0 ? fname_offs(str, i - 1) : 0);</span>
+<span class="line"><span class="tok-type">template</span> &lt;typename T, <span class="tok-type">size_t</span> S&gt;</span>
+<span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> <span class="tok-type">size_t</span> fname_offs(const T(&amp;str)[S], <span class="tok-type">size_t</span> i = S - 1) {</span>
+<span class="line">  <span class="tok-kw">return</span> (str[i] == '/' || str[i] == '\\') ? i + 1 : (i &gt; 0 ? fname_offs(str, i - 1) : 0);</span>
 <span class="line">}</span>
-<span class="line">template <typename T></span>
-<span class="line">inline constexpr size_t fname_offs(T(&amp;str)[1]) {</span>
-<span class="line">  return 0;</span>
+<span class="line"><span class="tok-type">template</span> &lt;typename T&gt;</span>
+<span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> <span class="tok-type">size_t</span> fname_offs(T(&amp;str)[1]) {</span>
+<span class="line">  <span class="tok-kw">return</span> 0;</span>
 <span class="line">}</span>
 <span class="line">namespace util_force_const_eval {</span>
-<span class="line">  template <typename T, T v></span>
-<span class="line">  struct const_expr_value</span>
-<span class="line">  {</span>
-<span class="line">    static constexpr const T value = v;</span>
+<span class="line">  <span class="tok-type">template</span> &lt;typename T, T v&gt;</span>
+<span class="line">  <span class="tok-type">struct</span> const_expr_value {</span>
+<span class="line">    <span class="tok-type">static</span> <span class="tok-type">constexpr</span> const T value = v;</span>
 <span class="line">  };</span>
 <span class="line">}</span>
-<span class="line">#define FORCE_CONST_EVAL(exp) ::util_force_const_eval::const_expr_value<decltype(exp), exp>::value</span>
-<span class="line">#define LEAF(FN) (&amp;FN[FORCE_CONST_EVAL(fname_offs(FN))])</span>
+<span class="line"><span class="tok-builtin">#define</span> FORCE_CONST_EVAL(exp) ::util_force_const_eval::const_expr_value<decltype(exp), exp>::value</span>
+<span class="line"><span class="tok-builtin">#define</span> LEAF(FN) (&amp;FN[FORCE_CONST_EVAL(fname_offs(FN))])</span>
 <span class="line"></span>
-<span class="line">int testEq(int a, int b) {</span>
-<span class="line">  if (a != b) {</span>
-<span class="line">    // Prefer __FILE_NAME__, which also works in C. Ideally, the compiler</span>
-<span class="line">    // can be told to provide relative file paths.</span>
-<span class="line">    fprintf(stderr,"%s:%d got '%d' expected '%d'\n", LEAF(__FILE__), __LINE__, a, b);</span>
-<span class="line">    return 1;</span>
+<span class="line"><span class="tok-type">int</span> testEq(<span class="tok-type">int32_t</span> a, <span class="tok-type">int32_t</span> b) {</span>
+<span class="line">  <span class="tok-kw">if</span> (a != b) {</span>
+<span class="line">    <span class="tok-comment">// Prefer __FILE_NAME__, which also works in C. Ideally, the compiler</span></span>
+<span class="line">    <span class="tok-comment">// can be told to provide relative file paths.</span></span>
+<span class="line">    fprintf(stderr,<span class="tok-str">"%s:%d got '%d' expected '%d'\n"</span>, LEAF(__FILE__), __LINE__, a, b);</span>
+<span class="line">    <span class="tok-kw">return</span> 1;</span>
 <span class="line">  }</span>
-<span class="line">  return 0;</span>
+<span class="line">  <span class="tok-kw">return</span> 0;</span>
 <span class="line">}</span>
 </code></pre>
       </figure>
@@ -286,11 +287,115 @@
       it like <code>memcpy</code> will be UB.
     </li>
 
-TODO
-* SHENNANIGAN streams do not enforce C abi and are overly complex for printing memory
-* SHENNANIGAN circular template expansion debugging
-* SHENNANIGAN missing virtual destructor for non-final methods in classes technically UB
-* why_exceptions_dont_scale
+    <li> Streams do not enforce C abi and are overly complex for printing memory.
+      Further (no example here), they need to extensions to offer non-blocking reads,
+      writes and introspection.
+      <figure><figcaption class="cpp-cap"><cite class="file">streams.cpp</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-kw">void</span> stream_cpp() {</span>
+<span class="line">  std::vector&lt;<span class="tok-type">uint8_t</span>&gt; array {1, 0, 0, 0};</span>
+<span class="line">  std::fstream fstream{stdout, std::fstream::app | std::fstream::out};</span>
+<span class="line">  <span class="tok-kw">auto</span> flags = fstream.flags();</span>
+<span class="line">  fstream &lt;&lt; std::hex;</span>
+<span class="line">  <span class="tok-kw">for</span> (uint32_t i = 0; i &lt; array.size(); i+=1)</span>
+<span class="line">    fstream &lt;&lt; std::hex &lt;&lt; array[i];</span>
+<span class="line">  fstream.flags(flags);</span>
+<span class="line">  fstream &lt;&lt; <span class="tok-str">"\n"</span>;</span>
+<span class="line">  fstream.close();</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-kw">void</span> fprintf_c() {</span>
+<span class="line">  std::vector&lt;<span class="tok-type">uint8_t</span>&gt; array {1, 0, 0, 0};</span>
+<span class="line">  <span class="tok-kw">for</span> (uint32_t i = 0; i &lt; array.size(); i+=1)</span>
+<span class="line">    fprintf(stdout, <span class="tok-str">"%x, "</span>, array[i]);</span>
+<span class="line">  fprintf(stdout, <span class="tok-str">"\n"</span>)</span>
+<span class="line">}</span>
+</code></pre>
+    </li>
+
+    <li> Incomplete type can not be instantiated in template:
+      <ol>
+        <li> pull in all headers deps of headers</li>
+        <li>class forward declares may create circular dependencies</li>
+        <li>build each file individually</li>
+        <li>might be a circular dependency during template usage</li>
+      </ol>
+    </li>
+
+    <li> Missing virtual destructor for non-final methods in classes is technically UB.
+      <figure><figcaption class="cpp-cap"><cite class="file">missing_virt_destructor.cpp</cite></figcaption>
+<pre><code>
+<span class="line">class ISomeInterface {</span>
+<span class="line"><span class="tok-kw">public</span>:</span>
+<span class="line">  <span class="tok-type">virtual</span> <span class="tok-type">int</span> SomeMethod() = 0;</span>
+<span class="line">};</span>
+<span class="line">class CSomeClass : ISomeInterface</span>
+<span class="line">{</span>
+<span class="line">  CSomeClass();</span>
+<span class="line">  <span class="tok-kw">public</span>:</span>
+<span class="line">  <span class="tok-type">int</span> SomeMethod() override {</span>
+<span class="line">    <span class="tok-kw">return</span> 1;</span>
+<span class="line">  }
+<span class="line">  <span class="tok-type">virtual</span> ~CSomeClass(); <span class="tok-comment">// missing virtual technical UB</span></span>
+<span class="line">};</span>
+<span class="line">class CSomeDerivedClass : CSomeClass</span>
+<span class="line">{</span>
+<span class="line">  CSomeDerivedClass();</span>
+<span class="line">  <span class="tok-kw">public</span>:</span>
+<span class="line">  <span class="tok-type">int</span> SomeMethod() override final {</span>
+<span class="line">    <span class="tok-kw">return</span> 2;</span>
+<span class="line">  }</span>
+<span class="line">  <span class="tok-type">virtual</span> ~CSomeDerivedClass(); <span class="tok-comment">// optional virtual</span></span>
+<span class="line">};</span>
+</code></pre>
+    </li>
+
+    <li> Why exceptions do not scale.
+      <figure><figcaption class="cpp-cap"><cite class="file">exceptions_dont_scale.cpp</cite></figcaption>
+<pre><code>
+<span class="line"><span class="tok-type">int</span> why_exceptions_dont_scale(char * errmsg_ptr, uint32_t * errmsg_len) {</span>
+<span class="line">  <span class="tok-type">constexpr</span> char const_drivermsg[] = <span class="tok-str">"DriverError: "</span>;</span>
+<span class="line">  <span class="tok-type">constexpr</span> char const_initmsg[] = <span class="tok-str">"InitError: "</span>;</span>
+<span class="line">  <span class="tok-type">constexpr</span> <span class="tok-type">char</span> const_nocamfoundmsg[] = <span class="tok-str">"NoCameraFound: "</span>;</span>
+<span class="line">  <span class="tok-comment">// Underlying idea: prefix exception strings with text. Below case handling</span></span>
+<span class="line">  <span class="tok-comment">// shows how error prone this is to make runtime decisions with C abi</span></span>
+<span class="line">  <span class="tok-comment">// compatibililty across dll. And this does not cover compiler mangling and</span></span>
+<span class="line">  <span class="tok-comment">// dependency on runtime etc.</span></span>
+<span class="line">  <span class="tok-comment">// Further more, tooling like clangd is unable to infer all possible strings</span></span>
+<span class="line">  <span class="tok-comment">// to enforce correct error handling of the bubbled up exceptions and not even</span></span>
+<span class="line">  <span class="tok-comment">// all possible derived exception types.</span></span>
+<span class="line">  struct SomeDll some_dll;</span>
+<span class="line">  <span class="tok-kw">try</span> {</span>
+<span class="line">    some_dll.SetupDll(<span class="tok-str">"someconfig_file"</span>);</span>
+<span class="line">  }</span>
+<span class="line">  <span class="tok-kw">catch</span> (std::runtime_error &amp; rt_err) {</span>
+<span class="line">    std::string err = rt_err.what();</span>
+<span class="line">    <span class="tok-comment">// std::string::StartsWith : err.rfind("DriverError:", 0) == 0)</span></span>
+<span class="line">    <span class="tok-kw">if</span> (err.rfind(const_drivermsg, 0) == 0) {</span>
+<span class="line">      <span class="tok-type">int</span> st = snprintf(&amp;errmsg_ptr[0], *errmsg_len, <span class="tok-str">"%s"</span>, &amp;err.c_str()[sizeof(const_drivermsg)]);</span>
+<span class="line">      <span class="tok-kw">if</span> (st &lt;= 0) <span class="tok-kw">return</span> 1; <span class="tok-comment">// C89 allows less than 1, C99 NULL</span></span>
+<span class="line">        <span class="tok-kw">return</span> 2;</span>
+<span class="line">    }</span>
+<span class="line">    <span class="tok-kw">else</span> <span class="tok-kw">if</span> (err.rfind(const_initmsg, 0) == 0) {</span>
+<span class="line">      <span class="tok-type">int</span> st = snprintf(&amp;errmsg_ptr[0], *errmsg_len, <span class="tok-str">"%s"</span>, &amp;err.c_str()[sizeof(const_initmsg)]);</span>
+<span class="line">      <span class="tok-kw">if</span> (st &lt;= 0) <span class="tok-kw">return</span> 1;</span>
+<span class="line">        <span class="tok-kw">return</span> 2;</span>
+<span class="line">    }</span>
+<span class="line">    <span class="tok-kw">else</span> <span class="tok-kw">if</span> (err.rfind(const_nocamfoundmsg, 0) == 0) {</span>
+<span class="line">      <span class="tok-type">int</span> st = snprintf(&amp;errmsg_ptr[0], *errmsg_len, <span class="tok-str">"%s"</span>, &amp;err.c_str()[sizeof(const_nocamfoundmsg)]);</span>
+<span class="line">      <span class="tok-kw">if</span> (st &lt;= 0) <span class="tok-kw">return</span> 1;</span>
+<span class="line">      <span class="tok-kw">return</span> 3;</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">  <span class="tok-kw">catch</span> (std::exception &amp; exc) {</span>
+<span class="line">    std::string err = exc.what();</span>
+<span class="line">    <span class="tok-type">int</span> st = snprintf(&amp;errmsg_ptr[0], *errmsg_len, <span class="tok-str">"%s"</span>, &amp;err.c_str()[sizeof(const_nocamfoundmsg)]);</span>
+<span class="line">    <span class="tok-kw">if</span> (st &lt;= 0) <span class="tok-kw">return</span> 1;</span>
+<span class="line">    <span class="tok-kw">return</span> 100;</span>
+<span class="line">  }</span>
+<span class="line">  <span class="tok-kw">return</span> 0;</span>
+<span class="line">}</span>
+</code></pre>
+    </li>
 
   </ul>
 </div>

@@ -164,7 +164,7 @@
           <li><span>Provenance as regions pointer is allowed to point to for access.</span>
       <figure><figcaption class="c-cap"><cite class="file">provenance.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">void</span> use_ptr(<span class="tok-kw">int</span> * ptr) {</span>
-<span class="line">  <span class="tok-kw">printf</span>("0: %d, 9: %d\n", arr[0], arr[9]);</span>
+<span class="line">  <span class="tok-builtin">printf</span>("0: %d, 9: %d\n", arr[0], arr[9]);</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-type">void</span> main() {</span>
 <span class="line">  <span class="tok-type">int</span> arr1[10]</span>
@@ -179,7 +179,7 @@
       <figure><figcaption class="c-cap"><cite class="file">copy_bytes.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">void</span> use_bytes(<span class="tok-type">uint8_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint32_t</span> * output, <span class="tok-type">int32_t</span> len_output) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i*4&lt;len_bytes &amp;&amp; i&lt;len_output; i+=4) {</span>
-<span class="line">    <span class="tok-kw">memcpy</span>(&amp;output[i], &amp;bytes[4*i], <span class="tok-builtin">sizeof</span>(len_output));
+<span class="line">    <span class="tok-builtin">memcpy</span>(&amp;output[i], &amp;bytes[4*i], <span class="tok-builtin">sizeof</span>(len_output));
 <span class="line">  }</span>
 <span class="line">}</span>
 </code></pre></figure>
@@ -190,7 +190,7 @@
 <span class="line">  <span class="tok-type">uint8_t</span> arr[4] = {0,0,0,1};</span>
 <span class="line">  <span class="tok-comment">// unnecessary variable hopefully elided</span></span>
 <span class="line">  <span class="tok-type">uint32_t</span> u32_arr = 0;</span>
-<span class="line">  <span class="tok-kw">memcpy</span>(&amp;u32_arr, &amp;arr[0], 4);</span>
+<span class="line">  <span class="tok-builtin">memcpy</span>(&amp;u32_arr, &amp;arr[0], 4);</span>
 <span class="line">  <span class="tok-type">uint32_t</span> * u32_arr_ptr = &amp;u32_arr;</span>
 <span class="line">  <span class="tok-comment">// &lt;use u32_arr_ptr here&gt;</span></span>
 <span class="line">  <span class="tok-comment">// Footgun: Dont return stack local variables</span></span>
@@ -217,7 +217,7 @@
       <figure><figcaption class="c-cap"><cite class="file">allowed_aliasing.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">void</span> allowed_aliasing(<span class="tok-type">uint16_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint16_t</span> * lim) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
-<span class="line">    <span class="tok-kw">if</span> (bytes == lim) break</span>;
+<span class="line">    <span class="tok-kw">if</span> (bytes == lim) <span class="tok-type">break</span></span>;
 <span class="line">    bytes[i] = 42;</span>
 <span class="line">  }</span>
 <span class="line">}</span>
@@ -227,7 +227,7 @@
       <figure><figcaption class="c-cap"><cite class="file">non_allowed_aliasing.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">void</span> non_allowed_aliasing(<span class="tok-type">uint16_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint8_t</span> * lim) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
-<span class="line">    <span class="tok-kw">if</span> (bytes == lim) break</span>;
+<span class="line">    <span class="tok-kw">if</span> (bytes == lim) <span class="tok-type">break</span></span>;
 <span class="line">    bytes[i] = 42;</span>
 <span class="line">  }</span>
 <span class="line">}</span>
@@ -427,7 +427,7 @@
 <span class="line">  <span class="tok-comment">// undefined behavior introduced if temporary is missing</span>
 <span class="line">  <span class="tok-comment">// printf("%x", ++(create_fail().a[0]));</span></span>
 <span class="line">  <span class="tok-type">struct</span> sExample res = create_sExample();</span>
-<span class="line">  <span class="tok-kw">printf</span>("%x", ++(res.a[0]));</span>
+<span class="line">  <span class="tok-builtin">printf</span>("%x", ++(res.a[0]));</span>
 <span class="line">  return 0;</span>
 <span class="line">}</span>
 </code></pre></figure>
