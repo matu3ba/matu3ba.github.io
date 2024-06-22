@@ -113,7 +113,7 @@
   </li>
 
   <li> <code>.strip()</code> is necessary after file read,
-    because Python automatically adds <code>'\n'</code> and there is no way to read without
+    because Python automatically adds <code>\n</code> and there is no way to read without
      newlines into a list.
   </li>
 
@@ -194,7 +194,7 @@
   </li>
 
   <li> Tuples and dicts are annoying to differentiate
-      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+      <figure><figcaption class="py-cap"><cite class="file">tup_and_dics.py</cite></figcaption>
 <pre><code><span class="line"># dictionary</span>
 <span class="line">dict1 = {</span>
 <span class="line">  "m1": "cp",</span>
@@ -223,7 +223,7 @@
   <li>
   Stack trace formatting is inefficient and one can not use <code>gf</code> or <code>gF</code> vim shortcuts to jump to location
   function to write status + trace to variable.
-      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+      <figure><figcaption class="py-cap"><cite class="file">stacktrace_fmt.py</cite></figcaption>
 <pre><code><span class="line"><span class="tok-fn">def</span> getStackTrace() -&gt; str:</span>
 <span class="line">  <span class="tok-kw">return</span> repr(traceback.format_stack())</span>
 </code></pre>
@@ -231,7 +231,7 @@
   </li>
 
   <li> Mixed <code>"</code> and <code>'</code> strings are invalid json
-      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+      <figure><figcaption class="py-cap"><cite class="file">json.py</cite></figcaption>
 <pre><code><span class="line"># Dict -&gt; str is inconsistent to json -&gt; str, so workaround with</span>
 <span class="line"># dict_asjson_lower = str(dict1).replace("'", '"')</span>
 <span class="line"><span class="tok-fn">def</span> combineDictsFromStr() -&gt; <span class="tok-type">None</span>:</span>
@@ -247,10 +247,10 @@
       </figure>
   </li>
 
-  <li> <code>os.kill()</code> does not call registered cleanup function `atexit.register(exit_cleanup)`
+  <li> <code>os.kill()</code> does not call registered cleanup function <code>atexit.register(exit_cleanup)</code>
 by deamonized threads. Must store pids of child processes and clean them explicitly or
 signal main thread via
-      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+      <figure><figcaption class="py-cap"><cite class="file">signal_main_thread.py</cite></figcaption>
 <pre><code><span class="line"><span class="tok-fn">def</span> signalMainThread(self) -&gt; <span class="tok-type">None</span>:</span>
 <span class="line">    <span class="tok-kw">pass</span></span>
 <span class="line">    # before Python 3.10: _thread.interrupt_main()</span>
@@ -272,7 +272,7 @@ signal main thread via
   <li>
 Generic module annotation is not allowed and mypy has no explicit docs for this.
 The following does not work and 'module: object' is the closest we can get as simple annotation.
-      <figure><figcaption class="py-cap"><cite class="file">missing_dict_methods.py</cite></figcaption>
+      <figure><figcaption class="py-cap"><cite class="file">modle_annotation.py</cite></figcaption>
 <pre><code><span class="line"><span class="tok-fn">def</span> check_fn(module: ModuleType) -&gt; <span class="tok-type">int</span>:</span>
 <span class="line">    <span class="tok-kw">if</span> str(type(module)) != "<class 'module'>": <span class="tok-kw">return</span> 1</span>
 <span class="line">    <span class="tok-kw">return</span> 0</span>
