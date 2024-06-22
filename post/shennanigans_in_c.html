@@ -119,7 +119,7 @@
             <ul>
               <li><span>Cleanly accessing a pointer with increased alignment requires
                 <a href="https://stackoverflow.com/questions/7059299/how-to-properly-convert-an-unsigned-char-array-into-an-uint32-t">to use a temporary with memcopy</a>.</span></li>
-              <li><span>To only compare pointers decrease alignment with <code>char*</code> pointer.</span></li>
+              <li><span>To only compare pointers decrease alignment with <code><span class="tok-type">char</span>*</code> pointer.</span></li>
               <li><span>To prune type info for generics use <code>void*</code> pointer.</span></li>
               <li><span>You are responsible to call a function that provides or provide yourself.</span></li>
             </ul>
@@ -148,11 +148,12 @@
                 for access with array being the "memory origin range" on stack or heap.
                 Pointers must point to the same array, when being used for arithmetic.<br>
                 Function arguments of identical pointer types are allowed to have
-                overlapping provenance regions, unless annotated with <code>__restrict__</code>,
+                overlapping provenance regions, unless annotated with <code><span class="tok-builtin">restrict</span></code>
+                (<code><span class="tok-builtin">__restrict__</span></code> for C++ in clang/gcc),
                 but pointers of different types are not allowed to have those regions.
                 Pointer comparison must be done via identical alignments unless comparison
                 of a pointer against pointer to 0 usually
-                abbreviated via macro <code>NULL</code>.<br>
+                abbreviated via macro <code><span class="tok-null">NULL</span></code>.<br>
               </li>
             </ul>
           </li>
@@ -164,7 +165,7 @@
           <li><span>Provenance as regions pointer is allowed to point to for access.</span>
       <figure><figcaption class="c-cap"><cite class="file">provenance.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">void</span> use_ptr(<span class="tok-kw">int</span> * ptr) {</span>
-<span class="line">  <span class="tok-builtin">printf</span>("0: %d, 9: %d\n", arr[0], arr[9]);</span>
+<span class="line">  printf("0: %d, 9: %d\n", arr[0], arr[9]);</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-type">void</span> main() {</span>
 <span class="line">  <span class="tok-type">int</span> arr1[10]</span>
@@ -201,10 +202,10 @@
           <li><span>Ensure correct storage and padding size for pointers via sizeof.</span>
       <figure><figcaption class="c-cap"><cite class="file">storage_padding.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-kw">struct</span> sStruct1 {</span>
-<span class="line">  uint8_t a1;</span>
-<span class="line">  uint8_t a2;</span>
-<span class="line">  uint32 b1;</span>
-<span class="line">  uint32 b2;</span>
+<span class="line">  <span class="tok-type">uint8_t</span> a1;</span>
+<span class="line">  <span class="tok-type">uint8_t</span> a2;</span>
+<span class="line">  <span class="tok-type">uint32</span> b1;</span>
+<span class="line">  <span class="tok-type">uint32</span> b2;</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-type">void</span> padding() {</span>
 <span class="line">  <span class="tok-kw">struct</span> sStruct1 * str1 = malloc(<span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> sStruct1)); </span>
@@ -263,7 +264,7 @@
 <span class="line">    <span class="tok-type">void</span> * pv_add_one = (void*)external_memory;</span>
 <span class="line">    <span class="tok-kw">pfn_add_one</span> pfn_add_one_casted = (pfn_add_one)pv_add_one;</span>
 <span class="line">    <span class="tok-kw">int</span> res = pfn_add_one_casted(1);</span>
-<span class="line">    assert(res == 1);</span>
+<span class="line">    assert(res == 2);</span>
 <span class="line">  }</span>
 <span class="line">}</span>
 </code></pre></figure>
@@ -393,7 +394,7 @@
 <pre><code><span class="line">// careful with segmented address spaces: lookup uintptr_t semantics</span>
 <span class="line"><span class="tok-type">void</span> ptrtointtoptr() {</span>
 <span class="line">  <span class="tok-type">void</span> *mem = malloc(1024+15);</span>
-<span class="line">  <span class="tok-comment">// C89: void *ptr = ((char *)mem+15) &amp; ~0x0F;</span></span>
+<span class="line">  <span class="tok-comment">// C89: void *ptr = ((<span class="tok-type">char</span> *)mem+15) &amp; ~0x0F;</span></span>
 <span class="line">  <span class="tok-type">void</span> *ptr = ((<span class="tok-type">uintptr_t</span>)mem+15) &amp; ~ (<span class="tok-type">uintptr_t</span>)0x0F;</span>
 <span class="line">  memset_16aligned(ptr, 0, 1024);</span>
 <span class="line">  free(mem);</span>
@@ -427,7 +428,7 @@
 <span class="line">  <span class="tok-comment">// undefined behavior introduced if temporary is missing</span>
 <span class="line">  <span class="tok-comment">// printf("%x", ++(create_fail().a[0]));</span></span>
 <span class="line">  <span class="tok-type">struct</span> sExample res = create_sExample();</span>
-<span class="line">  <span class="tok-builtin">printf</span>("%x", ++(res.a[0]));</span>
+<span class="line">  printf("%x", ++(res.a[0]));</span>
 <span class="line">  return 0;</span>
 <span class="line">}</span>
 </code></pre></figure>
