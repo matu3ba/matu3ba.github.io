@@ -164,11 +164,13 @@
           <!-- <span class="tok-kw"></span> -->
           <li><span>Provenance as regions pointer is allowed to point to for access.</span>
       <figure><figcaption class="c-cap"><cite class="file">provenance.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">void</span> use_ptr(<span class="tok-kw">int</span> * ptr) {</span>
-<span class="line">  printf("0: %d, 9: %d\n", arr[0], arr[9]);</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdlib.h&gt;</span></span>
+<span class="line"><span class="tok-type">void</span> use_ptr(<span class="tok-type">int</span> * arr) {</span>
+<span class="line">  printf(<span class="tok-str">"0: %d, 9: %d\n"</span>, arr[0], arr[9]);</span>
 <span class="line">}</span>
-<span class="line"><span class="tok-type">void</span> main() {</span>
-<span class="line">  <span class="tok-type">int</span> arr1[10]</span>
+<span class="line"><span class="tok-type">int</span> main() {</span>
+<span class="line">  <span class="tok-type">int</span> arr1[10];</span>
 <span class="line">  use_ptr(arr1);</span>
 <span class="line">  <span class="tok-type">int</span> * arr2 = malloc(<span class="tok-builtin">sizeof</span>(int));</span>
 <span class="line">  use_ptr(arr2);</span>
@@ -178,7 +180,9 @@
           </li>
           <li><span>Copy around some bytes from not overlapping regions (otherwise use memmove).</span>
       <figure><figcaption class="c-cap"><cite class="file">copy_bytes.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">void</span> use_bytes(<span class="tok-type">uint8_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint32_t</span> * output, <span class="tok-type">int32_t</span> len_output) {</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;string.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-type">void</span> use_bytes(<span class="tok-type">uint8_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint32_t</span> * output, <span class="tok-type">int32_t</span> len_output) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i*4&lt;len_bytes &amp;&amp; i&lt;len_output; i+=4) {</span>
 <span class="line">    <span class="tok-builtin">memcpy</span>(&amp;output[i], &amp;bytes[4*i], <span class="tok-builtin">sizeof</span>(len_output));
 <span class="line">  }</span>
@@ -187,7 +191,9 @@
           </li>
           <li><span>Correct alignment of pointers with temporary, when necessary.</span>
       <figure><figcaption class="c-cap"><cite class="file">correct_alignment.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">int</span> ptr_no_reinterpret_cast() {</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;string.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-type">int</span> ptr_no_reinterpret_cast() {</span>
 <span class="line">  <span class="tok-type">uint8_t</span> arr[4] = {0,0,0,1};</span>
 <span class="line">  <span class="tok-comment">// unnecessary variable hopefully elided</span></span>
 <span class="line">  <span class="tok-type">uint32_t</span> u32_arr = 0;</span>
@@ -201,22 +207,25 @@
           </li>
           <li><span>Ensure correct storage and padding size for pointers via sizeof.</span>
       <figure><figcaption class="c-cap"><cite class="file">storage_padding.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-kw">struct</span> sStruct1 {</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdlib.h&gt;</span></span>
+<span class="line"><span class="tok-kw">struct</span> sStruct1 {</span>
 <span class="line">  <span class="tok-type">uint8_t</span> a1;</span>
 <span class="line">  <span class="tok-type">uint8_t</span> a2;</span>
-<span class="line">  <span class="tok-type">uint32</span> b1;</span>
-<span class="line">  <span class="tok-type">uint32</span> b2;</span>
-<span class="line">}</span>
+<span class="line">  <span class="tok-type">uint32_t</span> b1;</span>
+<span class="line">  <span class="tok-type">uint32_t</span> b2;</span>
+<span class="line">};</span>
 <span class="line"><span class="tok-type">void</span> padding() {</span>
 <span class="line">  <span class="tok-kw">struct</span> sStruct1 * str1 = malloc(<span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> sStruct1)); </span>
-<span class="line">  str1.a1 = 5;</span>
+<span class="line">  str1-&gt;a1 = 5;</span>
 <span class="line">  free(str1);</span>
 <span class="line">}</span>
 </code></pre></figure>
           </li>
           <li><span>Allowed aliasing of pointers (type-based aliasing analysis)</span>
       <figure><figcaption class="c-cap"><cite class="file">allowed_aliasing.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">void</span> allowed_aliasing(<span class="tok-type">uint16_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint16_t</span> * lim) {</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-type">void</span> allowed_aliasing(<span class="tok-type">uint16_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint16_t</span> * lim) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
 <span class="line">    <span class="tok-kw">if</span> (bytes == lim) <span class="tok-type">break</span></span>;
 <span class="line">    bytes[i] = 42;</span>
@@ -256,12 +265,15 @@
               Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 20240428.
             </span>
       <figure><figcaption class="c-cap"><cite class="file">aliasing_exceptions_uniform_address_space.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">void</span> aliasing_exceptions_uniform_address_space() {</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;assert.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-type">uint8_t</span> external_memory [1024];</span>
+<span class="line"><span class="tok-type">void</span> aliasing_exceptions_uniform_address_space() {</span>
 <span class="line">  <span class="tok-kw">typedef</span> <span class="tok-type">int</span>(*pfn_add_one)(<span class="tok-type">int</span>);</span>
-<span class="line">  <span class="tok-type">int</span> add_one(<span class="tok-type">int</span> x) = { return x+1; } </span>
+<span class="line">  <span class="tok-type">int</span> add_one(<span class="tok-type">int</span> x) { return x+1; } </span>
 <span class="line">  <span class="tok-type">void</span> usage(<span class="tok-type">int</span> x) {</span>
 <span class="line">    <span class="tok-comment">// read fn ptr from external code</span>
-<span class="line">    <span class="tok-type">void</span> * pv_add_one = (void*)external_memory;</span>
+<span class="line">    <span class="tok-type">void</span> * pv_add_one = (<span class="tok-type">void</span>*)external_memory;</span>
 <span class="line">    <span class="tok-kw">pfn_add_one</span> pfn_add_one_casted = (pfn_add_one)pv_add_one;</span>
 <span class="line">    <span class="tok-kw">int</span> res = pfn_add_one_casted(1);</span>
 <span class="line">    assert(res == 2);</span>
@@ -376,7 +388,10 @@
         <ol>
           <li><span><a id="opaque">Opaque type idiom.<span>
       <figure><figcaption class="c-cap"><cite class="file">opaque.h</cite></figcaption>
-<pre><code><span class="line"><span class="tok-kw">struct</span> item;</span>
+<pre><code><span class="line"><span class="tok-builtin">#pragma</span> once</span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stddef.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-kw">struct</span> item;</span>
 <span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);
 <span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id);
 <span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it);
@@ -384,21 +399,40 @@
       <figure><figcaption class="c-cap"><cite class="file">opaque.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"opaque.h"</span></span>
 <span class="line"><span class="tok-kw">struct</span> item { <span class="tok-type">int32_t</span> id; };
-<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { return <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }
+<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { <span class="tok-kw">return</span> <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }
 <span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id) { it-&gt;id = id; }
 <span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it) { <span class="tok-kw">return</span> it-&gt;id; }
 </code></pre></figure>
           </li>
           <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
       <figure><figcaption class="c-cap"><cite class="file">ptrtoint_inttoptr.c</cite></figcaption>
-<pre><code><span class="line">// careful with segmented address spaces: lookup uintptr_t semantics</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;assert.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;inttypes.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdlib.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;string.h&gt;</span></span>
+<span class="line"><span class="tok-kw">static</span> <span class="tok-type">void</span> memset_16aligned(<span class="tok-type">void</span> * ptr, <span class="tok-type">char</span> byte, <span class="tok-type">size_t</span> size_bytes, <span class="tok-type">uint16_t</span> alignment) {</span>
+<span class="line">    assert((size_bytes &amp; (alignment-1)) == 0); <span class="tok-comment">// Size aligned</span></span>
+<span class="line">    assert(((<span class="tok-type">uintptr_t</span>)ptr &amp; (alignment-1)) == 0); <span class="tok-comemnt">// Pointer aligned</span></span>
+<span class="line">    memset(ptr, byte, size_bytes);</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-comment">// 1. Careful with segmented address spaces: lookup uintptr_t semantics</span></span>
+<span class="line"><span class="tok-comment">// 2. Careful with long standing existing optimization compiler bugs pointer to</span></span>
+<span class="line"><span class="tok-comment">// integer and back optimizations in for example clang and gcc</span></span>
+<span class="line"><span class="tok-comment">// 3. Careful with LTO potentially creating problem 2.</span></span>
+<span class="line"><span class="tok-comment">// 4. Consider C11 aligned_alloc or posix_memalign</span></span>
 <span class="line"><span class="tok-type">void</span> ptrtointtoptr() {</span>
-<span class="line">  <span class="tok-type">void</span> *mem = malloc(1024+15);</span>
-<span class="line">  <span class="tok-comment">// C89: void *ptr = ((<span class="tok-type">char</span> *)mem+15) &amp; ~0x0F;</span></span>
-<span class="line">  <span class="tok-type">void</span> *ptr = ((<span class="tok-type">uintptr_t</span>)mem+15) &amp; ~ (<span class="tok-type">uintptr_t</span>)0x0F;</span>
-<span class="line">  memset_16aligned(ptr, 0, 1024);</span>
+<span class="line">  const <span class="tok-type">uint16_t</span> alignment = 16;</span>
+<span class="line">  const <span class="tok-type">uint16_t</span> align_min_1 = alignment - 1;</span>
+<span class="line">  void * mem = malloc(1024+align_min_1);</span>
+<span class="line">  <span class="tok-comment">// C89: void *ptr = (void *)(((INT_WITH_PTR_SIZE)mem+align_min_1) &amp; ~(INT_WITH_PTR_SIZE)align_min_1);</span></span>
+<span class="line">  <span class="tok-comment">// ie void *ptr = (void *)(((uint64_t)mem+align_min_1) &amp; ~(uint64_t)align_min_1);</span></span>
+<span class="line">  <span class="tok-comment">// offset ptr to next alignment byte boundary</span></span>
+<span class="line">  <span class="tok-type">void</span> * ptr = (void *)(((uintptr_t)mem+align_min_1) &amp; ~(uintptr_t)align_min_1);</span>
+<span class="line">  printf(<span class="tok-str">"0x%08"</span> PRIXPTR <span class="tok-str">", 0x%08"</span> PRIXPTR <span class="tok-str">"\n"</span>, (<span class="tok-type">uintptr_t</span>)mem, (<span class="tok-type">uintptr_t</span>)ptr);</span>
+<span class="line">  memset_16aligned(ptr, 0, 1024, alignment);</span>
 <span class="line">  free(mem);</span>
-<span class="line">}
+<span class="line">}</span>
 </code></pre></figure>
           </li>
         </ol>
@@ -406,7 +440,9 @@
     </ol>
   <li> <a id="seq_pts"><b>Sequence Points</b></a> in simple case and with storage lifetime extension.
   <figure><figcaption class="c-cap"><cite class="file">sequence_points.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-type">int</span> f(<span class="tok-type">int</span>* a) {</span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span>
+<span class="line"><span class="tok-type">int</span> f(<span class="tok-type">int</span>* a) {</span>
 <span class="line">  *a=*a+1;</span>
 <span class="line">  return *a;</span>
 <span class="line">}</span>
@@ -421,7 +457,7 @@
 <span class="line">}</span>
 <span class="line"><span class="tok-type">struct</span> sExample { <span class="tok-type">int32_t</span> a[1]; };</span>
 <span class="line"><span class="tok-type">struct</span> sExample create_sExample(void) {</span>
-<span class="line">  <span class="tok-type">struct</span>t X res = { { 1 } };</span>
+<span class="line">  <span class="tok-type">struct</span>t sExample res = { { 1 } };</span>
 <span class="line">  <span class="tok-kw">return</span> res;</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-type">int</span> storage_lifetime_footgun(void) {</span>
