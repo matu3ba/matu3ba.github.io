@@ -172,7 +172,7 @@
 <span class="line"><span class="tok-type">int</span> main() {</span>
 <span class="line">  <span class="tok-type">int</span> arr1[10];</span>
 <span class="line">  use_ptr(arr1);</span>
-<span class="line">  <span class="tok-type">int</span> * arr2 = malloc(<span class="tok-builtin">sizeof</span>(int));</span>
+<span class="line">  <span class="tok-type">int</span> * arr2 = malloc(<span class="tok-builtin">sizeof</span>(<span class="tok-type">int</span>));</span>
 <span class="line">  use_ptr(arr2);</span>
 <span class="line">  free(arr2);</span>
 <span class="line">}</span>
@@ -265,20 +265,18 @@
               Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 20240428.
             </span>
       <figure><figcaption class="c-cap"><cite class="file">aliasing_exceptions_uniform_address_space.c</cite></figcaption>
-<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;assert.h&gt;</span></span>
-<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
-<span class="line"><span class="tok-type">uint8_t</span> external_memory [1024];</span>
-<span class="line"><span class="tok-type">void</span> aliasing_exceptions_uniform_address_space() {</span>
-<span class="line">  <span class="tok-kw">typedef</span> <span class="tok-type">int</span>(*pfn_add_one)(<span class="tok-type">int</span>);</span>
-<span class="line">  <span class="tok-type">int</span> add_one(<span class="tok-type">int</span> x) { <span class="tok-kw">return</span> x+1; } </span>
-<span class="line">  <span class="tok-type">void</span> usage(<span class="tok-type">int</span> x) {</span>
-<span class="line">    <span class="tok-comment">// read fn ptr from external code</span>
-<span class="line">    <span class="tok-type">void</span> * pv_add_one = (<span class="tok-type">void</span>*)external_memory;</span>
-<span class="line">    <span class="tok-kw">pfn_add_one</span> pfn_add_one_casted = (pfn_add_one)pv_add_one;</span>
-<span class="line">    <span class="tok-kw">int</span> res = pfn_add_one_casted(1);</span>
-<span class="line">    assert(res == 2);</span>
-<span class="line">  }</span>
-<span class="line">}</span>
+<pre><code><span class="tok-builtin">#include</span> <span class="tok-str">&lt;assert.h&gt;</span>
+<span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span>
+<span class="tok-type">uint8_t</span> external_memory [1024];
+<span class="tok-kw">typedef</span> int(*pfn_add_one)(int);
+<span class="tok-type">int</span> add_one(int x) { return x+1; }
+<span class="tok-type">void</span> usage(int x) {
+  <span class="tok-comment">// read fn ptr from external code</span>
+  <span class="tok-type">void</span> * pv_add_one = (<span class="tok-type">void</span>*)external_memory;
+  <span class="tok-type">pfn_add_one</span> pfn_add_one_casted = (<span class="tok-type">pfn_add_one</span>)pv_add_one;
+  <span class="tok-type">int</span> res = pfn_add_one_casted(1);
+  assert(res == 2);
+}
 </code></pre></figure>
           </li>
         </ul>
@@ -395,8 +393,7 @@
         <ol>
           <li><span><a id="opaque">Opaque type idiom.<span>
       <figure><figcaption class="c-cap"><cite class="file">opaque.h</cite></figcaption>
-<pre><code><span class="line"><span class="tok-builtin">#pragma</span> once</span>
-<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stddef.h&gt;</span></span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stddef.h&gt;</span></span>
 <span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
 <span class="line"><span class="tok-kw">struct</span> item;</span>
 <span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);
@@ -420,7 +417,7 @@
 <span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;string.h&gt;</span></span>
 <span class="line"><span class="tok-kw">static</span> <span class="tok-type">void</span> memset_16aligned(<span class="tok-type">void</span> * ptr, <span class="tok-type">char</span> byte, <span class="tok-type">size_t</span> size_bytes, <span class="tok-type">uint16_t</span> alignment) {</span>
 <span class="line">    assert((size_bytes &amp; (alignment-1)) == 0); <span class="tok-comment">// Size aligned</span></span>
-<span class="line">    assert(((<span class="tok-type">uintptr_t</span>)ptr &amp; (alignment-1)) == 0); <span class="tok-comemnt">// Pointer aligned</span></span>
+<span class="line">    assert(((<span class="tok-type">uintptr_t</span>)ptr &amp; (alignment-1)) == 0); <span class="tok-comment">// Pointer aligned</span></span>
 <span class="line">    memset(ptr, byte, size_bytes);</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-comment">// 1. Careful with segmented address spaces: lookup uintptr_t semantics</span></span>
@@ -460,7 +457,7 @@
 <pre><code><span class="line"><span class="tok-comment"><span class="tok-bultin">#include</span> <span class="tok-str">"extern.h"</span></span></span>
 <span class="line"><span class="tok-comment">/// requires 32 byte aligned src, dest; src and dest must not overlap</span></span>
 <span class="line"><span class="tok-type">void</span> memcpy_avx(<span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> src, <span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> dest, <span class="tok-type">size_t</span> n);</span>
-<span class="line">  <span class="tok-type">size_t</span> n_vec = n / sizeof(__m256i);</span>
+<span class="line">  <span class="tok-type">size_t</span> n_vec = n / <span class="tok-builtin">sizeof</span>(<span class="tok-type">__m256i</span>);</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">size_t</span> i=0; i&lt;n_vec; i+=1) {</span>
 <span class="line">    const <span class="tok-type">__m256i</span> temp = _mm256_load_si256(src);</span>
 <span class="line">    _mm256_store_si256(dest, temp);</span>
