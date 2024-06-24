@@ -253,13 +253,13 @@
             <ol>
               <li><span>Clang and gcc have <code>-fno-strict-aliasing</code>, msvc and tcc do disable type-based aliasing analysis based optimizations.</span></li>
               <li><span>As of 20240603, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).</span></li>
-              <li><span>Usage of <code>restrict</code> can be en/disabled in all compilers via <code>#pragma optimize("", on/off)</code>.</span></li>
-              It can also be disabled in all compilers via <code>#define restrict</code>, using an according optimization level
+              <li><span>Usage of <code><span class="tok-builtin">restrict</span></code> can be en/disabled in all compilers via <code><span class="tok-builtin">#pragma</span> optimize("", on/off)</code>.</span></li>
+              It can also be disabled in all compilers via <code><span class="tok-builtin">#define</span> restrict</code>, using an according optimization level
                 (typical -O1) or via separating header and implementation and disabling link time optimziations.</span></li>
             </ol>
           </li>
           <li><span>Posix extension and Windows in practice enable dynamic linking via casting pointers <code>void *</code>to function pointers and back.
-              This also means that <code>sizeof (function pointer) == sizeof (void *)</code> must be uphold, which is not true for microcontrollers
+              This also means that <code><span class="tok-builtin">sizeof</span> (function pointer) == <span class="tok-builtin">sizeof</span> (<span class="tok-type">void</span> *)</code> must be uphold, which is not true for microcontrollers
               with separate address space for code and data or
               <a href="https://cnlelema.github.io/memo/en/cheri/cheri-c-model/">CHERI in mixed capability mode/hybrid compilation mode</a>.
               Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 20240428.
@@ -270,7 +270,7 @@
 <span class="line"><span class="tok-type">uint8_t</span> external_memory [1024];</span>
 <span class="line"><span class="tok-type">void</span> aliasing_exceptions_uniform_address_space() {</span>
 <span class="line">  <span class="tok-kw">typedef</span> <span class="tok-type">int</span>(*pfn_add_one)(<span class="tok-type">int</span>);</span>
-<span class="line">  <span class="tok-type">int</span> add_one(<span class="tok-type">int</span> x) { return x+1; } </span>
+<span class="line">  <span class="tok-type">int</span> add_one(<span class="tok-type">int</span> x) { <span class="tok-kw">return</span> x+1; } </span>
 <span class="line">  <span class="tok-type">void</span> usage(<span class="tok-type">int</span> x) {</span>
 <span class="line">    <span class="tok-comment">// read fn ptr from external code</span>
 <span class="line">    <span class="tok-type">void</span> * pv_add_one = (<span class="tok-type">void</span>*)external_memory;</span>
@@ -326,8 +326,9 @@
         this article is already too long.<br>
         Rust decided to allow programmers experimental low level control over provenance
         with experimenting on CHERI and an interpreter for iterating on the provenance model
-        and to work(around) with backends, see Rust RFC 3559 title "rust_has_provenance"
-        and section "Drawbacks".<br>
+        and to work(around) with backends, see
+        <a href="https://rust-lang.github.io/rfcs/3559-rust-has-provenance.html#drawbacks">
+          Rust RFC 3559 title "rust_has_provenance" and section "Drawbacks"</a>.<br>
         The following special cases of pointer operations can be taken into account, when discussing
         provenance-based optimizations (in contrast to type-based aliasing analysis):
         <ol>
@@ -344,22 +345,28 @@
             memory relations can and can not be optimized (unstandardised).
           </li>
           <li><span>Headers/exports exposing data structures, pointers to data structures and void pointers.</span><br>
-            <b>Link time optimization (LTO</b>) works across across header and
+            <a href="#lto"><b>Link time optimization (LTO)</b></a> works across across header and
             object boundaries if sufficient information/artefacts for caller and
-            callee are given, so construction of aliasing pointers in headers may lead to
+            callee are given, so construction of exposed aliasing pointers may lead to
             undefined behavior depending on the build system flags and used compiler.
           </li>
           <li><span>Compiler intrinsics for IO: memcmp, memcpy, memmove, memset.</span><br>
-            <b>IO Compiler intrinsics</b> semantics are yet to be taken portably into account
+            <a href="#io_intrinsics"><b>IO Compiler intrinsic semantics</b></a> are yet to be taken portably into account
             due to a lot legacy code relying on certain properties and pointer properties
             like alignment being implicit.
-            Technically optimizations are possible with annotating sufficient pointer information
-            and useful for accelerating intrinsics via SIMD or SWAR techniques and
-            tracking provenance along pointers, like for different addressing modes or
+            Technically optimizations are possible with annotating sufficient
+            pointer information and useful to accelerate via SIMD and tracking
+            provenance along pointers, like for different addressing modes or
             capabilities in CHERI, would be further useful.
           </li>
+          <li><span>Checking C code validity with Cerberus.</span><br>
+            <a href="#cerberus"><b>Cerberus</b></a> allows checking C code semantics for most common idioms,
+            but does not support the complete corpus of C syntax.
+            It also offers checking semantics of multithreaded code, but this is
+            out of scope for this article.
+          </li>
           <li><span>CHERI rules for pointers.</span><br>
-            In <b>CHERI</b> mixed-capability mode pointers may be raw pointers
+            In <a href="#cheri"><b>CHERI</b></a> mixed-capability mode pointers may be raw pointers
             inclusive or pointer with annotated capabilities, which can include
             things like lower and upper address bound, permissions masks,
             flags usable for OS or application tasks, see
@@ -434,6 +441,117 @@
 <span class="line">  free(mem);</span>
 <span class="line">}</span>
 </code></pre></figure>
+          </li>
+          <li><span><a id="lto">Link time optimization (LTO) usage and problems</a>.<span>
+                One can use <code>ptrtoint_inttoptr.c</code> with flags
+                for strong LTO to optimize the bit code of the complete program, for example via
+                <code>clang -flto -funified-lto -fuse-ld=lld ptrtoint_inttoptr.c</code>.
+          </li>
+          <li><span><a id="io_intrinsics">IO Compiler intrinsic semantics example</a>.<span>
+                It would be helpful to have a way to add alignment to pointers to
+                do runtime selection of the best SIMD routine instead of being forced to do this manually.
+
+      <figure><figcaption class="c-cap"><cite class="file">extern.h</cite></figcaption>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str"><immintrin.h></span></span>
+<span class="tok-type">void</span> memcpy_avx(<span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> src, <span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> dest, <span class="tok-type">size_t</span> n);</span>
+</code></pre></figure>
+
+      <figure><figcaption class="c-cap"><cite class="file">extern.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-comment"><span class="tok-bultin">#include</span> <span class="tok-str">"extern.h"</span></span></span>
+<span class="line"><span class="tok-comment">/// requires 32 byte aligned src, dest; src and dest must not overlap</span></span>
+<span class="line"><span class="tok-type">void</span> memcpy_avx(<span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> src, <span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> dest, <span class="tok-type">size_t</span> n);</span>
+<span class="line">  <span class="tok-type">size_t</span> n_vec = n / sizeof(__m256i);</span>
+<span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">size_t</span> i=0; i&lt;n_vec; i+=1) {</span>
+<span class="line">    const <span class="tok-type">__m256i</span> temp = _mm256_load_si256(src);</span>
+<span class="line">    _mm256_store_si256(dest, temp);</span>
+<span class="line">    src += 1;</span>
+<span class="line">    dest += 1;</span>
+<span class="line">  }</span>
+<span class="line">}</span>
+</code></pre></figure>
+
+      <figure><figcaption class="c-cap"><cite class="file">memcpy_avx.c</cite></figcaption>
+<pre><code><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span>
+<span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span>
+<span class="tok-type">int</span> main(<span class="tok-type">void</span>) {
+  <span class="tok-type">uint8_t</span> mem_src[1024] = { 0 };
+  <span class="tok-type">uint8_t</span> mem_dest[1024] = { 0 };
+  const <span class="tok-type">uint16_t</span> alignment = 32;
+  const <span class="tok-type">uint16_t</span> align_min_1 = alignment - 1;
+  <span class="tok-type">__m256i</span> * p_src = (<span class="tok-type">void</span> *)(((<span class="tok-type">uintptr_t</span>)mem_src+align_min_1) &amp; ~(<span class="tok-type">uintptr_t</span>)align_min_1);
+  <span class="tok-type">__m256i</span> * p_dest = (<span class="tok-type">void</span> *)(((<span class="tok-type">uintptr_t</span>)mem_dest+align_min_1) &amp; ~(<span class="tok-type">uintptr_t</span>)align_min_1);
+  memcpy_avx(p_src, p_dest, 4);
+  fprintf(stdout, <span class="tok-str">"p_src: %p, p_dest: %p\n"</span>, (<span class="tok-type">void</span>*)p_src, (<span class="tok-type">void</span>*)p_dest);
+  <span class="tok-kw">return</span> 0;
+}
+<span class="tok-comment">// clang -Weverything -O3 -march=native memcpy_avx.c extern.c &amp;&amp; ./a.out</span>
+<span class="tok-comment">// Output (contains C++ warnings):</span>
+<span class="tok-comment">// extern.c:8:5: warning: unsafe pointer arithmetic [-Wunsafe-buffer-usage]</span>
+<span class="tok-comment">//     8 |     src += 1;</span>
+<span class="tok-comment">//       |     ^~~</span>
+<span class="tok-comment">// extern.c:9:5: warning: unsafe pointer arithmetic [-Wunsafe-buffer-usage]</span>
+<span class="tok-comment">//     9 |     dest += 1;</span>
+<span class="tok-comment">//       |     ^~~~</span>
+<span class="tok-comment">// 2 warnings generated.</span>
+<span class="tok-comment">// p_src: 0x7ffceb985a60, p_dest: 0x7ffceb985660</span>
+</code></pre></figure>
+          </li>
+          <li><span><a id="cerberus">Checking C code validity with Cerberus</a> does not imply absence of compiler miscompilations.<span>
+      <figure><figcaption class="c-cap"><cite class="file">cerberus_install.sh</cite></figcaption>
+<pre><code><span class="line"><span class="tok-comment"># Install opam with ocaml</span></span>
+<span class="line">git clone https://github.com/rems-project/cerberus</span>
+<span class="line">opam install --deps-only ./cerberus-lib.opam ./cerberus.opam</span>
+<span class="line">make</span>
+<span class="line">make install DESTDIR=$HOME/.local/cerberus</span>
+<span class="line">echo 'PATH=${PATH}:"$HOME/.local/cerberus/bin"' &gt;&gt; ~/.bashrc</span>
+<span class="line">eval (opam env)</span>
+<span class="line">cerberus --help</span>
+</code></pre></figure>
+
+      <figure><figcaption class="c-cap"><cite class="file">extern.h</cite></figcaption>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stddef.h&gt;</span></span>
+<span class="line"><span class="tok-kw">extern</span> <span class="tok-type">size_t</span> x;</span>
+</code></pre></figure>
+
+      <figure><figcaption class="c-cap"><cite class="file">extern.c</cite></figcaption>
+<pre><code><span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span>
+<span class="line"><span class="tok-type">size_t</span> x = 0;</span>
+</code></pre></figure>
+
+      <figure><figcaption class="c-cap"><cite class="file">ptr_provenance_miscompilation.c</cite></figcaption>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stddef.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span></span>
+<span class="line"><span class="tok-comment">// Removing restrict makes the miscompilation go away</span></span>
+<span class="line"><span class="tok-type">size_t</span> f(<span class="tok-type">size_t</span> * <span class="tok-kw">restrict</span> ptr_to_x);</span>
+<span class="line"><span class="tok-type">size_t</span> f(<span class="tok-type">size_t</span> * <span class="tok-kw">restrict</span> ptr_to_x) {</span>
+<span class="line">  <span class="tok-type">size_t</span> * p = ptr_to_x;</span>
+<span class="line">  *p = 1;</span>
+<span class="line">  <span class="tok-kw">if</span> (p == &amp;x) {</span>
+<span class="line">      <span class="tok-comment">// Expected branch, taken only in Debug mode</span></span>
+<span class="line">      *p = 2;</span>
+<span class="line">  }</span>
+<span class="line">  <span class="tok-kw">return</span> *p;</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-type">int</span> main(<span class="tok-type">void</span>) {</span>
+<span class="line">  <span class="tok-kw">if</span> (f(&amp;x) == 1) fprintf(stderr, <span class="tok-str">"panic : p != &amp;x\n"</span>);</span>
+<span class="line">}</span>
+<span class="line"><span class="tok-comment">// clang -O0 -Weverything ptr_provenance_miscompilation.c extern.c &amp;&amp; ./a.out</span></span>
+<span class="line"><span class="tok-comment">// output:</span></span>
+<span class="line"><span class="tok-comment">// clang -O1 -Weverything ptr_provenance_miscompilation.c extern.c &amp;&amp; ./a.out</span></span>
+<span class="line"><span class="tok-comment">// output: panic : p != &amp;x</span></span>
+<span class="line"><span class="tok-comment">// cerberus ptr_provenance_miscompilation.c extern.c</span></span>
+<span class="line"><span class="tok-comment">// output:</span></span>
+<span class="line"><span class="tok-comment">// merging everything into ptr_provenance_miscompilation.c</span></span>
+<span class="line"><span class="tok-comment">// cerberus ptr_provenance_miscompilation.c</span></span>
+<span class="line"><span class="tok-comment">// output:</span></span>
+</code></pre></figure>
+          </li>
+          <li><span><a id="cheri">CHERI usage if left as task for the reader.</a>.<span>
+                Useful links are <code>https://github.com/CTSRD-CHERI/cheribuild</code> and
+                <code>https://github.com/CTSRD-CHERI/cheri-c-programming</code> and
+                <code>https://github.com/capablevms/cheri-examples</code>.
           </li>
         </ol>
       </li>
