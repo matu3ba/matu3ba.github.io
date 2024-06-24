@@ -268,8 +268,8 @@
 <pre><code><span class="tok-builtin">#include</span> <span class="tok-str">&lt;assert.h&gt;</span>
 <span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span>
 <span class="tok-type">uint8_t</span> external_memory [1024];
-<span class="tok-kw">typedef</span> int(*pfn_add_one)(int);
-<span class="tok-type">int</span> add_one(int x) { return x+1; }
+<span class="tok-kw">typedef</span> <span class="tok-type">int</span>(*pfn_add_one)(<span class="tok-type">int</span>);
+<span class="tok-type">int</span> add_one(int x) { <span class="tok-kw">return</span> x+1; }
 <span class="tok-type">void</span> usage(int x) {
   <span class="tok-comment">// read fn ptr from external code</span>
   <span class="tok-type">void</span> * pv_add_one = (<span class="tok-type">void</span>*)external_memory;
@@ -559,7 +559,7 @@
 <span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span>
 <span class="line"><span class="tok-type">int</span> f(<span class="tok-type">int</span>* a) {</span>
 <span class="line">  *a=*a+1;</span>
-<span class="line">  return *a;</span>
+<span class="line">  <span class="tok-kw">return</span> *a;</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-type">void</span> simple_sequence_points() {</span>
 <span class="line">  <span class="tok-type">int</span> a = 0;</span>
@@ -579,8 +579,8 @@
 <span class="line">  <span class="tok-comment">// undefined behavior introduced if temporary is missing</span>
 <span class="line">  <span class="tok-comment">// printf("%x", ++(create_fail().a[0]));</span></span>
 <span class="line">  <span class="tok-type">struct</span> sExample res = create_sExample();</span>
-<span class="line">  printf("%x", ++(res.a[0]));</span>
-<span class="line">  return 0;</span>
+<span class="line">  printf(<span class="tok-str">"%x"</span>, ++(res.a[0]));</span>
+<span class="line">  <span class="tok-kw">return</span> 0;</span>
 <span class="line">}</span>
 </code></pre></figure>
   </li>
