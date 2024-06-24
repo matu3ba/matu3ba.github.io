@@ -446,7 +446,15 @@
           </li>
           <li><span><a id="io_intrinsics">IO Compiler intrinsic semantics example</a>.<span>
                 It would be helpful to have a way to add alignment to pointers to
-                do runtime selection of the best SIMD routine instead of being forced to do this manually.
+                have the compiler automatically do runtime selection of the best
+                SIMD routine instead of being forced to do this manually.
+                <code>__attribute__(aligned(ALIGNMENT)</code>, <code>_Alignas(ALIGNMENT)</code>, <code>alignas(ALIGNMENT)</code>
+                do offer no guarantee that the code is vectorized and one has to check for example via
+                <code>clang -O3 -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize</code>
+                or <code>gcc -O3 -ftree-vectorizer-verbose=3</code> and use extensions
+                <code>https://clang.llvm.org/docs/LanguageExtensions.html</code> and
+                <code>https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html</code>
+                like <code>__builtin_assume_aligned</code>.
 
       <figure><figcaption class="c-cap"><cite class="file">extern.h</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;immintrin.h&gt;</span></span>
