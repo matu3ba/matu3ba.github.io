@@ -94,7 +94,25 @@
   </ol>
   <ol>
     <li><a href="#theory">Theory of debugging.</a></li>
-      TODO: Theory, methods and determinism as fundamental problem.
+      theory;
+      A program <a href="https://gu.outerproduct.net/debug.html">
+      can be represented as (often non-deterministic) state machine</a>,
+      such that a <b>bug</b> is a <b>bad transition rule</b> between those states.
+      It is usually assumed that the developer/user knows correct and incorrect
+      (bad) system states and the code represents a somewhat correct model of
+      the intended semantics.
+      Then an execution witness are the states and state transitions encountered
+      on a specific program run. If the execution witness shows a "bad state",
+      then there must be a bug.
+      Thus a debugger can be seen as query engine over states and transitions of
+      a buggy execution witness.<br>
+      Frequent operations are bug source isolation to deterministic components,
+      where encapsulation of non-determinism usually simplifies the process.
+      In contrast to that, concurrent code is tricky to debug, because one
+      needs to trace the execution flow to estimate where the origin of the
+      incorrect state is.
+
+      TODO: methods and determinism as fundamental problem.
     <li><a href="#practice">Practical methods with tradeoffs.</a></li>
       TODO: typical things to debug and possible frameworks to use with internal functionality
     <li><a href="#uniform_execution_representation">Uniform execution representation.</a></li>

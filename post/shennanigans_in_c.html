@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset=utf-8>
-<title>Pointers, sequence points and bit fields in C.</title>
+<title>C shennanigans: Pointers, sequence points and bit fields.</title>
 <style>
     #contents {
       max-width: 60em;
@@ -80,7 +80,7 @@
 </style>
 <div id="contents">
 <div style="text-align:left; padding up down: 1em">
-<h2>C shennanigans.</h2>
+<h2>C shennanigans: Pointers, sequence points and bit fields.</h2>
 </div>
   This text focuses on some of the non-obvious and easy to make mistakes
   non-experienced C programmers are likely to make and are/can not completely
@@ -144,7 +144,7 @@
               <li><span>What does this means in <b>practice</b>?</span><br>
                 Each pointer has an associated "provenance" it is allowed to point to.
                 This mean that a pointer <code>ptr</code> must uphold
-                <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt; &amp;array[len+1]) || ptr != 0)</code>.
+                <code>(&amp;array[0] &lt;= ptr &amp;&amp; ptr &lt; &amp;array[len+1])</code>.
                 for access with array being the "memory origin range" on stack or heap.
                 Pointers must point to the same array, when being used for arithmetic.<br>
                 Function arguments of identical pointer types are allowed to have
@@ -553,8 +553,8 @@
 <span class="line"><span class="tok-comment">// output:</span></span>
 </code></pre></figure>
           </li>
-          <li><span><a id="cheri">CHERI usage if left as task for the reader.</a>.<span>
-                Useful links are <code>https://github.com/CTSRD-CHERI/cheribuild</code> and
+          <li><span><a id="cheri">CHERI usage is left as task for the reader.</a>.<span>
+                Useful links are <code>https://github.com/CTSRD-CHERI/cheribuild</code>,
                 <code>https://github.com/CTSRD-CHERI/cheri-c-programming</code> and
                 <code>https://github.com/capablevms/cheri-examples</code>.
           </li>
