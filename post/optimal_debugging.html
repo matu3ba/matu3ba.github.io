@@ -82,9 +82,13 @@
 <div style="text-align:left; padding up down: 1em">
 <h2>Towards an optimal debugging framework library.</h2>
 </div>
-  This text is intended as overview of debugging techniques and motivation
-  for uniform execution representation and setup to efficiently mix and match
-  the appropriate technique.
+  This text is intended as overview of debugging techniques and motivation for
+  uniform execution representation and setup to efficiently mix and match the
+  appropriate technique for system level debugging with focus on statically
+  optimizing compiler languages to keep complexity and scope limited.
+  The author accepts the irony of such statements by "C having no ABI"/many
+  systems in practice having no ABI, but reality is in this text simplified for
+  brevity and sanity.
   <ol>
     <li><a href="#theory">Theory of debugging.</a></li>
     <li><a href="#practice">Practical methods with tradeoffs.</a></li>
@@ -110,11 +114,132 @@
       where encapsulation of non-determinism usually simplifies the process.
       In contrast to that, concurrent code is tricky to debug, because one
       needs to trace the execution flow to estimate where the origin of the
-      incorrect state is.
+      incorrect state is.<br>
+      One can generally categorize methods into the following list
+      <ol>
+        <li><b>observe</b> the system while running it to <b>trace state or state changes</b></li>
+        <li><b>learn, extend and ensure</b> how and which system invariants are satisfied</li>
+        <li><b>simplify and isolate</b> system components and changes over time</li>
+        <li><b>understand</b> the <b>expected and actual code semantics</b> to the degree
+          necessary from <b>of the involved systems</b> (for example userspace
+          processes, kernel, build system, compiler, source code, linker,
+          object code, assembly, hardware etc)
+        </li>
+        <li><b>automate</b> the process to minimize errors/oversights during debugging,
+        against probabilistic errors, document the process etc
+        </li>
+      </ol>
+      with the fundamental problems being
+      <ol>
+        <li>finding out correct sytem components semantics</li>
+        <li>ensuring deterministic reproducibility of the problem</li>
+        <li>limited time and effort</li>
+      </ol>
+      Hereby, a debugger optionally simplifies
+      <ol>
+        <li> task execution manipulation</li>
+        <li> memory manipulation</li>
+        <li> source location translation</li>
+        <li> scripting</li>
+        <li> REPL use cases</li>
+      </ol>
+      based on runtime context to query one or multiple buggy execution
+      witnesses.
+      There exist multiple well-known methods with various tradeoffs, for example
+      <ol>
+        <li> <b>Formal Verification</b> as ahead or compile-time invariant resolving.</li>
+        <li> <b>Validation</b> as runtime invariant checks.</li>
+        <li> <b>Testing</b> as sample based runtime invariant checks.</li>
+        <li> <b>Stepping</b> via "classical debugger" to access execution
+          context, dump memory and do both via source code location translation
+          usually via REPL commands.</li>
+        <li> <b>Logging</b> as dumping (a simplification of) state with context
+          from bugs (usually timestamps in production systems).</li>
+        <li> <b>Tracing</b> as dumping (a simplification of) runtime behavior
+          via temporal relations (usually timestamps).</li>
+        <li> <b>Recording</b> Encoded dumping of runtime to replay runtime with
+          before specified time and state determinism.</li>
+      </ol>
 
-      TODO: methods and determinism as fundamental problem.
+      Debugging is domain- and design-specific and relies on core component(s)
+      of the to be debugged system to provide necessary debug functionality.
+      For example, hardware debugging relies on interfaces to the hardware like
+      JTAG, Kernel debugging on Kernel compilation or configuration and
+      elevated (user), userspace debugging on process and user permissions,
+      system configuration or a child process to be debugged on Posix systems
+      via ptrace.
+
     <li><a href="#practice">Practical methods with tradeoffs.</a></li>
-      TODO: typical things to debug and possible frameworks to use with internal functionality
+    Usually semantics are not "set into stone" inclusive or do not offer
+    sufficient tradeoffs, so formal verification are no option aside of usage
+    of models as design and planning tool.
+      <ol>
+        <li>Hard(ware) problems</li>
+        Component tests against defects, Time channels
+        <li>Kernel problems</li>
+        Reverse engineering and "trying to find info" or "use some tracing
+        tool" and for open source "adjust the source and stare at kernel
+        dumps/use debugger".
+        <li>Detectable Undefined Behavior</li>
+        Compiler and runtime sanitizers like TODO list.
+        <li>Undetectable Undefined Behavior</li>
+        Staring at source code, backend intermediate representation like LLVM
+        IR and reducing the problem or resulting assembly. Unfortunately the
+        backend optimizers like LLVM do not offer frontend language writers
+        debug APIs and related tooling due to not being designed for that
+        purpose.
+        <li>Miscompilations</li>
+        Tools like Miri or Cerberus run the program in an interpreter,
+        but may not cover all possible program semantics due to ambiguity
+        and may not be feasible, so the only good chance is to reduce it.
+        <li>Memory problems
+          <ol>
+            <li>out-of-bounds access</li>
+            sanitizer
+            <li>null pointer deference</li>
+            sanitizer
+            <li>type confusion</li>
+            sanitizer
+            <li>integer overflow</li>
+            sanitizer
+            <li>use after free</li>
+            sanitizer
+            <li>invalid stack access</li>
+            sanitizer
+            <li>usage of uninitialized memory</li>
+            sanitizer
+            <li>data races</li>
+            sanitizer
+        </ol>
+        </li>
+        <li>Resource leaks (Freestanding/Kernel)</li>
+            sanitizer
+        <li>Deadlocks</li>
+            sanitizer?
+        <li>Performance</li>
+            tracer
+        <li>Logic problems: unclear which logic(s) necessary to apply when ignoring hardware,
+          memory problems, UB and other above problems
+          <ol>
+            <li>(temporary) logical inconstency of state (relations)</li>
+            <li>incorrect math ie for edge cases</li>
+            <li>incorrect modeling of external and internal state and synchronization</li>
+            <li>incorrect protocol handling</li>
+            <li>insufficient handling of requirements to ensure logical correctness</li>
+          </ol>
+            TODO: rephrasing
+            TODO unclear what to use ideally
+        </li>
+        <!-- https://www.cprogramming.com/tutorial/memory_debugging_parallel_inspector.html -->
+      </ol>
+
+      TODOs:
+      <ol>
+        <li>Tooling and performance tradeoffs.</li>
+        <li>minimal descriptions for C, Rust, Zig; Posix, Linux, Windows</li>
+      </ol>
+
+      <!-- <li>Verification</li> -->
     <li><a href="#uniform_execution_representation">Uniform execution representation.</a></li>
       TODO: Uniform execution representation and queries over program execution.
     <li><a href="#abstraction_problems">Abstraction problems during problem isolation.</a></li>
