@@ -108,51 +108,44 @@
       Then an execution witness are the states and state transitions encountered
       on a specific program run. If the execution witness shows a "bad state",
       then there must be a bug.
-      Thus a debugger can be seen as query engine over states and transitions of
-      a buggy execution witness.<br>
+      Thus a <b>debugger</b> can be seen <b>as query engine over states and transitions of
+        a buggy execution witness.</b><br>
       Frequent operations are bug source isolation to deterministic components,
       where encapsulation of non-determinism usually simplifies the process.
       In contrast to that, concurrent code is tricky to debug, because one
       needs to trace the execution flow to estimate where the origin of the
       incorrect state is.<br>
-      One can generally categorize methods into the following list
+      One can generally categorize methods into the following list (<b>asoul</b>)
       <ol>
-        <li><b>observe</b> the system while running it to <b>trace state or state changes</b></li>
-        <li><b>learn, extend and ensure</b> how and which system invariants are satisfied</li>
+        <li><b>automate</b> the process to minimize errors/oversights during debugging,
+        against probabilistic errors, document the process etc
+        </li>
         <li><b>simplify and isolate</b> system components and changes over time</li>
+        <li><b>observe</b> the system while running it to <b>trace state or state changes</b></li>
         <li><b>understand</b> the <b>expected and actual code semantics</b> to the degree
+        <li><b>learn, extend and ensure</b> how and which system invariants are satisfied</li>
           necessary from <b>of the involved systems</b> (for example userspace
           processes, kernel, build system, compiler, source code, linker,
           object code, assembly, hardware etc)
         </li>
-        <li><b>automate</b> the process to minimize errors/oversights during debugging,
-        against probabilistic errors, document the process etc
-        </li>
       </ol>
-      with the fundamental problems being
+      with the fundamental constrains being (<b>feel</b>)
       <ol>
-        <li>finding out correct sytem components semantics</li>
-        <li>ensuring deterministic reproducibility of the problem</li>
-        <li>limited time and effort</li>
+        <li><b>finding out</b> correct sytem components semantics</li>
+        <li><b>[e]ensuring</b> deterministic reproducibility of the problem</li>
+        <li><b>limited</b> time and effort</li>
       </ol>
-      Hereby, a debugger optionally simplifies
-      <ol>
-        <li> task execution manipulation</li>
-        <li> memory manipulation</li>
-        <li> source location translation</li>
-        <li> scripting</li>
-        <li> REPL use cases</li>
-      </ol>
-      based on runtime context to query one or multiple buggy execution
-      witnesses.
-      There exist multiple well-known methods with various tradeoffs, for example
+
+      Common debugging methods to <b>feel a soul</b> with various tradeoffs
+      from compile-time to runtime debugging less to more run-time data
+      collection:
       <ol>
         <li> <b>Formal Verification</b> as ahead or compile-time invariant resolving.</li>
         <li> <b>Validation</b> as runtime invariant checks.</li>
         <li> <b>Testing</b> as sample based runtime invariant checks.</li>
-        <li> <b>Stepping</b> via "classical debugger" to access execution
-          context, dump memory and do both via source code location translation
-          usually via REPL commands.</li>
+        <li> <b>Stepping</b> via "classical debugger" to manipulate task execution
+          context, manipulate memory optionally via source code location translation
+          via REPL commands, graphically, scripting or (rarely) freely programmable.</li>
         <li> <b>Logging</b> as dumping (a simplification of) state with context
           from bugs (usually timestamps in production systems).</li>
         <li> <b>Tracing</b> as dumping (a simplification of) runtime behavior
@@ -161,8 +154,20 @@
           before specified time and state determinism.</li>
       </ol>
 
-      Debugging is domain- and design-specific and relies on core component(s)
-      of the to be debugged system to provide necessary debug functionality.
+      Simplification and isolation means to apply the meaning of both words on
+      all potential sub-components including, but not limited to
+      hardware, code versioning including dependencies, source system,
+      compiler framework and target system. Typical methods are
+      <ol>
+        <li> <b>Bisection</b> via git or the actual binaries.</li>
+        <li> <b>Reduction</b> via removal of system parts or trying to reproduce
+          with (a minimal) example.</li>
+        <li> <b>Statistical analysis</b> from collected data on how the problem
+          manifests on given environment(s) etc.</li>
+      </ol>
+
+      <b>Debugging</b> is domain- and design-specific and <b>relies on</b> core component(s)
+      of <b>the to be debugged system to provide necessary debug functionality</b>.
       For example, hardware debugging relies on interfaces to the hardware like
       JTAG, Kernel debugging on Kernel compilation or configuration and
       elevated (user), userspace debugging on process and user permissions,
@@ -173,9 +178,15 @@
     Usually semantics are not "set into stone" inclusive or do not offer
     sufficient tradeoffs, so formal verification are no option aside of usage
     of models as design and planning tool.
+
+    TODO: requirements on system design for formal verification vs debugging.
+    no surprise rule: core system enabling debugging (in any form) must be correct
+    to the degree necessary.
+
       <ol>
         <li>Hard(ware) problems</li>
-        Component tests against defects, Time channels
+        Component tests against defects, Time channels.
+
         <li>Kernel problems</li>
         Reverse engineering and "trying to find info" or "use some tracing
         tool" and for open source "adjust the source and stare at kernel
@@ -216,19 +227,21 @@
             sanitizer
         <li>Freezes (deadlocks, softlocks, signal safety, unbounded loops etc)</li>
             sanitizer, validator
-        <li>Performance</li>
+        <li>Performance problems</li>
             simulator, tracer
-        <li>Logic problems: unclear which logic(s) necessary to apply when ignoring hardware,
-          memory problems, UB and other above problems
+        <li>Logic problems of software systems can be described as problems
+          related to incorrectly applied logic of how the code is solving the
+          intended and follow-up problems ignoring hardware problems, kernel
+          problems, different types of UB, miscompilations memory problems,
+          resource leaks, freezes and performance issues.
           <ol>
-            <li>(temporary) logical inconstency of state (relations)</li>
+            <li>(temporary) inconstency of state (relations)</li>
             <li>incorrect math ie for edge cases</li>
             <li>incorrect modeling of external and internal state and synchronization</li>
             <li>incorrect protocol handling</li>
-            <li>insufficient handling of requirements to ensure logical correctness</li>
+            <li>insufficient handling of or the software requirements themself</li>
           </ol>
-            TODO: rephrasing
-            TODO unclear what to use ideally
+            TODO: more things missing, unclear what to use ideally
         </li>
         <!-- https://www.cprogramming.com/tutorial/memory_debugging_parallel_inspector.html -->
       </ol>
@@ -239,8 +252,22 @@
         <li>minimal descriptions for C, Rust, Zig; Posix, Linux, Windows</li>
       </ol>
 
+      Overall, one can summarize that it is <b>good practice to have</b> a
+      <b>system correctness and debugging strategy</b>.
+
       <!-- <li>Verification</li> -->
     <li><a href="#uniform_execution_representation">Uniform execution representation.</a></li>
+      As it was shown before, modern languages simplify detection or elimination of
+      memory problems and runtime detectable undefined behavior.
+      So far undetectable undefined behavior may be detected, if backend optimizers
+      are redesignede with according APIs.
+      Detecting miscompilations requires strict formal reasoning of executing
+      the source code semantics or formal verification of the compiler
+      itself, which shall not be discussed here.
+      This leaves hardware problems, kernel problems, resource leaks, freezes,
+      performance problems and logic problems.
+      TODO: what they have in common + motivation
+
       TODO: Uniform execution representation and queries over program execution.
     <li><a href="#abstraction_problems">Abstraction problems during problem isolation.</a></li>
       TODO: origin detection, isolation and abstraction
