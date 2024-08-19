@@ -98,7 +98,6 @@
   </ol>
   <ol>
     <li><a href="#theory">Theory of debugging.</a></li>
-      theory;
       A program <a href="https://gu.outerproduct.net/debug.html">
       can be represented as (often non-deterministic) state machine</a>,
       such that a <b>bug</b> is a <b>bad transition rule</b> between those states.
@@ -113,7 +112,7 @@
       Frequent operations are bug source isolation to deterministic components,
       where encapsulation of non-determinism usually simplifies the process.
       In contrast to that, concurrent code is tricky to debug, because one
-      needs to trace the execution flow to estimate where the origin of the
+      needs to trace multiple execution flows to estimate where the origin of the
       incorrect state is.<br>
       One can generally categorize methods into the following list (<b>asoul</b>)
       <ol>
@@ -176,23 +175,65 @@
 
     <li><a href="#practice">Practical methods with tradeoffs.</a></li>
     Usually semantics are not "set into stone" inclusive or do not offer
-    sufficient tradeoffs, so formal verification are no option aside of usage
-    of models as design and planning tool.
+    sufficient tradeoffs, so formal verification are rarely an option aside of
+    usage of models as design and planning tool.
+    Very well designed systems explain users how to debug bugs regarding to
+    <b>functional behavior</b>, <b>time behavior</b> with <b>internal and external resources</b> themself up
+    to the degree the system usage and task execution correctness is intended.
 
     TODO: requirements on system design for formal verification vs debugging.
     no surprise rule: core system enabling debugging (in any form) must be correct
     to the degree necessary.
 
-      <ol>
-        <li>Hard(ware) problems</li>
-        Component tests against defects, Time channels.
+    TODO: good argumentation on ignoring linker speak, language footguns etc.
 
-        <li>Kernel problems</li>
-        Reverse engineering and "trying to find info" or "use some tracing
-        tool" and for open source "adjust the source and stare at kernel
+      <ol>
+        <li>Bugs related to functional behavior.</li>
+        <li>Bugs related to time behavior.</li>
+        <li>Internal and external system resources.</li>
+      </ol>
+    <!-- chapter 1 functional correct behavior -->
+    <!-- memory problems -> logic problems -> language problems (detectable,
+         undetectable undefined behavior, miscompilations) -->
+    <!-- chapter 2 time correct behavior -->
+    <!-- freezes -> performance problems (latency, throughput) -->
+    <!-- chapter 3 abstracting problems away from hardware -->
+    <!-- hw -> kernel -> user space resources -->
+      <ol>
+        <li>Debugging hard(ware) problems</li>
+        <a href"https://interrupt.memfault.com/blog/schematic-review-checklist">
+          Hardware design reviews</a> with extensive focus on core components
+        (power, battery, periphery, busses, memory/flash and debug/test infrastructure)
+        to enable debugging and component tests against product and assembling defects.
+        TODO Elimination or mitigation of time channels, formal methods? attack fuzzing?
+        software toggles?
+        <li>Kernel and platform problems.</li>
+        The managing environment the code is running on can vary a lot.
+        As example, the typical four phases of the Linux boot process
+        (system startup, bootloader stage, kernel stage, and init process)
+        have each their own debugging infrastructure and methods.
+        Generally, working with (introspection-restricted) platforms requires
+        1. reverse engineering and "trying to find info" and/or 2. "use some tracing
+        tool" and for 3. open source "adjust the source and stare at kernel
         dumps/use debugger".
+        Kernels are rarely designed for tracing, recording or formal
+        verification due to internal complexity and virtualization is slow and
+        hides many classes of synchronization bugs.
         <li>Detectable Undefined Behavior</li>
-        Compiler and runtime sanitizers like TODO list.
+        Compiler and runtime sanitizers
+          <ol>
+            <li>C</li>
+            <li>C++</li>
+            <li>Zig with <b>-OReleaseSafe</b> turns "undefined behavior" into
+              runtime-checked disallowed behavior except for
+              <ol>
+                <li>TODO</li>
+                <li>TODO</li>
+                <li>TODO</li>
+                <li>TODO</li>
+              </ol>
+            </li>
+          </ol>
         <li>Undetectable Undefined Behavior</li>
         Staring at source code, backend intermediate representation like LLVM
         IR and reducing the problem or resulting assembly. Unfortunately the
@@ -204,10 +245,11 @@
         but may not cover all possible program semantics due to ambiguity
         and may not be feasible, so the only good chance is to reduce it.
         <li>Memory problems
+          sanitizers, validators, simulator, tracers: TODO which, configurability and costs
           <ol>
             <li>out-of-bounds access</li>
             sanitizer
-            <li>null pointer deference</li>
+            <li>null pointer dereference</li>
             sanitizer
             <li>type confusion</li>
             sanitizer
