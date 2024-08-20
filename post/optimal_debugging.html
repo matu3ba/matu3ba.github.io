@@ -167,19 +167,26 @@
 
       <b>Debugging</b> is domain- and design-specific and <b>relies on</b> core component(s)
       of <b>the to be debugged system to provide necessary debug functionality</b>.
-      For example, hardware debugging relies on interfaces to the hardware like
-      JTAG, Kernel debugging on Kernel compilation or configuration and
-      elevated (user), userspace debugging on process and user permissions,
-      system configuration or a child process to be debugged on Posix systems
-      via ptrace.
+      For example, software based hardware debugging relies on interfaces to
+      the hardware like JTAG, Kernel debugging on Kernel compilation or
+      configuration and elevated (user), userspace debugging on process and
+      user permissions, system configuration or a child process to be debugged
+      on Posix systems via ptrace.
 
     <li><a href="#practice">Practical methods with tradeoffs.</a></li>
     Usually semantics are not "set into stone" inclusive or do not offer
-    sufficient tradeoffs, so formal verification are rarely an option aside of
+    sufficient tradeoffs, so formal verification is rarely an option aside of
     usage of models as design and planning tool.
+    Depending on the domain and environment, problematic behavior of hardware
+    or software components must be to be more or less 1. avoided and 2. traceable
+    and there exist various (domain) metrics as decision helper.
     Very well designed systems explain users how to debug bugs regarding to
-    <b>functional behavior</b>, <b>time behavior</b> with <b>internal and external resources</b> themself up
-    to the degree the system usage and task execution correctness is intended.
+    <b>functional behavior</b>, <b>time behavior</b> with <b>internal and
+      external system resources</b> themself up to the degree the system usage and
+    task execution correctness is intended.
+    Access restrictions limit or rule out stepping, whereas storage limitations
+    limit or rule out logging, tracing and recording.
+
 
     TODO: requirements on system design for formal verification vs debugging.
     no surprise rule: core system enabling debugging (in any form) must be correct
