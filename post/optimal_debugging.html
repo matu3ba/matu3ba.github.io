@@ -208,7 +208,7 @@
     <!-- hw -> kernel -> user space resources -->
       <ol>
         <li>Debugging hard(ware) problems</li>
-        <a href"https://interrupt.memfault.com/blog/schematic-review-checklist">
+        <a href="https://interrupt.memfault.com/blog/schematic-review-checklist">
           Hardware design reviews</a> with extensive focus on core components
         (power, battery, periphery, busses, memory/flash and debug/test infrastructure)
         to enable debugging and component tests against product and assembling defects.
@@ -290,7 +290,22 @@
             <li>incorrect protocol handling</li>
             <li>insufficient handling of or the software requirements themself</li>
           </ol>
-            TODO: more things missing, unclear what to use ideally
+          The source of these problems are usually
+          <ol>
+            <li> incorrect constrains on the design, meaning how the different
+              parts should interact and work towards the goals for the use
+              cases</li>
+            <li> unclear, unspecified or incorrectly assumed hardware or software
+              guarantees by components </li>
+            <li> implementation oversights, unintended use cases, unfeasibility
+              of a general solution due to time and/or money constrains</li>
+          </ol>
+          Formal modeling of the design, model checking, code review, writing
+          tests for edge cases or runtime validation are typically used with
+          best practice being to write code in a risk-aware, testable and
+          debuggable way. The methods and scope are here very wide and very
+          domain and use case specific, so no general or short recommendation
+          can be made.
         </li>
         <!-- https://www.cprogramming.com/tutorial/memory_debugging_parallel_inspector.html -->
       </ol>
@@ -301,8 +316,11 @@
         <li>minimal descriptions for C, Rust, Zig; Posix, Linux, Windows</li>
       </ol>
 
-      Overall, one can summarize that it is <b>good practice to have</b> a
-      <b>system correctness and debugging strategy</b>.
+      Ideally, only the system behavior and interactions with domain and
+      use-case specific parts need cognitive load from the programmer, whereas
+      the other error classes have standard approaches to isolate and eliminate.
+      Unifying debug tooling simplifies usage for bigger developer productivity
+      and exposing as library allows to automate this process.
 
       <!-- <li>Verification</li> -->
     <li><a href="#uniform_execution_representation">Uniform execution representation.</a></li>
@@ -329,4 +347,5 @@
   <!-- Section 3: Uniform execution representation and queries over program execution.<br> -->
   <!-- Section 4: Abstraction problems during problem isolation.<br> -->
   <!-- Section 5: Program modification and validation language, query language and alternatives.<br> -->
+</div>
 </html>

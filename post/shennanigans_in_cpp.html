@@ -113,7 +113,7 @@
 <span class="line">};</span>
 <span class="line"><span class="tok-kw">class</span> T2 {</span>
 <span class="line"><span class="tok-kw">public</span>:</span>
-<span class="line">    std::map<std::string, T1> mapex1;</span>
+<span class="line">    std::map&lt;std::string, T1&gt; mapex1;</span>
 <span class="line">    <span class="tok-kw">void</span> AddT1 (<span class="tok-kw">const</span> std::string &amp;t1str) {</span>
 <span class="line">        T1 t1obj(t1str);</span>
 <span class="line">        mapex1.emplace(t1str, t1obj);</span>
@@ -151,7 +151,7 @@
 <span class="line">                         , 1, 0, 0, 0</span>
 <span class="line">                         , 0, 0, 0, 0 };</span>
 <span class="line">  <span class="tok-comment">// clang-format: on</span></span>
-<span class="line">  <span class="tok-type">int64_t</span> val_mcpy;
+<span class="line">  <span class="tok-type">int64_t</span> val_mcpy;</span>
 <span class="line">  <span class="tok-comment">// val_mcpy = memcpy(&amp;val_mcpy, some_vals[1], <span class="tok-builtin">sizeof</span>(val_mcpy);  // refusal to compile</span></span>
 <span class="line">  val_mcpy = <span class="tok-builtin">memcpy</span>(&amp;val_mcpy, &amp;some_vals[1], <span class="tok-builtin">sizeof</span>(val_mcpy);   // refusal to compile</span>
 <span class="line">  <span class="tok-type">int64_t</span> val_wrong = *<span class="tok-builtin">reinterpret_cast</span>&lt;<span class="tok-type">int64_t</span>*&gt;(some_vals[1]);            <span class="tok-comment">// runtime error</span></span>
@@ -162,7 +162,7 @@
 <span class="line">  <span class="tok-kw">if</span> (val != <span class="tok-number">INT64_MIN</span>) <span class="tok-kw">return</span> 1;</span>
 <span class="line">  <span class="tok-kw">return</span> 0;</span>
 <span class="line">}</span>
-</code></pre>
+</code></pre></figure>
     </li>
 
     <li> <a href="https://stackoverflow.com/questions/11598990/is-stdstoi-actually-safe-to-use">
@@ -192,12 +192,12 @@
     <li> Checking, if typename is a string is complex (even with C++17 extension).
       <figure><figcaption class="cpp-cap"><cite class="file">is_typname_string.hpp</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">template</span>&lt;typename STR&gt;</span>
-<span class="line"><span class="tok-type">inline</span></span> <span class="tok-type">constexpr</span> bool is_string_class_decayed = false;</span>
+<span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> bool is_string_class_decayed = false;</span>
 <span class="line"><span class="tok-type">template</span>&lt;typename... STR&gt;</span>
 <span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> bool is_string_class_decayed&lt;std::basic_string&lt;STR...&gt;&gt; = true;</span>
 <span class="line"><span class="tok-comment">// decay_t will remove const, &amp; and volatile from the type</span></span>
 <span class="line"><span class="tok-type">template</span>&lt;typename STR&gt;</span>
-<span class="line"><span class="tok-type">inline</span></span> <span class="tok-type">constexpr</span> bool is_string_class = is_string_class_decayed&lt;std::decay_t&lt;STR&gt;&gt;</span>
+<span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> bool is_string_class = is_string_class_decayed&lt;std::decay_t&lt;STR&gt;&gt;</span>
 <span class="line"><span class="tok-type">template</span> &lt;typename TChar, typename TString&gt;</span>
 <span class="line"><span class="tok-type">inline</span> <span class="tok-type">constexpr</span> bool is_string = is_string_class&lt;TString&gt; &amp;&amp; std::is_same_v&lt;TChar, typename TString::value_type&gt;;</span>
 <span class="line"><span class="tok-kw">static_assert</span>(is_string_class&lt;std::string&gt;);</span>
@@ -221,7 +221,7 @@
 <pre><code><span class="line"><span class="tok-kw">void</span> cstring_string_interop() {</span>
 <span class="line">  <span class="tok-kw">const</span> <span class="tok-type">char</span> * cmd = <span class="tok-str">"ls"</span>;</span>
 <span class="line">  <span class="tok-type">char</span> <span class="tok-kw">const</span> * buffer[] = {<span class="tok-str">"ls"</span>, <span class="tok-str">"-l"</span>, NULL};</span>
-<span class="line">  <span class="tok-type">char</span> * <span class="tok-kw">const</span> * argv = <span class="tok-builtin">const_cast</span><<span class="tok-type">char</span> * <span class="tok-kw">const</span> *&gt;(buffer);</span>
+<span class="line">  <span class="tok-type">char</span> * <span class="tok-kw">const</span> * argv = <span class="tok-builtin">const_cast</span><span class="tok-type">char</span> * <span class="tok-kw">const</span> *&gt;(buffer);</span>
 <span class="line">  int execed = execve(cmd, argv, NULL);</span>
 <span class="line">  (<span class="tok-kw">void</span>)execed;</span>
 <span class="line">}</span>
@@ -246,7 +246,7 @@
 <span class="line">    <span class="tok-type">static</span> <span class="tok-type">constexpr</span> <span class="tok-kw">const</span> T value = v;</span>
 <span class="line">  };</span>
 <span class="line">}</span>
-<span class="line"><span class="tok-builtin">#define</span> FORCE_CONST_EVAL(exp) ::util_force_const_eval::const_expr_value<decltype(exp), exp>::value</span>
+<span class="line"><span class="tok-builtin">#define</span> FORCE_CONST_EVAL(exp) ::util_force_const_eval::const_expr_value&lt;decltype(exp), exp&gt;::value</span>
 <span class="line"><span class="tok-builtin">#define</span> LEAF(FN) (&amp;FN[FORCE_CONST_EVAL(fname_offs(FN))])</span>
 <span class="line"></span>
 <span class="line"><span class="tok-type">int</span> testEq(<span class="tok-type">int32_t</span> a, <span class="tok-type">int32_t</span> b) {</span>
@@ -303,7 +303,7 @@
 <span class="line">    fprintf(stdout, <span class="tok-str">"%x, "</span>, array[i]);</span>
 <span class="line">  fprintf(stdout, <span class="tok-str">"\n"</span>)</span>
 <span class="line">}</span>
-</code></pre>
+</code></pre></figure>
     </li>
 
     <li> Incomplete type can not be instantiated in template:
@@ -327,7 +327,7 @@
 <span class="line">  <span class="tok-kw">public</span>:</span>
 <span class="line">  <span class="tok-type">int</span> SomeMethod() <span class="tok-kw">override</span> {</span>
 <span class="line">    <span class="tok-kw">return</span> 1;</span>
-<span class="line">  }
+<span class="line">  }</span>
 <span class="line">  <span class="tok-type">virtual</span> ~CSomeClass(); <span class="tok-comment">// missing virtual technical UB</span></span>
 <span class="line">};</span>
 <span class="line"><span class="tok-kw">class</span> CSomeDerivedClass : CSomeClass</span>
@@ -339,7 +339,7 @@
 <span class="line">  }</span>
 <span class="line">  <span class="tok-type">virtual</span> ~CSomeDerivedClass(); <span class="tok-comment">// optional virtual</span></span>
 <span class="line">};</span>
-</code></pre>
+</code></pre></figure>
     </li>
 
     <li> Why exceptions do not scale.
@@ -386,7 +386,7 @@
 <span class="line">  }</span>
 <span class="line">  <span class="tok-kw">return</span> 0;</span>
 <span class="line">}</span>
-</code></pre>
+</code></pre></figure>
     </li>
 
     <li><code>__STDC_VERSION__</code> <a href="https://github.com/open-mpi/ompi/pull/7817">is not necessary defined</a> by C++ compilers.

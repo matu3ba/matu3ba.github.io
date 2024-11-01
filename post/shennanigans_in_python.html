@@ -85,13 +85,16 @@
 <div style="text-align:left; padding up down: 1em">
 <h2>Python shennanigans.</h2>
 </div>
+<p>
   The following shennanigans were collected during my work on creating a system
   integration library and framework for hardware and software tests including
   developer tasks like worktree management, building, target deployment and
   configuration. Therefore it should be representative for things one
   might want to do in absence of better tooling. The used Python version was
-  3.8.2, but most problems still persist.<p>
+  3.8.2, but most problems still persist.
+</p>
 
+<p>
   My <b>tldr;</b> retrospection upfront, which you may be able to reproduce
   once you try to code long-running services, which recover from all failures,
   cleanly reset state or generally try to debug spurious problems. Please don't.<br>
@@ -104,7 +107,8 @@
   different combination of traversal) becomes unreasonably verbose and error
   prone. The alternative is to use C-like error handling, which requires to figure out
   all possible exceptions of Python libstd methods, which language servers
-  do not support (as of 20240404).<p>
+  do not support (as of 20240404).
+</p>
 
   Aside of these more fundamental limitations, here the list of shennanigans I have run into:
 <ul>
@@ -131,7 +135,7 @@
 <span class="line">    <span class="tok-comment"># return big | small == big</span></span>
 <span class="line">    <span class="tok-comment"># also:</span></span>
 <span class="line">    <span class="tok-comment"># return {**big, **small} == big</span></span>
-<span class="line">    <span class="tok-kw">return</span> <span class="tok-type">dict</span>(big, **small) == big</span></span>
+<span class="line">    <span class="tok-kw">return</span> <span class="tok-type">dict</span>(big, **small) == big</span>
 </code></pre>
       </figure>
   </li>
@@ -272,9 +276,9 @@ signal main thread via
   <li>
 Generic module annotation is not allowed and mypy has no explicit docs for this.
 The following does not work and 'module: object' is the closest we can get as simple annotation.
-      <figure><figcaption class="py-cap"><cite class="file">modle_annotation.py</cite></figcaption>
+      <figure><figcaption class="py-cap"><cite class="file">module_annotation.py</cite></figcaption>
 <pre><code><span class="line"><span class="tok-fn">def</span> check_fn(module: ModuleType) -&gt; <span class="tok-type">int</span>:</span>
-<span class="line">    <span class="tok-kw">if</span> str(type(module)) != "<class 'module'>": <span class="tok-kw">return</span> 1</span>
+<span class="line">    <span class="tok-kw">if</span> str(type(module)) != "module": <span class="tok-kw">return</span> 1</span>
 <span class="line">    <span class="tok-kw">return</span> 0</span>
 </code></pre>
       </figure>

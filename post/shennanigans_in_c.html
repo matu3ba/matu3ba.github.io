@@ -111,24 +111,30 @@
     </ol>
     <br>
     <ol>
-      <li> <a id="pointer_access_requirements"><b>Pointer access requirements</b></a> are fairly well specified from C89 on in
+      <li>
+        <a id="pointer_access_requirements"><b>Pointer access requirements</b></a> are fairly well specified from C89 on in
         strong contrast to <a href="#pointer_construction_requirements">pointer construction requirements</a> and programmers with knowledge
         of how processing hardware works can derive below information.
         <ol>
-          <li><span>Proper <b>alignment</b></span></li>
+          <li> <span>Proper <b>alignment</b></span> </li>
             <ul>
               <li><span>Cleanly accessing a pointer with increased alignment requires
-                <a href="https://stackoverflow.com/questions/7059299/how-to-properly-convert-an-unsigned-char-array-into-an-uint32-t">to use a temporary with memcopy</a>.</span></li>
-              <li><span>To only compare pointers decrease alignment with <code><span class="tok-type">char</span>*</code> pointer.</span></li>
-              <li><span>To prune type info for generics use <code>void*</code> pointer.</span></li>
-              <li><span>You are responsible to call a function that provides or provide yourself.</span></li>
+                <a href="https://stackoverflow.com/questions/7059299/how-to-properly-convert-an-unsigned-char-array-into-an-uint32-t">to use a temporary with memcopy</a>.</span>
+              </li>
+              <li>
+                <span>To only compare pointers decrease alignment with <code><span class="tok-type">char</span>*</code> pointer.</span>
+              </li>
+              <li> <span>To prune type info for generics use <code>void*</code> pointer.</span> </li>
+              <li> <span>You are responsible to call a function that provides or provide yourself.</span> </li>
             </ul>
-          <li><span>Sufficient <b>storage</b> (pointer must point to valid object)</span></li>
-          <li><span>Sufficient <b>padding</b> (ie withing structs).</span></li>
-          <li><span>Correct <b>aliasing</b> (<a id="strict_aliasing_rule"><b>"Strict Aliasing Rule"</b></a>)</span>
+          <li> <span>Sufficient <b>storage</b> (pointer must point to valid object)</span> </li>
+          <li> <span>Sufficient <b>padding</b> (ie withing structs).</span> </li>
+          <li>
+            <span>Correct <b>aliasing</b> (<a id="strict_aliasing_rule"><b>"Strict Aliasing Rule"</b></a>)</span>
             <ul>
 <!-- https://gist.github.com/shafik/848ae25ee209f698763cffee272a58f8 -->
-              <li><span>C23 6.5 Expressions paragraph 7</span><br>
+              <li>
+                <span>C23 6.5 Expressions paragraph 7</span><br>
                 "An object shall have its stored value accessed only by an lvalue expression<br>
                 that has one of the following types
                 &#45; a type compatible with the effective type of the object,<br>
@@ -159,7 +165,8 @@
           </li>
         </ol>
       </li>
-      <li> <a id="pointer_access_practice"><b>Pointer access</b> in <b>practice</b></a>.
+      <li>
+        <a id="pointer_access_practice"><b>Pointer access</b> in <b>practice</b></a>.
         <ul>
           <!-- <span class="tok-kw"></span> -->
           <li><span>Provenance as regions pointer is allowed to point to for access.</span>
@@ -184,7 +191,7 @@
 <span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
 <span class="line"><span class="tok-type">void</span> use_bytes(<span class="tok-type">uint8_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint32_t</span> * output, <span class="tok-type">int32_t</span> len_output) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i*4&lt;len_bytes &amp;&amp; i&lt;len_output; i+=4) {</span>
-<span class="line">    memcpy(&amp;output[i], &amp;bytes[4*i], <span class="tok-builtin">sizeof</span>(len_output));
+<span class="line">    memcpy(&amp;output[i], &amp;bytes[4*i], <span class="tok-builtin">sizeof</span>(len_output));</span>
 <span class="line">  }</span>
 <span class="line">}</span>
 </code></pre></figure>
@@ -201,8 +208,8 @@
 <span class="line">  <span class="tok-type">uint32_t</span> * u32_arr_ptr = &amp;u32_arr;</span>
 <span class="line">  <span class="tok-comment">// &lt;use u32_arr_ptr here&gt;</span></span>
 <span class="line">  <span class="tok-comment">// Footgun: Dont return stack local variables</span></span>
-<span class="line">  <span class="tok-kw">return</span> 0;
-<span class="line">}
+<span class="line">  <span class="tok-kw">return</span> 0;</span>
+<span class="line">}</span>
 </code></pre></figure>
           </li>
           <li><span>Ensure correct storage and padding size for pointers via sizeof.</span>
@@ -233,7 +240,7 @@
 <span class="line">}</span>
 </code></pre></figure>
           </li>
-          <li><span>Non-allowed aliasing of pointers (type-based aliasing analysis)
+          <li><span>Non-allowed aliasing of pointers (type-based aliasing analysis)</span>
       <figure><figcaption class="c-cap"><cite class="file">non_allowed_aliasing.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-type">void</span> non_allowed_aliasing(<span class="tok-type">uint16_t</span> * bytes, <span class="tok-type">int32_t</span> len_bytes, <span class="tok-type">uint8_t</span> * lim) {</span>
 <span class="line">  <span class="tok-kw">for</span>(<span class="tok-type">int</span> i=0; i&lt;len_bytes; i+=1) {</span>
@@ -246,7 +253,8 @@
           </li>
         </ul>
       </li>
-      <li> <a id="pointer_exceptions"><b>The Exceptions</b></a>.
+      <li>
+        <a id="pointer_exceptions"><b>The Exceptions</b></a>.
         <ul>
           <li>
             <span>Controlling the build system + compiler invocation to opt-out of provenance based optimizations.</span><br>
@@ -255,10 +263,11 @@
               <li><span>As of 20240603, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).</span></li>
               <li><span>Usage of <code><span class="tok-builtin">restrict</span></code> can be en/disabled in all compilers via <code><span class="tok-builtin">#pragma</span> optimize("", on/off)</code>.</span></li>
               It can also be disabled in all compilers via <code><span class="tok-builtin">#define</span> restrict</code>, using an according optimization level
-                (typical -O1) or via separating header and implementation and disabling link time optimziations.</span></li>
+                (typical -O1) or via separating header and implementation and disabling link time optimziations.
             </ol>
           </li>
-          <li><span>Posix extension and Windows in practice enable dynamic linking via casting pointers <code>void *</code>to function pointers and back.
+          <li>
+            <span>Posix extension and Windows in practice enable dynamic linking via casting pointers <code>void *</code>to function pointers and back.
               This also means that <code><span class="tok-builtin">sizeof</span> (function pointer) == <span class="tok-builtin">sizeof</span> (<span class="tok-type">void</span> *)</code> must be uphold, which is not true for microcontrollers
               with separate address space for code and data or
               <a href="https://cnlelema.github.io/memo/en/cheri/cheri-c-model/">CHERI in mixed capability mode/hybrid compilation mode</a>.
@@ -378,6 +387,7 @@
             being CheriBSD experimental userspace temporal memory safety (20240602).
           </li>
         </ol>
+      </li>
       <li> <a id="pointer_construction_practice"><b>Pointer construction</b> in <b>practice</b></a>.
         The original intention was to explain provenance based rules, but due to
         long standing bugs in LLVM and gcc and no formal model with performance
@@ -391,24 +401,24 @@
         Other more elaborative examples can be seen in the github gist
         "What is the Strict Aliasing Rule and Why do we care?".
         <ol>
-          <li><span><a id="opaque">Opaque type idiom.<span>
+          <li><span><a id="opaque">Opaque type idiom.</a></span>
       <figure><figcaption class="c-cap"><cite class="file">opaque.h</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stddef.h&gt;</span></span>
 <span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
 <span class="line"><span class="tok-kw">struct</span> item;</span>
-<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);
-<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id);
-<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it);
+<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>);</span>
+<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id);</span>
+<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it);</span>
 </code></pre></figure>
       <figure><figcaption class="c-cap"><cite class="file">opaque.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"opaque.h"</span></span>
-<span class="line"><span class="tok-kw">struct</span> item { <span class="tok-type">int32_t</span> id; };
-<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { <span class="tok-kw">return</span> <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }
-<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id) { it-&gt;id = id; }
-<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it) { <span class="tok-kw">return</span> it-&gt;id; }
+<span class="line"><span class="tok-kw">struct</span> item { <span class="tok-type">int32_t</span> id; };</span>
+<span class="line"><span class="tok-type">size_t</span> item_size(<span class="tok-type">void</span>) { <span class="tok-kw">return</span> <span class="tok-builtin">sizeof</span>(<span class="tok-kw">struct</span> item); }</span>
+<span class="line"><span class="tok-type">void</span> id_setid(<span class="tok-kw">struct</span> item * it, <span class="tok-type">int32_t</span> id) { it-&gt;id = id; }</span>
+<span class="line"><span class="tok-type">int</span> item_getid(<span class="tok-kw">struct</span> item * it) { <span class="tok-kw">return</span> it-&gt;id; }</span>
 </code></pre></figure>
           </li>
-          <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.<span>
+          <li><span><a id="ptrintconv">Pointer to integer and integer to pointer conversion</a>.</span>
       <figure><figcaption class="c-cap"><cite class="file">ptrtoint_inttoptr.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;assert.h&gt;</span></span>
 <span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;inttypes.h&gt;</span></span>
@@ -439,12 +449,12 @@
 <span class="line">}</span>
 </code></pre></figure>
           </li>
-          <li><span><a id="lto">Link time optimization (LTO) usage and problems</a>.<span>
+          <li><span><a id="lto">Link time optimization (LTO) usage and problems</a>.</span>
                 One can use <code>ptrtoint_inttoptr.c</code> with flags
                 for strong LTO to optimize the bit code of the complete program, for example via
                 <code>clang -flto -funified-lto -fuse-ld=lld ptrtoint_inttoptr.c</code>.
           </li>
-          <li><span><a id="io_intrinsics">IO Compiler intrinsic semantics example</a>.<span>
+          <li><span><a id="io_intrinsics">IO Compiler intrinsic semantics example</a>.</span>
                 It would be helpful to have a way to add alignment to pointers to
                 have the compiler automatically do runtime selection of the best
                 SIMD routine instead of being forced to do this manually.
@@ -458,7 +468,7 @@
 
       <figure><figcaption class="c-cap"><cite class="file">extern.h</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;immintrin.h&gt;</span></span>
-<span class="tok-type">void</span> memcpy_avx(<span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> src, <span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> dest, <span class="tok-type">size_t</span> n);</span>
+<span class="line"><span class="tok-type">void</span> memcpy_avx(<span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> src, <span class="tok-type">__m256i</span> * <span class="tok-builtin">__restrict</span> dest, <span class="tok-type">size_t</span> n);</span>
 </code></pre></figure>
 
       <figure><figcaption class="c-cap"><cite class="file">extern.c</cite></figcaption>
@@ -477,8 +487,8 @@
 
       <figure><figcaption class="c-cap"><cite class="file">memcpy_avx.c</cite></figcaption>
 <pre><code><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span>
-<span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
-<span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span>
 <span class="tok-type">int</span> main(<span class="tok-type">void</span>) {
   <span class="tok-type">uint8_t</span> mem_src[1024] = { 0 };
   <span class="tok-type">uint8_t</span> mem_dest[1024] = { 0 };
@@ -502,7 +512,7 @@
 <span class="tok-comment">// p_src: 0x7ffceb985a60, p_dest: 0x7ffceb985660</span>
 </code></pre></figure>
           </li>
-          <li><span><a id="cerberus">Checking C code validity with Cerberus</a> does not imply absence of compiler miscompilations.<span>
+          <li><span><a id="cerberus">Checking C code validity with Cerberus</a> does not imply absence of compiler miscompilations.</span>
       <figure><figcaption class="c-cap"><cite class="file">cerberus_install.sh</cite></figcaption>
 <pre><code><span class="line"><span class="tok-comment"># Install opam with ocaml</span></span>
 <span class="line">git clone https://github.com/rems-project/cerberus</span>
@@ -520,14 +530,14 @@
 </code></pre></figure>
 
       <figure><figcaption class="c-cap"><cite class="file">extern.c</cite></figcaption>
-<pre><code><span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span>
+<pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span>
 <span class="line"><span class="tok-type">size_t</span> x = 0;</span>
 </code></pre></figure>
 
       <figure><figcaption class="c-cap"><cite class="file">ptr_provenance_miscompilation.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stddef.h&gt;</span></span>
-<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span></span>
-<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span>
+<span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">"extern.h"</span></span>
 <span class="line"><span class="tok-comment">// Removing restrict makes the miscompilation go away</span></span>
 <span class="line"><span class="tok-type">size_t</span> f(<span class="tok-type">size_t</span> * <span class="tok-kw">restrict</span> ptr_to_x);</span>
 <span class="line"><span class="tok-type">size_t</span> f(<span class="tok-type">size_t</span> * <span class="tok-kw">restrict</span> ptr_to_x) {</span>
@@ -553,7 +563,7 @@
 <span class="line"><span class="tok-comment">// output:</span></span>
 </code></pre></figure>
           </li>
-          <li><span><a id="cheri">CHERI usage is left as task for the reader.</a>.<span>
+          <li><span><a id="cheri">CHERI usage is left as task for the reader.</a>.</span>
                 Useful links are <code>https://github.com/CTSRD-CHERI/cheribuild</code>,
                 <code>https://github.com/CTSRD-CHERI/cheri-c-programming</code> and
                 <code>https://github.com/capablevms/cheri-examples</code>.
@@ -561,7 +571,9 @@
         </ol>
       </li>
     </ol>
-  <li> <a id="seq_pts"><b>Sequence Points</b></a> in simple case and with storage lifetime extension.
+  </li>
+  <li>
+    <a id="seq_pts"><b>Sequence Points</b></a> in simple case and with storage lifetime extension.
   <figure><figcaption class="c-cap"><cite class="file">sequence_points.c</cite></figcaption>
 <pre><code><span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdint.h&gt;</span></span>
 <span class="line"><span class="tok-builtin">#include</span> <span class="tok-str">&lt;stdio.h&gt;</span></span>
@@ -584,7 +596,7 @@
 <span class="line">  <span class="tok-kw">return</span> res;</span>
 <span class="line">}</span>
 <span class="line"><span class="tok-type">int</span> storage_lifetime_footgun(void) {</span>
-<span class="line">  <span class="tok-comment">// undefined behavior introduced if temporary is missing</span>
+<span class="line">  <span class="tok-comment">// undefined behavior introduced if temporary is missing</span></span>
 <span class="line">  <span class="tok-comment">// printf("%x", ++(create_fail().a[0]));</span></span>
 <span class="line">  <span class="tok-type">struct</span> sExample res = create_sExample();</span>
 <span class="line">  printf(<span class="tok-str">"%x"</span>, ++(res.a[0]));</span>
