@@ -386,6 +386,16 @@
             pointer capability revocation on freeing memory with latest example
             being CheriBSD experimental userspace temporal memory safety (20240602).
           </li>
+          <li><span>What to expect for the future.</span><br>
+            LLVM support for full restrict has been merged, but
+            <a href="https://www.reddit.com/r/rust/comments/1ft619r/llvm_rfc_improvements_to_capture_tracking/">
+              it has design and quality problems</a>,
+            so it looks like the C++ code base of LLVM prevents faster iterations
+            and/or more fundamental changes, since the feature is in
+            development for now ca. 5 years (since 2019).<br>
+            Semantic implications are not communicated and neither formalized, so the future path remains unclear.
+            This is reflected by <a href="https://github.com/rust-lang/rust/issues/107975">long-lasting miscompilation not getting fixed</a>.
+          </li>
         </ol>
       </li>
       <li> <a id="pointer_construction_practice"><b>Pointer construction</b> in <b>practice</b></a>.
