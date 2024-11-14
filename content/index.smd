@@ -1,0 +1,18 @@
+---
+.title = "matu3bas Website",
+.description = "Personal Website",
+.author = "matu3ba",
+.date = @date("2024-11-10T00:00:00"),
+.layout = "home.shtml",
+.tags = ["zig", "hellow_world"],
+.draft = false,
+---
+
+[]($section.id("hello_world"))
+## First Hello World
+
+[hello_world.zig]($code.asset('hello_world.zig').language('zig'))
+
+Addressable via ip:port/#hello_world
+and from shtml for positioning via
+`<div :html="$page.contentSection('hello_world')"></div>`

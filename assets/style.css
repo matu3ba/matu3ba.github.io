@@ -1,0 +1,100 @@
+:root {
+  --font-primary: "Roboto", sans-serif; /* Specify your primary font */
+  --font-secondary: "Open Sans", sans-serif; /* Optional secondary font */
+  --font-monospace: "Source Code Pro", monospace; /* Optional monospace font for code */
+}
+
+body { font-family: var(--font-primary); }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-secondary); /* Use secondary font for headings */
+}
+
+figure {
+  margin: 0;
+}
+figure pre {
+  margin-bottom: 0;
+}
+
+figcaption
+{
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  background: #fcdba5;
+  font-size: 12pt;
+  padding-left: 5pt;
+}
+
+/* not yet working */
+/* figcaption.cap_zig { */
+/*   background: #fcdba5; */
+/* } */
+/* figcaption.cap_shell { */
+/*   background: #ccc; */
+/*   color: #000; */
+/* } */
+
+pre,
+code {
+  font-size: 12pt;
+  direction: ltr;
+}
+
+pre > code,
+samp {
+  display: block;
+  overflow: auto;
+  padding: 5pt;
+  background: #f8f8f8;
+  color: black;
+  line-height: normal;
+}
+
+pre,
+code {
+  font-family: monospace;
+  font-size: 12pt;
+}
+
+code {
+  border-top: 5px;
+  border-top-right-radius: 5px;
+}
+
+/**Treesitter grammar is uncapable to disting function within call context and
+ * function declaration/definition. Both example and print are identified with
+ * the same span class function and thus colored with --darkred:
+ * fn ->example<-() void {
+ *   std.debug.->print<-("test123\n", .{});
+ * }
+ **/
+code.zig {
+  --red: #d14;
+  --darkred: #900;
+  --brightblue: #0086b3;
+  --bluegray: #458;
+  --cyan: #008080;
+  --darkyellow: #aa7;
+  --gray: #777;
+  --black: #333;
+
+  .attribute { color: var(--bluegray); font-weight: bold; }
+  .boolean { color: var(--cyan); }
+  .comment { color: var(--gray); }
+  .constant.builtin { color: var(--brightblue); font-weight: normal; }
+  .function { color: var(--darkred); font-weight: bold; }
+  .function.builtin { color: var(--brightblue); font-weight: normal; }
+  .keyword { color: var(--black); font-weight: bold; }
+  .keyword.function { color: var(--black); font-weight: bold; }
+  .null { color: var(--cyan); }
+  .number { color: var(--cyan); }
+  .operator { color: var(--black); font-weight: bold; }
+  .qualifier { color: var(--bluegray); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: var(--bluegray); font-weight: bold; }
+  .undefined { color: var(--cyan); }
+  /* .bracket */
+  /* .field */
+  /* .variable */
+}
