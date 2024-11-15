@@ -32,7 +32,6 @@ body {
   font-family: var(--font-primary);
   background-color: light-dark(#fff, #000);
 }
-
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-secondary); /* Use secondary font for headings */
 }
@@ -117,3 +116,10 @@ code.zig {
   /* .field */
   /* .variable */
 }
+
+/* home.smd */
+/* justify-content: space-around, center, space-between */
+
+.home_table_flex_grid { display: flex; justify-content: center; column-gap: 20px; }
+.home_left, .home_right { flex: 1; }
+@media screen and (max-width: 600px) { .home_table_flex_grid { display: block; } }

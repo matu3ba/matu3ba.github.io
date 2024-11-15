@@ -7,7 +7,11 @@
     <link rel="stylesheet" type="text/css" href="$site.asset('style.css').link()">
   </head>
   <body>
-    <h1 :text="$page.title"></h1>
-    <div :html="$page.content()"></div>
+    <h2 :text="$page.title"></h2>
+    <div class="home_table_flex_grid">
+      <div :html="$page.contentSection('home_left')"></div>
+      <div :html="$page.contentSection('home_right')"></div>
+    </div>
+    <!--<div :html="$page.content()"></div>-->
   </body>
 </html>

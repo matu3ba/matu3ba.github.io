@@ -4,15 +4,14 @@
 .author = "matu3ba",
 .date = @date("2024-11-10T00:00:00"),
 .layout = "home.shtml",
-.tags = ["zig", "hellow_world"],
+.tags = ["zig", "hello_world"],
 .draft = false,
 ---
 
-[]($section.id("hello_world"))
-## First Hello World
+### [Articles]($section.id('home_left'))
+Left are articles. This section ends with the next \$section.id.
+
+### [Posts]($section.id('home_right'))
+Right are blog posts.
 
 [hello_world.zig]($code.asset('hello_world.zig').language('zig'))
-
-Addressable via ip:port/#hello_world
-and from shtml for positioning via
-`<div :html="$page.contentSection('hello_world')"></div>`
