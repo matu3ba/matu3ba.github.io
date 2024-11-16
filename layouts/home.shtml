@@ -7,10 +7,29 @@
     <link rel="stylesheet" type="text/css" href="$site.asset('style.css').link()">
   </head>
   <body>
-    <h2 :text="$page.title"></h2>
-    <div class="home_table_flex_grid">
-      <div :html="$page.contentSection('home_left')"></div>
-      <div :html="$page.contentSection('home_right')"></div>
+    <!--
+      <h2 :text="$page.title"></h2>
+      <div class="home_table_flex_grid">
+        <div :html="$page.contentSection('home_left')"></div>
+        <div :html="$page.contentSection('home_right')"></div>
+      </div>
+    </div> -->
+    <div class="home_page">
+      <div class='flex_grid'>
+        <div class='flex_row'>
+          <div class='flex_double_column'>
+            <h2 :text="$page.title"></h2>
+          </div>
+        </div>
+        <div class='flex_row'>
+          <div class='flex_column'>
+            <div :html="$page.contentSection('home_left')"></div>
+          </div>
+          <div class='flex_column'>
+            <div :html="$page.contentSection('home_right')"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <!--<div :html="$page.content()"></div>-->
   </body>

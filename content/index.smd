@@ -9,9 +9,11 @@
 ---
 
 ### [Articles]($section.id('home_left'))
-Left are articles. This section ends with the next \$section.id.
+* 20241001 Article 1 with some very long text verrrrrrrrrrrrrrrrrrrrrrrrrrryyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+* 20241001 Article 2
+* 20241001 Article 3
 
 ### [Posts]($section.id('home_right'))
-Right are blog posts.
-
-[hello_world.zig]($code.asset('hello_world.zig').language('zig'))
+* 20241001 Post 1
+* 20241001 Post 2
+* 20241001 Post 3
