@@ -35,18 +35,17 @@
 
 body {
   font-family: var(--font-primary);
-  background-color: light-dark(#fff, #000);
+  background-color: light-dark(white, black);
   font-size: var(--font_size_normal);
 }
-h1, h2, h3 { font-family: var(--font-secondary); }
+h1, h2, h3 { font-family: var(--font-secondary); color: light-dark(black white); }
 h1 { font-size: var(--font_size_h1); }
 h2 { font-size: var(--font_size_h2); }
 h3 { font-size: var(--font_size_h3); }
 h4, h5, h6 { color: crimson; } /* dot not use h4-h6 */
 
-a.reset_a {
-  text-decoration: none;
-}
+.reset_a a{ text-decoration: none; }
+.reset_a a:visited{ color:black; }
 
 figure { margin: 0; }
 figure pre { margin-bottom: 0; }
