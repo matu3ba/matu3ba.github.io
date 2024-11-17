@@ -12,14 +12,10 @@
           <div class='static_double_column1'>
             <h2 :text="$page.title"></h2>
           </div>
-          <div class='static_column'>
-            <div :html="$page.contentSection('home_left')"></div>
-          </div>
-          <div class='static_column'>
-            <div :html="$page.contentSection('home_right')"></div>
+          <div class='static_double_column2'>
+            <div :html="$page.content()"></div>
           </div>
       </div>
     </div>
-    <!--<div :html="$page.content()"></div>-->
   </body>
 </html>

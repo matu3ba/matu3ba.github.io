@@ -1,0 +1,16 @@
+---
+.title = "",
+.author = "Jan Philipp Hafer",
+.date = @date("2024-04-20:00:00:00"),
+.layout = "article.shtml",
+.tags = ["article", "system", "hardware", "software", "design", "debugging"],
+.draft = false,
+---
+
+TODO:
+* adjust html to add small "header line"
+* adjust html title to add title as double col
+* content in another double col
+* fix scaling, 200% should be necessary
+
+* https://makealivingwriting.com/writing-an-article-vs-writing-blog-post-differences/

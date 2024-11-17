@@ -1,0 +1,11 @@
+---
+.title = "Jans Website",
+.description = "Personal Website",
+.author = "Jan Philipp Hafer",
+.date = @date("2024-11-10T00:00:00"),
+.layout = "article.shtml",
+.tags = ["home", "overview", "blog posts", "articles"],
+.draft = false,
+---
+
+TODO

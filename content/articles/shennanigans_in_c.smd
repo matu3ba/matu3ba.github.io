@@ -1,0 +1,10 @@
+---
+.title = "",
+.author = "Jan Philipp Hafer",
+.date = @date("2024-04-20:00:00:00"),
+.layout = "article.shtml",
+.tags = ["article", "system", "hardware", "software", "design", "debugging"],
+.draft = false,
+---
+
+TODO

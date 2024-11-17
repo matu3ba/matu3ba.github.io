@@ -9,7 +9,6 @@
   --brightred: #f00;
   --darkred: #900;
   --lm_blue: #0086b3;
-  /* --dm_blue: #00a; */
   --dm_blue: #0080a5;
   --lm_bluegray: #458;
   --dm_bluegray: #57c;
@@ -26,11 +25,13 @@
   --backgroundlight_code: #f8f8f8;
   --backgrounddark_code: #121212;
 
+  --font_size: 12px;
 }
 
 body {
   font-family: var(--font-primary);
   background-color: light-dark(#fff, #000);
+  font-size: var(--font_size);
 }
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-secondary); /* Use secondary font for headings */
@@ -48,7 +49,7 @@ figcaption
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   background: light-dark(var(--brightorange), var(--darkorange));
-  font-size: 12pt;
+  font-size: var(--font_size);
   padding-left: 5pt;
 }
 
@@ -80,7 +81,7 @@ samp {
 pre,
 code {
   font-family: monospace;
-  font-size: 12pt;
+  font-size: var(--font_size);
 }
 
 code {
@@ -121,10 +122,13 @@ code.zig {
   display: grid;
   grid-template-columns: 400px 400px;
 }
-.static_double_column {
-  /* exclusive end */
-  grid-column-start: 1; grid-column-end: 3;
+.static_double_column1 {
+  grid-column-start: 1; grid-column-end: 3; /* exclusive end */
   grid-row-start: 1; grid-row-end: 2;
+}
+.static_double_column2 {
+  grid-column-start: 1; grid-column-end: 3; /* exclusive end */
+  grid-row-start: 2; grid-row-end: 3;
 }
 /* .static_column { } unneeded */
 /* .static_row { } unneeded */
