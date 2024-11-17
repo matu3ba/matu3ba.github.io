@@ -24,32 +24,38 @@
 
   --backgroundlight_code: #f8f8f8;
   --backgrounddark_code: #121212;
+  --font_size_normal: 100%;
+  --font_size_h1: 150%;
+  --font_size_h2: 120%;
+  --font_size_h3: 100%;
 
-  --font_size: 12px;
+  --content_width: 1200px; /* same as @media screen */
+  --content_1colof2_width: calc(1200px / 2);
 }
 
 body {
   font-family: var(--font-primary);
   background-color: light-dark(#fff, #000);
-  font-size: var(--font_size);
+  font-size: var(--font_size_normal);
 }
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-secondary); /* Use secondary font for headings */
+h1, h2, h3 { font-family: var(--font-secondary); }
+h1 { font-size: var(--font_size_h1); }
+h2 { font-size: var(--font_size_h2); }
+h3 { font-size: var(--font_size_h3); }
+h4, h5, h6 { color: crimson; } /* dot not use h4-h6 */
+
+a.reset_a {
+  text-decoration: none;
 }
 
-figure {
-  margin: 0;
-}
-figure pre {
-  margin-bottom: 0;
-}
+figure { margin: 0; }
+figure pre { margin-bottom: 0; }
 
-figcaption
-{
+figcaption {
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   background: light-dark(var(--brightorange), var(--darkorange));
-  font-size: var(--font_size);
+  font-size: var(--font_size_normal);
   padding-left: 5pt;
 }
 
@@ -81,7 +87,7 @@ samp {
 pre,
 code {
   font-family: monospace;
-  font-size: var(--font_size);
+  font-size: var(--font_size_normal);
 }
 
 code {
@@ -120,7 +126,7 @@ code.zig {
 
 .static_grid {
   display: grid;
-  grid-template-columns: 400px 400px;
+  grid-template-columns: var(--content_1colof2_width) var(--content_1colof2_width);
 }
 .static_double_column1 {
   grid-column-start: 1; grid-column-end: 3; /* exclusive end */
@@ -129,6 +135,10 @@ code.zig {
 .static_double_column2 {
   grid-column-start: 1; grid-column-end: 3; /* exclusive end */
   grid-row-start: 2; grid-row-end: 3;
+}
+.static_double_column3 {
+  grid-column-start: 1; grid-column-end: 3; /* exclusive end */
+  grid-row-start: 3; grid-row-end: 4;
 }
 /* .static_column { } unneeded */
 /* .static_row { } unneeded */
@@ -148,7 +158,12 @@ code.zig {
   align-items: center;
   gap: 4px;
 }
-.home_left { flex: 1; width: 300px; }
-.home_right { flex: 1; width: 300px; }
-@media screen and (max-width: 800px) { .home_page { display: block; } }
-@media screen and (max-width: 800px) { .static_grid { display: block; } }
+/* .home_left { flex: 1; width: 300px; } */
+/* .home_right { flex: 1; width: 300px; } */
+.home_left { flex: 1; }
+.home_right { flex: 1; }
+/* SHENNANIGAN: Variables break block view on Mozilla Firefox 132.0.2, so use 1200px:
+/* @media screen and (max-width: var(--content_width)) { .home_page { display: block; } } */
+/* @media screen and (max-width: var(--content_width)) { .static_grid { display: block; } } */
+@media screen and (max-width: 1200px) { .home_page { display: block; } }
+@media screen and (max-width: 1200px) { .static_grid { display: block; } }

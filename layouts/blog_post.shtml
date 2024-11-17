@@ -13,6 +13,9 @@
             <h2 :text="$page.title"></h2>
           </div>
           <div class='static_double_column2'>
+            <h2 :text="$page.title"></h2>
+          </div>
+          <div class='static_double_column3'>
             <div :html="$page.content()"></div>
           </div>
       </div>
