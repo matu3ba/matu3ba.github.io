@@ -6,3 +6,67 @@
 .tags = ["article", "python", "software", "design"],
 .draft = false,
 ---
+
+[]($section.id("intro"))
+The following shennanigans were collected during my work on creating a system
+integration library and framework for hardware and software tests including
+developer tasks like worktree management, building, target deployment and
+configuration. Therefore it should be representative for things one
+might want to do in absence of better tooling. The used Python version was
+3.8.2, but most problems still persist.
+
+[]($section.id("tldr"))
+My [**tldr;**](#tldr) retrospection upfront, which you may be able to reproduce
+once you try to code long-running services, which recover from all failures,
+cleanly reset state or generally try to debug spurious problems. Please don't.
+
+Python on itself is great for prototyping up to a few hundred lines of code,
+like to quickly receive or send some json over tcp/html.
+**However**, it is unfeasible to scale, for example to use as library code.
+Changes in a leaf function can add exceptions to higher level code paths and
+handling those via exceptions for user friendly error messages, for example
+to collect context (information along multiple functions, for example from
+different combination of traversal) becomes unreasonably verbose and error
+prone. The alternative is to use C-like error handling, which requires to figure out
+all possible exceptions of Python libstd methods, which language servers
+do not support (as of 20240404).
+
+[]($section.id("list_of_shame"))
+Aside of these more fundamental limitations, here the [list of shennanigans](#list_of_shennanigans) I have run into:
+- `xml.dom.minidom` [breaks space and newlines](https://bugs.python.org/issue5752). Use `ElementTree`.
+- `.strip()` is necessary after file read, because Python automatically adds
+  `\n` and there is no way to read without newlines into a list.
+- Testing for subdictionaries with `dict` is unreadable, so such a method is missing
+[missing_dict_methods1.py]($code.asset('./missing_dict_methods1.py').language('python'))
+- `dict` has no method to check, if the fields of a dictionary are in another dictionary
+[missing_dict_methods2.py]($code.asset('./missing_dict_methods2.py').language('python'))
+- `dict` has no method to check, if all fields and values of a dictionary are in another dictionary
+[missing_dict_methods3.py]($code.asset('./missing_dict_methods3.py').language('python'))
+- Tuples and dicts are annoying to differentiate
+[tup_and_dicts.py]($code.asset('./tup_and_dicts.py').language('python'))
+- Stack trace formatting is inefficient and one can not use <code>gf</code> or <code>gF</code> vim shortcuts to jump to location
+  function to write status + trace to variable.
+[stacktrace_fmt.py]($code.asset('./stacktrace_fmt.py').language('python'))
+- Mixed double quote (`"`) and single quote (`'`) strings are invalid json
+[invalid_json.py]($code.asset('./invalid_json.py').language('python'))
+- `os.kill()` does not call registered cleanup function
+  `atexit.register(exit_cleanup)` by deamonized threads. Must store pids of
+  child processes and clean them explicitly or signal main thread via
+[signal_main_thread.py]($code.asset('./signal_main_thread.py').language('python'))
+- [Socket timeout can cause file-like readline() method to lose data](https://github.com/python/cpython/issues/51571), workaround
+  1. Read from Kernel structure and append chunk-wise to buffer from socket until stop event (via select).
+  2. After each read, try to line a line from the buffer and remove the line on success (being utf-8 etc).
+  3. On failure of reading line, continue with 1.
+  4. Teardown should read socket until being empty, if a stop was obtained.
+- Generic module annotation is not allowed and mypy has no explicit docs for
+  this. The following does not work and `module: object` is the closest we can
+  get as simple annotation.
+[module_annotation.py]($code.asset('./module_annotation.py').language('python'))
+- There are no scheduling and watchdog methods, which makes Python thread
+  scheduling very unreliable. Unlucky schedules may cause fatal delay for
+  shuffling data between daemon thread and main thread. As example, an
+  application using 1 main thread and 2 deamon threads may cause the relevant
+  deamon thread not being scheduled for 2 seconds.
+  Empirically 3 seconds work.
+- Trailing comma in dictionary or `json.dumps` generated string has
+  silent failures, for example on parsing the output as json via php.
