@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title :text="$site.title"></title>
+    <link rel="stylesheet" type="text/css" href="$site.asset('normalize.css').link()">
+    <link rel="stylesheet" type="text/css" href="$site.asset('style.css').link()">
+  </head>
+  <body>
+    <div class="home_page">
+      <div class='static_grid'>
+          <div class='static_double_column1'>
+            <h1><span class="reset_a"><a href="/">Jans Website</a></span></h1>
+          </div>
+          <div class='static_double_column2'>
+            <h2 :text="$page.title"></h2>
+          </div>
+          <div class='static_double_column3'>
+            <div :html="$page.contentSection('intro')"></div>
+            <ol>
+              <li><a id ="pointer_semantics"><b>Pointer semantics</b> in C</a>.
+                <ol>
+                  <li><a href="#pointer_access_requirements">Pointer access requirements</a></li>
+                  <li><a href="#pointer_access_practice">Pointer access in practice</a></li>
+                  <li><a href="#pointer_exceptions">The Exceptions</a></li>
+                  <li><a href="#pointer_construction_requirements">Pointer construction requirements</a></li>
+                  <li><a href="#pointer_construction_practice">Pointer construction in practice</a></li>
+                </ol>
+                <ol>
+                  <!--<li><div :html="$page.contentSection('pointer_access_requirements')"></div></li>-->
+                  <li>
+                    <a id="pointer_access_requirements"><b>Pointer access requirements</b></a> are fairly well specified from C89 on in
+                    strong contrast to <a href="#pointer_construction_requirements">pointer construction requirements</a> and programmers with knowledge
+                    of how processing hardware works can derive below information.
+                    <ol>
+                      <li> <span>Proper <b>alignment</b></span> </li>
+                        <ul>
+                          <li><span>Cleanly accessing a pointer with increased alignment requires to use a temporary with memcopy.</span>
+                          </li>
+                          <li>
+                            <span>To only compare pointers decrease alignment with <code><span class="tok-type">char</span>*</code> pointer.</span>
+                          </li>
+                          <li> <span>To prune type info for generics use <code>void*</code> pointer.</span> </li>
+                          <li> <span>You are responsible to call a function that provides or provide yourself.</span> </li>
+                        </ul>
+                      <li> <span>Sufficient <b>storage</b> (pointer must point to valid object)</span> </li>
+                      <li> <span>Sufficient <b>padding</b> (ie within structs).</span> </li>
+                      <li>
+                        <span>Correct <b>aliasing</b> (<a id="strict_aliasing_rule"><b>"Strict Aliasing Rule"</b></a>)</span>
+                        <div :html="$page.contentSection('strict_aliasing_rule:expl')"></div>
+                      </li>
+                    </ol>
+                  </li>
+                  <li><div :html="$page.contentSection('pointer_access_practice')"></div></li>
+                  <li><div :html="$page.contentSection('pointer_exceptions')"></div></li>
+                  <li><div :html="$page.contentSection('pointer_construction_requirements')"></div></li>
+                  <li>
+                    <div :html="$page.contentSection('pointer_construction_practice')"></div>
+                    <ol>
+                      <li><div :html="$page.contentSection('opaque')"></div></li>
+                      <li><div :html="$page.contentSection('ptrintconv')"></div></li>
+                      <li><div :html="$page.contentSection('lto')"></div></li>
+                      <li><div :html="$page.contentSection('io_intrinsics')"></div></li>
+                      <li><div :html="$page.contentSection('cerberus')"></div></li>
+                      <li><div :html="$page.contentSection('cheri')"></div></li>
+                    </ol>
+                  </li>
+                </ol>
+              </li>
+              <li><div :html="$page.contentSection('seq_pts')"></div></li>
+              <li><div :html="$page.contentSection('bitfields')"></div></li>
+            </ol>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>

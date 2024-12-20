@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title :text="$site.title"></title>
+    <link rel="stylesheet" type="text/css" href="$site.asset('normalize.css').link()">
+    <link rel="stylesheet" type="text/css" href="$site.asset('style.css').link()">
+  </head>
+  <body>
+    <div class="home_page">
+      <div class='static_grid'>
+          <div class='static_double_column1'>
+            <h1><span class="reset_a"><a href="/">Jans Website</a></span></h1>
+          </div>
+          <div class='static_double_column2'>
+            <h2 :text="$page.title"></h2>
+          </div>
+          <div class='static_double_column3'>
+            <div :html="$page.contentSection('intro')"></div>
+            <div :html="$page.contentSection('theory')"></div>
+            <div :html="$page.contentSection('practice')"></div>
+            <!--<div :html="$page.content()"></div>-->
+            <ol>
+              <li> <a id ="hardware_problems"><b>Hard(ware) problems</b></a>
+                <a href="https://interrupt.memfault.com/blog/schematic-review-checklist">
+                Hardware design reviews</a>
+                with extensive focus on core components
+                (power, battery, periphery, busses, memory/flash and debug/test infrastructure)
+                to enable debugging and component tests against product and assembling defects
+                are fundamental for software debugging under assumption that computing unit(s)
+                and memory unit(s) can be trusted to work reliable enough.
+                Depending on goals, time channel analysis, formal methods to rule out logic
+                errors and fuzzing against bad temporal behavior (for example during speculative execution)
+                are common methods besides various testing strategies based on statistical analysis.
+              </li>
+              <li> <a id ="platform_problems"><b>Kernel and platform problems</b></a>
+                The managing environment the code is running on can vary a lot.
+                As example, the typical four phases of the Linux boot process
+                (system startup, bootloader stage, kernel stage, and init process)
+                have each their own debugging infrastructure and methods.
+                Generally, working with (introspection-restricted) platforms requires
+                1. reverse engineering and "trying to find info" and/or 2. "use some tracing
+                tool" and for 3. open source "adjust the source and stare at kernel
+                dumps/use debugger".
+                Kernels are rarely designed for tracing, recording, formal
+                verification due to internal complexity and virtualization is slow and
+                hides many classes of synchronization bugs.
+                Due to being complex, moving targets, having no library design, having design flaws
+                and many performance tradeoffs, they are hard to fuzz test.
+              </li>
+              <li> <a id ="detectable_ub"><b>Detectable Undefined Behavior</b></a>
+                TODO make table of tools
+              </li>
+              <li> <a id ="undetectable_ub"><b>Undetectable Undefined Behavior</b></a>
+                Staring at source code, backend intermediate representation like LLVM
+                IR and reducing the problem or resulting assembly. Unfortunately the
+                backend optimizers like LLVM do not offer frontend language writers
+                debug APIs and related tooling due to not being designed for that
+                purpose.
+              </li>
+              <li> <a id ="miscomplations"><b>Miscompilations</b></a>
+                Tools like Miri or Cerberus run the program in an interpreter,
+                but may not cover all possible program semantics due to ambiguity
+                and may not be feasible, so the only good chance is to reduce it.
+              </li>
+              <li> <a id ="memory_problems"><b>Memory problems</b></a>
+                sanitizers, validators, simulator, tracers: TODO table with configs and costs
+                - 1.out-of-bounds access sanitizer
+                - 2.null pointer dereference sanitizer
+                - 3.type confusion sanitizer
+                - 4.integer overflow sanitizer
+                - 5.use after free sanitizer
+                - 6.invalid stack access sanitizer
+                - 7.usage of uninitialized memory sanitizer
+                - 8.data races sanitizer
+              </li>
+              <li> <a id ="resource_leaks"><b>Resource leaks (Freestanding/Kernel)</b></a>
+                TODO sanitizers
+              </li>
+              <li> <a id ="freezes"><b>Freezes (deadlocks, softlocks, signal safety, unbounded loops etc)</b></a>
+                TODO sanitizer, validator, stepping
+              </li>
+              <li> <a id ="perf_problems"><b>Performance problems</b></a>
+                TODO
+              </li>
+              <li> <a id ="logic_problems"><b>Logic problems</b></a>
+                TODO
+              </li>
+            </ol>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>

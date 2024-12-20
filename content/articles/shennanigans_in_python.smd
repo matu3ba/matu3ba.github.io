@@ -1,5 +1,5 @@
 ---
-.title = "Python shennanigans",
+.title = "Python shennanigans.",
 .author = "Jan Philipp Hafer",
 .date = @date("2024-04-20:00:00:00"),
 .layout = "article.shtml",
@@ -31,7 +31,7 @@ prone. The alternative is to use C-like error handling, which requires to figure
 all possible exceptions of Python libstd methods, which language servers
 do not support (as of 20240404).
 
-[]($section.id("list_of_shame"))
+[]($section.id("list_of_shennanigans"))
 Aside of these more fundamental limitations, here the [list of shennanigans](#list_of_shennanigans) I have run into:
 - `xml.dom.minidom` [breaks space and newlines](https://bugs.python.org/issue5752). Use `ElementTree`.
 - `.strip()` is necessary after file read, because Python automatically adds
@@ -50,7 +50,7 @@ Aside of these more fundamental limitations, here the [list of shennanigans](#li
 - Mixed double quote (`"`) and single quote (`'`) strings are invalid json
 [invalid_json.py]($code.asset('./invalid_json.py').language('python'))
 - `os.kill()` does not call registered cleanup function
-  `atexit.register(exit_cleanup)` by deamonized threads. Must store pids of
+  `atexit.register(exit_cleanup)` by daemonized threads. Must store pids of
   child processes and clean them explicitly or signal main thread via
 [signal_main_thread.py]($code.asset('./signal_main_thread.py').language('python'))
 - [Socket timeout can cause file-like readline() method to lose data](https://github.com/python/cpython/issues/51571), workaround
@@ -65,8 +65,8 @@ Aside of these more fundamental limitations, here the [list of shennanigans](#li
 - There are no scheduling and watchdog methods, which makes Python thread
   scheduling very unreliable. Unlucky schedules may cause fatal delay for
   shuffling data between daemon thread and main thread. As example, an
-  application using 1 main thread and 2 deamon threads may cause the relevant
-  deamon thread not being scheduled for 2 seconds.
+  application using 1 main thread and 2 daemon threads may cause the relevant
+  daemon thread not being scheduled for 2 seconds.
   Empirically 3 seconds work.
 - Trailing comma in dictionary or `json.dumps` generated string has
   silent failures, for example on parsing the output as json via php.

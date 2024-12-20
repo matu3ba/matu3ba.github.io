@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 import json
-
 
 # Dict -> str is inconsistent to json -> str, so workaround with
 # dict_asjson_lower = str(dict1).replace("'", '"')

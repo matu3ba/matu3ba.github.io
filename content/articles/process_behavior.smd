@@ -1,12 +1,30 @@
 ---
-.title = "Process behavior on various OSes",
+.title = "Process semantics and abstraction problems on Linux, Windows, MacOS, Posix.",
 .description = "Personal Website",
 .author = "Jan Philipp Hafer",
 .date = @date("2024-11-10T00:00:00"),
 .layout = "article.shtml",
-.tags = ["home", "article"],
+.tags = ["article", "system", "platform", "windows", "macos", "linux", "posix", "process", "abstraction"],
 .draft = false,
 ---
 
-TODO
-no idea why is this broken
+This article documents process semantic differences between
+Linux, Windows, MacOS, Posix including what can be reasonably relied on and what no.
+
+TODO motivation: audience/why this is actually relevant to read, ie security. 
+
+    IPC.
+        Signals.
+        Pipes.
+        Sockets
+        Shared memory.
+        Shared memory.
+    Security.
+        File access permissions.
+        User permissions.
+        TODO.
+    Process groups.
+
+    IPC.
+    Posix.
+    Process groups.

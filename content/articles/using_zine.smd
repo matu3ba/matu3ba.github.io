@@ -1,0 +1,42 @@
+---
+.title = "Using zine",
+.author = "Jan Philipp Hafer",
+.date = @date("2024-12-19:00:00:00"),
+.layout = "article.shtml",
+.tags = ["article", "zine", "software", "usage", "report"],
+.draft = false,
+---
+
+This is a brief experience report on usage of zine as static website generator from 20241220.
+
+My main use cases are
+
+1. to utilize `build.zig` as convenient way for more complex tasks with C, C++ and Zig code
+2. having a simple to use and functional cache system for task 1
+3. effortless code highlighting that most of the time works
+4. static generated website
+and I would appreciate ways to integrate other content and document creation
+solutions.
+
+I am mostly happy with the still result, but less happy with the experience and time to get there.
+
+1. For example, I would prefer not having to invest several hours into figuring
+out which CSS properties work and which not and manually twiddling with
+sizes and use a bespoke and simple tool to
+[generate static grids with wraparound](https://github.com/matu3ba/matu3ba.github.io/blob/28519f871b39c94d097c6ec8a2da2b0a33c79793/assets/style.css:242)
+instead of figuring out that
+[flex grids dont allow wraparound](https://github.com/matu3ba/matu3ba.github.io/blob/28519f871b39c94d097c6ec8a2da2b0a33c79793/assets/style.css:222).
+2. Automatic extraction of all html attribute classes for css style code for coloring would have also been nice, instead of
+[manually inspecting the html code to attach colors](https://github.com/matu3ba/matu3ba.github.io/blob/28519f871b39c94d097c6ec8a2da2b0a33c79793/assets/style.css).
+3. Specifying nice colors takes time, so the few hours were expected.
+4. Not having nested markdown lists properly working in SuperMD files is not a great experience, when finding out
+after converting html to markdown for the first level already.
+5. Dumping properties form scripty instead of having to look them up and having
+documentation in a more editor-readable way, for example text file would also
+have been a nice to have.
+6. Comments within markdown blocks (empty line, `[This is a comment]::`) are undocumented.
+and not supported in the editor setup.
+
+All in all, I am happy, but will fix the list issue in SuperMD files, because I believe this
+nudges people into not writing on edge cases and is a worse experience than
+plain markdown. Code polishing will also follow.

@@ -1,10 +1,98 @@
 ---
-.title = "Shennanigans of C++",
+.title = "Some C++ footgun avoidance.",
 .author = "Jan Philipp Hafer",
 .date = @date("2024-04-20:00:00:00"),
 .layout = "article.shtml",
-.tags = ["article", "system", "hardware", "software", "design", "debugging"],
+.tags = ["article", "c++", "software", "design"],
 .draft = false,
 ---
 
-TODO
+[]($section.id("intro"))
+Here is a list of footguns taken from my notes I found worthwhile to write up
+to remind myself not to do the same mistake again or how to workaround various
+compiler problems. It consists of type problems, easy to make memory issues
+mostly around uninitialized memory and stack-local values, low quality library
+code, problems with virtual classes, template code problems and some compiler
+specific problems. For a more complete view on the edge cases of the language,
+consider taking a look at the
+[C++ iceberg](https://github.com/fouronnes/cppiceberg)
+and [preprocessor iceberg](https://github.com/JadLevesque/PPMP-Iceberg).
+
+[]($section.id("cpp_review"))
+Update 20241217:
+Since the writing of this article (20240618), I did significantly
+extend my CI-tested sample code on C++14, C++17, C++20 and
+C++23 and do not plan to continue to list footguns.
+My main complains about C++ are
+1. Concepts are not testable and there are no understandable backtraces
+for why concepts are not satisfied, which often makes them worse than templates.
+2. Simple things like renaming `std::vector<bool>` are not getting fixed.
+3. Many language features are unnecessary complex (function overloading,
+multiple constructors) instead of being usable via tagged union (`std::variant`).
+4. Individual declarative/functional parts can not be used by kernels via build system
+to speed up compilation.
+5. Compile time function execution is less powerful, but still offers no logical
+completeness or correctness advantage.
+6. Object oriented programming and virtual tables are not optional. There is no reason
+why string functions would require `std::string` or `std::string_view` instead
+of working on user-provided information, for example provided via `struct`
+with a fat pointer (pointer and length).
+
+The current trajectory of C++ indicates to me that none of this will be fixed,
+even though modules would soon allow C++ version 2.
+Personally I would prefer semantics more comparable to Zig, but so far Zig
+has no static analysis to reduce transition efforts from C++.
+
+[]($section.id("footguns"))
+- Do not use `hashmap[key]`, use `auto search_hashmap = hashmap.find();` and write
+  via iterator or use emplace, because there is no check for the elements
+  existence or (typically raw C) values of members can remain undefined after
+  object creation due to implicit default constructor.
+[hashmap_simple_ub.cpp]($code.asset('./hashmap_simple_ub.cpp').language('cpp'))
+- Providing const char * to a function with reference will use the stack-local
+  memory instead of using a copy. If further, `c_str()` is used to emplace into a
+  `std::map`, this leads to UB due to usage of invalid memory once the stack
+  local memory goes out of scope.
+  In doubt, allocate a copy with `std::string newstring = std::string(some_string)`
+  Especially in std::map or other owned containers.
+  Only if there is an explicit comment on the storage including handling of
+  move and copy constructor, use `(const) char*` as provided argument for `(const)
+  std::string &`.
+- There is no type safety in `reinterpret_cast` usage, which is worse than
+  memcpy. However, the prevention of another temporary for portable code may be
+  worth it.
+[reinterpret_cast_ts.cpp]($code.asset('./reinterpret_cast_ts.cpp').language('cpp'))
+- C++ conversion string to int is worse without boost, so use C's strtol.
+- Checking, if typename is a string is complex (even with C++17 extension).
+[is_typname_string.hpp]($code.asset('./is_typname_string.hpp').language('cpp'))
+- auto does verbatim replacement of the return type, which can hide a
+  stack-local copy or move. Only use `auto` for well-known iterators, status
+  tuples, shared pointers etc, but never for objects and object references.
+- Interoperating type safe with c strings is cumbersome.
+[cstr_interop.cpp]($code.asset('./cstr_interop.cpp').language('cpp'))
+- MSVC has no reliable relative paths as macro yet (see
+  experimental:deterministic mode). Workaround to get filename by Andry.
+[msvc_rel_path.cpp]($code.asset('./msvc_rel_path.cpp').language('cpp'))
+- Destructors of virtual classes should have lifetime annotation, unless final
+  class. Otherwise, debugging problems will be painful, because the intended
+  object lifetimes become ambiguous on reading the code. Consider using clang
+  `-Wnon-virtual-dtor` or recent msvc (ca. year 2020).
+- Delete copy + move constructors for non-final classes with no pure-virtual methods.
+- Consider marking copy constructor as explicit and deleting copy assignment,
+  if copying class is expensive. Consider providing a "clone fn" as syntactic sugar.
+- Do not use `std::vector<bool>`, because it is a dynamic bitset and has
+  horrible naming. Accidental byte operations on it like memcpy will be UB.
+- Streams do not enforce C abi and are overly complex for printing memory.
+  Further (no example here), they need to extensions to offer non-blocking
+  reads, writes and introspection.
+[streams_no_cabi.cpp]($code.asset('./streams_no_cabi.cpp').language('cpp'))
+- Incomplete type can not be instantiated in template:
+  1. pull in all headers deps of headers
+  2. class forward declares may create circular dependencies
+  3. build each file individually
+  4. might be a circular dependency during template usage
+- Missing virtual destructor for non-final methods in classes is technically UB.
+[missing_virt_destructor.cpp]($code.asset('./missing_virt_destructor.cpp').language('cpp'))
+- Why exceptions do not scale.
+[exceptions_dont_scale.cpp]($code.asset('./exceptions_dont_scale.cpp').language('cpp'))
+- `__STDC_VERSION__` is not necessary defined by C++ compilers.

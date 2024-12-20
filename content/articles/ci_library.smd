@@ -1,5 +1,5 @@
 ---
-.title = "CI Library",
+.title = "Towards an extensible continuous integration library.",
 .description = "Personal Website",
 .author = "Jan Philipp Hafer",
 .date = @date("2024-11-10T00:00:00"),
@@ -8,4 +8,24 @@
 .draft = false,
 ---
 
-TODO
+This article describes
+
+    motivation for writing continuous integration as a library with main advantages being control, isolation and debuggability
+    maintenance effort
+    security tradeoffs
+    obstacles on cross operating system remote debugging
+    options to handle untrusted operating systems
+
+for uniform execution representation and setup to efficiently mix and match the appropriate technique.
+
+    Motivation.
+    Maintenance effort.
+    Security tradeoffs.
+    Cross operating system remote debugging.
+    Untrusted operating systems.
+
+    Motivation.
+    Maintenance effort.
+    Security tradeoffs.
+    Cross operating system remote debugging.
+    Untrusted operating systems.

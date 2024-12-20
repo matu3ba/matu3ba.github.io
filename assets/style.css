@@ -101,8 +101,82 @@ code {
  *   std.debug.->print<-("test123\n", .{});
  * }
  **/
-code.zig {
 
+code.bash {
+  .comment { color: var(--gray); }
+  /* .constant { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+}
+
+code.c {
+  .comment { color: var(--gray); }
+  .constant.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function.method { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function { color: light-dark(var(--darkred), var(--brightred)); font-weight: bold; }
+  .keyword { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .number { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .operator { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  /* .variable */
+
+  /* .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .function.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+  /* .keyword.function { color: light-dark(var(--black), var(--white)); font-weight: bold; } */
+  /* .null { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .qualifier { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .undefined { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .bracket */
+  /* .field */
+}
+
+code.cpp {
+  .comment { color: var(--gray); }
+  .constant.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function.method { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function { color: light-dark(var(--darkred), var(--brightred)); font-weight: bold; }
+  .keyword { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .number { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .operator { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  /* .variable */
+
+  /* .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .function.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+  /* .keyword.function { color: light-dark(var(--black), var(--white)); font-weight: bold; } */
+  /* .null { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .qualifier { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .undefined { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .bracket */
+  /* .field */
+}
+
+code.python {
+  .comment { color: var(--gray); }
+  .constant.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function.method { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function { color: light-dark(var(--darkred), var(--brightred)); font-weight: bold; }
+  .keyword { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .number { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .operator { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  /* .variable */
+
+  /* .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .function.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+  /* .keyword.function { color: light-dark(var(--black), var(--white)); font-weight: bold; } */
+  /* .null { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .qualifier { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .undefined { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .bracket */
+  /* .field */
+}
+
+code.zig {
   .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
   .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
   .comment { color: var(--gray); }

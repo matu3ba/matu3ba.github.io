@@ -1,10 +1,214 @@
 ---
-.title = "Shennaingans of C",
+.title = "C shennanigans: Pointers, sequence points and bit fields.",
 .author = "Jan Philipp Hafer",
 .date = @date("2024-04-20:00:00:00"),
-.layout = "article.shtml",
-.tags = ["article", "system", "hardware", "software", "design", "debugging"],
+.layout = "shennanigans_in_c.shtml",
+.tags = ["article", "system", "c", "software", "design"],
 .draft = false,
 ---
 
-TODO
+[]($section.id("intro"))
+This article focuses on some of the non-obvious and easy to make mistakes
+non-experienced C programmers are likely to make and are/can not completely
+be covered by tooling without going into edge cases relevant to performance
+and covering the most simple and conservative approach:
+- 1.[Pointer semantics](#pointer_semantics)
+- 2.[Sequence points](#seq_pts)
+- 3.[Bit-fields](#bitfields)
+
+Compiler flags or implementation may provide workarounds to
+these problems to prevent optimizations based on introduced
+Undefined Behavior (UB). Review used C compilers with flags
+used including tests and platforms before reusing of any code.
+The [SEI wiki covers some basic
+cases](https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152200)
+  without covering compiler workarounds.
+  Pointer construction is widely unspecified in earlier C standards before C11
+  and up to this day with C23 pointer semantics have no formal model, see also
+  item [pointer construction requirements](#pointer_construction_requirements).
+
+[]($section.id("strict_aliasing_rule:expl"))
+* C23 6.5 Expressions paragraph 7  
+"An object shall have its stored value accessed only by an lvalue expression
+that has one of the following types
+  - a type compatible with the effective type of the object,
+  - a qualified version of a type compatible with the effective type of the object,
+  - a type that is the signed or unsigned type corresponding to the effective type of the
+object,
+  - a type that is the signed or unsigned type corresponding to a qualified version of the
+effective type of the object,
+  - an aggregate or union type that includes one of the aforementioned types among its
+members (including, recursively, a member of a subaggregate or contained union), or
+  - a character type."
+* What does this means in **practice**?  
+Each pointer has an associated "provenance" it is allowed to point to.
+This mean that a pointer `ptr` must uphold
+`(&amp;array[0] <= ptr &amp;&amp; ptr < &amp;array[len+1])`
+for access with array being the "memory origin range" on stack or heap.
+Pointers must point to the same array, when being used for arithmetic.  
+Function arguments of identical pointer types are allowed to have
+overlapping provenance regions, unless annotated with `restrict`
+(`__restrict__` for C++ in clang/gcc),
+but pointers of different types are not allowed to have those regions.
+Pointer comparison must be done via identical alignments, unless comparison
+of a pointer against pointer to 0, usually
+abbreviated via macro `NULL`.
+
+[]($section.id("pointer_access_practice"))
+**Pointer access** in **practice**.
+- Provenance as regions pointer is allowed to point to for access.
+[provenance.c]($code.asset('./provenance.c').language('c'))
+- Copy around some bytes from not overlapping regions (otherwise use memmove).
+[copy_bytes.c]($code.asset('./copy_bytes.c').language('c'))
+- Correct alignment of pointers with temporary, when necessary.
+[correct_alignment.c]($code.asset('./correct_alignment.c').language('c'))
+- Ensure correct storage and padding size for pointers via sizeof.
+[storage_padding.c]($code.asset('./storage_padding.c').language('c'))
+- Allowed aliasing of pointers (type-based aliasing analysis)
+[allowed_aliasing.c]($code.asset('./allowed_aliasing.c').language('c'))
+- Non-allowed aliasing of pointers (type-based aliasing analysis)
+[non_allowed_aliasing.c]($code.asset('./non_allowed_aliasing.c').language('c'))
+
+[]($section.id("pointer_exceptions"))
+**The Exceptions**
+- Controlling the build system and compiler invocation to opt-out of provenance based optimizations.
+  1. Clang and gcc have `-fno-strict-aliasing`, msvc and tcc do disable type-based aliasing analysis based optimizations.
+  2. As of 20240603, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).
+  3. Usage of `restrict` can be en/disabled in all compilers via `#pragma optimize("", on/off)`.
+  It can also be disabled in all compilers via `#define restrict`, using an according optimization level (typical `-O1`)
+  or via separating header and implementation and disabling link time optimziations.
+- Posix extension and Windows in practice enable dynamic linking via casting pointers `void *` to function pointers and
+  back. This also means that `sizeof (function pointer) == sizeof (void *)` must be uphold, which is not true for
+  microcontrollers with separate address space for code and data or CHERI in mixed capability mode/hybrid compilation mode.
+  Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 20240428.
+[aliasing_exceptions_uniform_address_space.c]($code.asset('./aliasing_exceptions_uniform_address_space.c').language('c'))
+
+[]($section.id("pointer_construction_requirements"))
+**Pointer construction requirements** are unspecified in all C standards with potentially some hints and nothing
+concrete up to including C23 which further implies that pointer semantics have no formal model. At least a few
+possible formal models exist (paper VIP: Verifying Real-World C Idioms with Integer-Pointer Casts,
+N2676, P2318R1: A Provenance-aware Memory Object Model for C) so far without taking into account CHERI
+in mixed capability mode/hybrid compilation mode and from what I understand without taking all equivalence classes of
+pointer operations into account.  
+Therefore it is best to use the most conservative approach xor to provide the set of
+chosen (non-portable) compiler semantics in the build system next to the code to remove room for ambiguity.  
+For further information about this, take a look into paper "Subtleties of the ANSI/ISO C standard" and
+"n2263: Clarifying Pointer Provenance v4".  
+To simplify things, we can however extend the strict aliasing rule pointer
+construction with shortcomings regarding "effective type" on type punning for hardware related programming:
+This would mean that generated pointers must uphold
+`(&array[0] <= ptr && ptr <= &array[len+1]) || ptr == 0 || ptr = undefined)`
+with `ptr == 0` and undefined pointers being the exceptions.  
+Standards up to including C23 do not specify this behavior explicitly. For example C23 specifies that operations
+on pointers to a object must remain in the above given range and temporal pointer overflow behavior is undefined.
+Expected behavior of exposed (externally readable and writable) addresses via headers and object files including
+possible future C standard direction can be found in "A Provenance-aware Memory Object Model for C".  
+Temporal out of bounds behavior, linker semantics with guaranteed addresses or address regions and all other constrains remain unspecified.  
+It is not discussed here how the optimizer would prove how serialized and deserialized pointer have the same
+provenance regions (integer cast, memory copy or external usage), because there are multiple algorithms and this article is already too long.  
+Rust decided to allow programmers experimental low level control over provenance with experimenting on CHERI and an
+interpreter for iterating on the provenance model and to work(around) with backends, see Rust RFC 3559 title "rust_has_provenance"
+and section "Drawbacks".  
+The following special cases of pointer operations can be taken into account, when discussing provenance-based optimizations
+(in contrast to type-based aliasing analysis):
+
+- 1.[Opaque type idiom.](#opaque)  
+    Opaque types provide a way to guarantee correct usage of object and pointer properties for a library or API user and thus should be preferred, if feasible.
+- 2.[Pointer to integer and integer to pointer conversion.](#ptrintconv)  
+    Pointer/integer to integer/pointer conversion mandates in all suggested models for pointer semantics (of C) to prevent provenance-based optimizations
+    unless the optimizer can prove with certainty the origin of pointer provenance and/or programmers must/can annotate provenance information to
+    pointers to guide the optimizer about which memory relations can and can not be optimized (unstandardised).
+- 3.Headers/exports exposing data structures, pointers to data structures and void pointers.  
+    [Link time optimization (LTO)](#lto) works across across header and object boundaries if sufficient information/artefacts for caller and callee are given,
+    so construction of exposed aliasing pointers may lead to undefined behavior depending on the build system flags and used compiler.
+- 4.Compiler intrinsics for IO: memcmp, memcpy, memmove, memset.  
+    [IO Compiler intrinsic semantics](#io_intrinsics) are yet to be taken portably into account due to a lot legacy code relying on certain properties and pointer
+    properties like alignment being implicit. Technically optimizations are possible with annotating sufficient pointer information and useful to
+    accelerate via SIMD and tracking provenance along pointers, like for different addressing modes or capabilities in CHERI, would be further useful.
+- 5.Checking C code validity with Cerberus.  
+    [Cerberus](#cerberus) allows checking C code semantics for most common idioms, but does not support the complete corpus of C syntax. It also offers checking
+    semantics of multithreaded code, but this is out of scope for this article.
+- 6.CHERI rules for pointers.  
+    In [CHERI](#cheri) mixed-capability mode pointers may be raw pointers inclusive or pointer with annotated capabilities, which can include things like lower
+    and upper address bound, permissions masks, flags usable for OS or application tasks, see "Capability Hardware Enhanced RISC Instructions:
+    CHERI Instruction-Set Architecture (Version 9)". Since there is no formal model on how CHERI pointer semantics work, examples are not included.
+    A work in progress CHERI C is given in paper "Formal Mechanised Semantics of CHERI C: Capabilities, Undefined Behaviour, and Provenance".
+    CHERI offers (scalable) compartmentalization, spatial memory safety with opt-in temporal memory safety via runtime support mandating pointer capability revocation on freeing memory with latest example being CheriBSD experimental userspace temporal memory safety (20240602).
+- 7.What to expect for the future.  
+    LLVM support for full restrict has been merged, but
+    [it has design and quality problems](https://www.reddit.com/r/rust/comments/1ft619r/llvm_rfc_improvements_to_capture_tracking/),
+    so it looks like the C++ code base of LLVM prevents
+    faster iterations and/or more fundamental changes, since the feature is in development for now ca. 5 years (since 2019).
+    Semantic implications are not communicated and neither formalized, so the future path remains unclear. This is reflected by
+    [long-lasting miscompilations not getting fixed](https://github.com/rust-lang/rust/issues/107975).
+
+[]($section.id("pointer_construction_practice"))
+**Pointer construction in practice.** The original intention was to explain provenance based rules,
+but due to long standing bugs in LLVM and gcc and no formal model with performance safety, compilation time and
+other implications, I would suggest the reader to write thorough tests and on doubts about testability to disable
+provenance based optimizations, especially in production code.  
+Optimizers with provenance based optimization steps are unfortunately not build with controllability and debuggability
+in mind and standard bodies so far can not recommend any extensive test corpus to derive how frontend and backend
+optimizer tests would need to be designed.  
+Other more elaborative examples can be seen in the github gist "What is the Strict Aliasing Rule and Why do we care?".  
+
+[]($section.id("opaque"))
+Opaque type idiom.
+[opaque.h]($code.asset('./opaque.h').language('c'))
+[opaque.c]($code.asset('./opaque.c').language('c'))
+
+[]($section.id("ptrintconv"))
+Pointer to integer and integer to pointer conversion.
+[ptrtoint_inttoptr.c]($code.asset('./ptrtoint_inttoptr.c').language('c'))
+
+[]($section.id("lto"))
+Link time optimization (LTO) usage and problems. One can use `ptrtoint_inttoptr.c` with flags for strong LTO
+to optimize the bit code of the complete program, for example via `clang -flto -funified-lto -fuse-ld=lld ptrtoint_inttoptr.c`.  
+
+[]($section.id("io_intrinsics"))
+IO Compiler intrinsic semantics example. It would be helpful to have a way to add alignment to pointers to have th
+compiler automatically do runtime selection of the best SIMD routine instead of being forced to do this manually.
+`__attribute__(aligned(ALIGNMENT)`, `_Alignas(ALIGNMENT)`, `alignas(ALIGNMENT)` do offer no guarantee that the code
+is vectorized and one has to check for example via `clang -O3 -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize`
+or `gcc -O3 -ftree-vectorizer-verbose=3` and use [clang extensions](https://clang.llvm.org/docs/LanguageExtensions.html)
+and [gcc extensions](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html) like `__builtin_assume_aligned`.
+[extern_avx.h]($code.asset('./extern_avx.h').language('c'))
+[extern_avx.c]($code.asset('./extern_avx.c').language('c'))
+[memcpy_avx.c]($code.asset('./memcpy_avx.c').language('c'))
+
+[]($section.id("cerberus"))
+Checking C code validity with Cerberus does not imply absence of compiler miscompilations.
+[cerberus_install.sh]($code.asset('./cerberus_install.sh').language('bash'))
+[extern_miscompilation.h]($code.asset('./extern_miscompilation.h').language('c'))
+[extern_miscompilation.c]($code.asset('./extern_miscompilation.c').language('c'))
+[ptr_provenance_miscompilation.c]($code.asset('./ptr_provenance_miscompilation.c').language('c'))
+
+[]($section.id("cheri"))
+CHERI usage is left as task for the reader. Useful links are `https://github.com/CTSRD-CHERI/cheribuild`,
+`https://github.com/CTSRD-CHERI/cheri-c-programming` and `https://github.com/capablevms/cheri-examples`.
+
+[]($section.id("seq_pts"))
+**Sequence Points** in simple case and with storage lifetime extension.
+[sequence_points.c]($code.asset('./sequence_points.c').language('c'))
+
+[]($section.id("bitfields"))
+**Bit-fields** should not be used unless for non-portable code regarding
+compilers and CPUs and do not make assumptions regarding the layout of
+structures with bit-fields and use `static_assert`/`_Static_assert` on every struct.
+Keep bit-fields as simple as possible, meaning prefer not to nest them or also static_assert the layout.
+[Reasons from ISO/IEC 9899:TC3](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf)
+```
+> An implementation may allocate any addressable storage unit large enough to hold a bit
+> field. If enough space remains, a bit-field that immediately follows another bit-field in a
+> structure shall be packed into adjacent bits of the same unit. If insufficient space remains,
+> whether a bit-field that does not fit is put into the next unit or overlaps adjacent units is
+> implementation-defined. The order of allocation of bit-fields within a unit (high-order to
+> low-order or low-order to high-order) is implementation-defined. The alignment of the
+> addressable storage unit is unspecified.
+```
+or in other words:
+- 1.Order of allocation not specified.
+- 2.Most significant bit not specified.
+- 3.Alignment is not specified.
+- 4.Implementations can determine, whether bit-fields cross a storage unit boundary.
+- 5.Structs may contain padding bytes anywhere.
