@@ -7,6 +7,6 @@ pub fn build(b: *std.Build) !void {
         .content_dir_path = "content",
         .host_url = "https://matu3ba.github.io/",
         .layouts_dir_path = "layouts",
-        .title = "matu3bas Website",
+        .title = "Jans Website",
     });
 }

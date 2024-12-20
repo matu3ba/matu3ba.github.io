@@ -1,9 +1,9 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -e
 
 # uses access permissions as simplification of executable detection
-if command -v 'fd' &> /dev/null; then
+if command -v 'fd' &>/dev/null; then
   fd -E clean.sh -t x -x rm {}
   fd -I -e o -t f -x rm {}
   fd -I -t d zig-cache -x rm -fr {}
