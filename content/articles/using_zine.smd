@@ -29,13 +29,16 @@ instead of figuring out that
 2. Automatic extraction of all html attribute classes for css style code for coloring would have also been nice, instead of
 [manually inspecting the html code to attach colors](https://github.com/matu3ba/matu3ba.github.io/blob/28519f871b39c94d097c6ec8a2da2b0a33c79793/assets/style.css).
 3. Specifying nice colors takes time, so the few hours were expected.
-4. Not having nested markdown lists properly working in SuperMD files is not a great experience, when finding out
-after converting html to markdown for the first level already.
+4. Not having nested markdown lists properly working in SuperMD files is not a great experience.
+Especially, when finding out after converting html to markdown for the first level already.
 5. Dumping properties form scripty instead of having to look them up and having
-documentation in a more editor-readable way, for example text file would also
+documentation in a more editor-readable way, for example text file, would also
 have been a nice to have.
-6. Comments within markdown blocks (empty line, `[This is a comment]::`) are undocumented.
-and not supported in the editor setup.
+6. Comments within markdown blocks (empty line, `[This is a comment]::`) are
+undocumented and not supported in the editor setup.
+7. The release process for common platforms should be documented. Github Pages
+requires `Build and deployment Source` -> `Deploy from branch` -> `gh-pages`,
+`/ (root)`.
 
 All in all, I am happy, but will fix the list issue in SuperMD files, because I believe this
 nudges people into not writing on edge cases and is a worse experience than
