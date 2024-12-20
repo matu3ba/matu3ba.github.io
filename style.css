@@ -1,0 +1,242 @@
+:root {
+
+  --font-primary: "Roboto", sans-serif; /* Specify your primary font */
+  --font-secondary: "Open Sans", sans-serif; /* Optional secondary font */
+  --font-monospace: "Source Code Pro", monospace; /* Optional monospace font for code */
+  color-scheme: light dark;
+
+  --red: #d14; /* red has no inversion */
+  --brightred: #f00;
+  --darkred: #900;
+  --lm_blue: #0086b3;
+  --dm_blue: #0080a5;
+  --lm_bluegray: #458;
+  --dm_bluegray: #57c;
+  --lightcyan: #00afaf;
+  --darkcyan: #008080;
+  --brightyellow: #ee7;
+  --darkyellow: #aa7;
+  --gray: #777; /* gray has no inversion */
+  --black: #333;
+  --white: #ccc;
+  --brightorange: #fcdba5;
+  --darkorange: #daa520;
+
+  --backgroundlight_code: #f8f8f8;
+  --backgrounddark_code: #121212;
+  --font_size_normal: 100%;
+  --font_size_h1: 150%;
+  --font_size_h2: 120%;
+  --font_size_h3: 100%;
+
+  --content_width: 1200px; /* same as @media screen */
+  --content_1colof2_width: calc(var(--content_width) / 2);
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: light-dark(white, black);
+  font-size: var(--font_size_normal);
+}
+h1, h2, h3 { font-family: var(--font-secondary); color: light-dark(black white); }
+h1 { font-size: var(--font_size_h1); }
+h2 { font-size: var(--font_size_h2); }
+h3 { font-size: var(--font_size_h3); }
+h4, h5, h6 { color: crimson; } /* dot not use h4-h6 */
+
+.reset_a a{ text-decoration: none; }
+.reset_a a:visited{ color:black; }
+
+figure { margin: 0; }
+figure pre { margin-bottom: 0; }
+
+figcaption {
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  background: light-dark(var(--brightorange), var(--darkorange));
+  font-size: var(--font_size_normal);
+  padding-left: 5pt;
+}
+
+/* not yet working */
+/* figcaption.cap_zig { */
+/*   background: #fcdba5; */
+/* } */
+/* figcaption.cap_shell { */
+/*   background: #ccc; */
+/*   color: #000; */
+/* } */
+
+pre,
+code {
+  font-size: 12pt;
+  direction: ltr;
+}
+
+pre > code,
+samp {
+  display: block;
+  overflow: auto;
+  padding: 5pt;
+  background: light-dark(var(--backgroundlight_code), var(--backgrounddark_code));
+  color: light-dark(black, white);
+  line-height: normal;
+}
+
+pre,
+code {
+  font-family: monospace;
+  font-size: var(--font_size_normal);
+}
+
+code {
+  border-top: 5px;
+  border-top-right-radius: 5px;
+}
+
+/**Treesitter grammar is uncapable to disting function within call context and
+ * function declaration/definition. Both example and print are identified with
+ * the same span class function and thus colored with --darkred:
+ * fn ->example<-() void {
+ *   std.debug.->print<-("test123\n", .{});
+ * }
+ **/
+
+code.bash {
+  .comment { color: var(--gray); }
+  /* .constant { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+}
+
+code.c {
+  .comment { color: var(--gray); }
+  .constant.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function.method { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function { color: light-dark(var(--darkred), var(--brightred)); font-weight: bold; }
+  .keyword { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .number { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .operator { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  /* .variable */
+
+  /* .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .function.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+  /* .keyword.function { color: light-dark(var(--black), var(--white)); font-weight: bold; } */
+  /* .null { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .qualifier { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .undefined { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .bracket */
+  /* .field */
+}
+
+code.cpp {
+  .comment { color: var(--gray); }
+  .constant.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function.method { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function { color: light-dark(var(--darkred), var(--brightred)); font-weight: bold; }
+  .keyword { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .number { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .operator { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  /* .variable */
+
+  /* .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .function.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+  /* .keyword.function { color: light-dark(var(--black), var(--white)); font-weight: bold; } */
+  /* .null { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .qualifier { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .undefined { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .bracket */
+  /* .field */
+}
+
+code.python {
+  .comment { color: var(--gray); }
+  .constant.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function.method { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function { color: light-dark(var(--darkred), var(--brightred)); font-weight: bold; }
+  .keyword { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .number { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .operator { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  /* .variable */
+
+  /* .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .function.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; } */
+  /* .keyword.function { color: light-dark(var(--black), var(--white)); font-weight: bold; } */
+  /* .null { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .qualifier { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; } */
+  /* .undefined { color: light-dark(var(--darkcyan), var(--lighttcyan)); } */
+  /* .bracket */
+  /* .field */
+}
+
+code.zig {
+  .attribute { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  .boolean { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .comment { color: var(--gray); }
+  .constant.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .function { color: light-dark(var(--darkred), var(--brightred)); font-weight: bold; }
+  .function.builtin { color: light-dark(var(--lm_blue), var(--dm_blue)); font-weight: normal; }
+  .keyword { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .keyword.function { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .null { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .number { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  .operator { color: light-dark(var(--black), var(--white)); font-weight: bold; }
+  .qualifier { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  .string { color: var(--red); }
+  .type { color: light-dark(var(--lm_bluegray), var(--dm_bluegray)); font-weight: bold; }
+  .undefined { color: light-dark(var(--darkcyan), var(--lighttcyan)); }
+  /* .bracket */
+  /* .field */
+  /* .variable */
+}
+
+.static_grid {
+  display: grid;
+  grid-template-columns: var(--content_1colof2_width) var(--content_1colof2_width);
+}
+.static_double_column1 {
+  grid-column-start: 1; grid-column-end: 3; /* exclusive end */
+  grid-row-start: 1; grid-row-end: 2;
+}
+.static_double_column2 {
+  grid-column-start: 1; grid-column-end: 3; /* exclusive end */
+  grid-row-start: 2; grid-row-end: 3;
+}
+.static_double_column3 {
+  grid-column-start: 1; grid-column-end: 3; /* exclusive end */
+  grid-row-start: 3; grid-row-end: 4;
+}
+/* .static_column { } unneeded */
+/* .static_row { } unneeded */
+
+.flex_grid { column-gap: 20px; justify-content: center; margin: 15px; }
+.flex_row { display: flex; flex-direction: row; flex-wrap: wrap; width: 100%; }
+.flex_double_column { display: flex; flex-direction: column; flex-basis: 100%; flex: 2 }
+.flex_column { display: flex; flex-direction: column; flex-basis: 100%; flex: 1 }
+
+/* home.smd */
+/* justify-content: space-around, center, space-between */
+/* .home_table_flex_grid { display: flex; justify-content: center; column-gap: 20px; flex-wrap: nowrap; } */
+.home_page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+/* .home_left { flex: 1; width: 300px; } */
+/* .home_right { flex: 1; width: 300px; } */
+.home_left { flex: 1; }
+.home_right { flex: 1; }
+/* SHENNANIGAN: Variables break block view on Mozilla Firefox 132.0.2, so use 1200px: */
+/* @media screen and (max-width: var(--content_width)) { .home_page { display: block; } } */
+/* @media screen and (max-width: var(--content_width)) { .static_grid { display: block; } } */
+@media screen and (max-width: 1200px) { .home_page { display: block; } }
+@media screen and (max-width: 1200px) { .static_grid { display: block; } }

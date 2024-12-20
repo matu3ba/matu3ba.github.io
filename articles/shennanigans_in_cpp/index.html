@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>matu3bas Website</title>
+    <link rel="stylesheet" type="text/css" href="/normalize.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+  </head>
+  <body>
+    <div class="home_page">
+      <div class='static_grid'>
+          <div class='static_double_column1'>
+            <h1><span class="reset_a"><a href="/">Jans Website</a></span></h1>
+          </div>
+          <div class='static_double_column2'>
+            <h2>Some C++ footgun avoidance.</h2>
+          </div>
+          <div class='static_double_column3'>
+            <div><div id=intro><p> Here is a list of footguns taken from my notes I found worthwhile to write up to remind myself not to do the same mistake again or how to workaround various compiler problems. It consists of type problems, easy to make memory issues mostly around uninitialized memory and stack-local values, low quality library code, problems with virtual classes, template code problems and some compiler specific problems. For a more complete view on the edge cases of the language, consider taking a look at the <a href="https://github.com/fouronnes/cppiceberg" target="_blank">C++ iceberg</a> and <a href="https://github.com/JadLevesque/PPMP-Iceberg" target="_blank">preprocessor iceberg</a>.</p></div><div id=cpp_review><p> Update 20241217: Since the writing of this article (20240618), I did significantly extend my CI-tested sample code on C++14, C++17, C++20 and C++23 and do not plan to continue to list footguns. My main complains about C++ are</p><ol><li>Concepts are not testable and there are no understandable backtraces for why concepts are not satisfied, which often makes them worse than templates.</li><li>Simple things like renaming <code>std::vector&lt;bool&gt;</code> are not getting fixed.</li><li>Many language features are unnecessary complex (function overloading, multiple constructors) instead of being usable via tagged union (<code>std::variant</code>).</li><li>Individual declarative/functional parts can not be used by kernels via build system to speed up compilation.</li><li>Compile time function execution is less powerful, but still offers no logical completeness or correctness advantage.</li><li>Object oriented programming and virtual tables are not optional. There is no reason why string functions would require <code>std::string</code> or <code>std::string_view</code> instead of working on user-provided information, for example provided via <code>struct</code> with a fat pointer (pointer and length).</li></ol><p>The current trajectory of C++ indicates to me that none of this will be fixed, even though modules would soon allow C++ version 2. Personally I would prefer semantics more comparable to Zig, but so far Zig has no static analysis to reduce transition efforts from C++.</p></div><div id=footguns><ul><li>Do not use <code>hashmap[key]</code>, use <code>auto search_hashmap = hashmap.find();</code> and write via iterator or use emplace, because there is no check for the elements existence or (typically raw C) values of members can remain undefined after object creation due to implicit default constructor. <figure><pre><code class="cpp"><span class="keyword">#include</span> <span class="string">&lt;map&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;string&gt;</span>
+<span class="keyword">class</span> <span class="type">T1</span> {
+<span class="keyword">public</span>:
+  <span class="function">T1</span>()<span class="delimiter">;</span> <span class="comment">// needed to allow convenient random access via [] operator</span>
+  <span class="function">T1</span>(<span class="type">std</span>::<span class="type">string</span> <span class="keyword">const</span> <span class="operator">&amp;</span><span class="variable">t1</span>)
+      : <span class="property">mName</span>(<span class="variable">t1</span>) {}<span class="delimiter">;</span>
+  <span class="type">std</span>::<span class="type">string</span> <span class="property">mName</span><span class="delimiter">;</span>
+  <span class="type">std</span>::<span class="type">string</span> <span class="property">prop1</span><span class="delimiter">;</span>
+}<span class="delimiter">;</span>
+<span class="keyword">class</span> <span class="type">T2</span> {
+<span class="keyword">public</span>:
+  <span class="type">std</span>::<span class="type">map</span><span class="operator">&lt;</span><span class="type">std</span>::<span class="type">string</span>, <span class="type">T1</span><span class="operator">&gt;</span> <span class="property">mapex1</span><span class="delimiter">;</span>
+  <span class="type">void</span> <span class="function">AddT1</span>(<span class="type">std</span>::<span class="type">string</span> <span class="keyword">const</span> <span class="operator">&amp;</span><span class="variable">t1str</span>) {
+    <span class="type">T1</span> <span class="function">t1obj</span>(<span class="type">t1str</span>)<span class="delimiter">;</span>
+    <span class="variable">mapex1</span><span class="delimiter">.</span><span class="function">emplace</span>(<span class="variable">t1str</span>, <span class="variable">t1obj</span>)<span class="delimiter">;</span>
+    <span class="variable">mapex1</span>[<span class="variable">t1str</span>]<span class="delimiter">.</span><span class="property">prop1</span> <span class="operator">=</span> <span class="string">&quot;blabla&quot;</span><span class="delimiter">;</span> <span class="comment">// potential footgun</span>
+  }
+}<span class="delimiter">;</span>
+</code></pre>
+<figcaption>hashmap_simple_ub.cpp</figcaption></figure></li><li>Providing const char * to a function with reference will use the stack-local memory instead of using a copy. If further, <code>c_str()</code> is used to emplace into a <code>std::map</code>, this leads to UB due to usage of invalid memory once the stack local memory goes out of scope. In doubt, allocate a copy with <code>std::string newstring = std::string(some_string)</code> Especially in std::map or other owned containers. Only if there is an explicit comment on the storage including handling of move and copy constructor, use <code>(const) char*</code> as provided argument for <code>(const) std::string &amp;</code>.</li><li>There is no type safety in <code>reinterpret_cast</code> usage, which is worse than memcpy. However, the prevention of another temporary for portable code may be worth it. <figure><pre><code class="cpp"><span class="keyword">#include</span> <span class="string">&lt;cstdint&gt;</span>
+<span class="type">int64_t</span> <span class="function">usage_ptr</span>(<span class="type">int64_t</span> <span class="operator">*</span><span class="variable">val</span>) { <span class="keyword">return</span> <span class="operator">*</span><span class="variable">val</span><span class="delimiter">;</span> }
+<span class="type">int32_t</span> <span class="function">reinterpret_cast_usage</span>() {
+  <span class="comment">// clang-format: off</span>
+  <span class="type">uint8_t</span> <span class="variable">some_vals</span>[<span class="number">9</span>] <span class="operator">=</span> {<span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>}<span class="delimiter">;</span>
+  <span class="comment">// clang-format: on</span>
+  <span class="type">int64_t</span> <span class="variable">val_mcpy</span><span class="delimiter">;</span>
+  <span class="comment">// val_mcpy = memcpy(&amp;val_mcpy, some_vals[1], sizeof(val_mcpy);  // refusal to compile</span>
+  <span class="variable">val_mcpy</span> <span class="operator">=</span> <span class="function">memcpy</span>(<span class="operator">&amp;</span><span class="variable">val_mcpy</span>, <span class="operator">&amp;</span><span class="variable">some_vals</span>[<span class="number">1</span>], <span class="keyword">sizeof</span>(<span class="variable">val_mcpy</span>))<span class="delimiter">;</span>    <span class="comment">// refusal to compile</span>
+  <span class="type">int64_t</span> <span class="variable">val_wrong</span> <span class="operator">=</span> <span class="operator">*</span><span class="function">reinterpret_cast</span><span class="operator">&lt;</span><span class="type">int64_t</span> <span class="operator">*</span><span class="operator">&gt;</span>(<span class="variable">some_vals</span>[<span class="number">1</span>])<span class="delimiter">;</span>   <span class="comment">// runtime error</span>
+  <span class="type">int64_t</span> <span class="variable">val_ok</span> <span class="operator">=</span> <span class="operator">*</span><span class="function">reinterpret_cast</span><span class="operator">&lt;</span><span class="type">int64_t</span> <span class="operator">*</span><span class="operator">&gt;</span>(<span class="operator">&amp;</span><span class="variable">some_vals</span>[<span class="number">1</span>])<span class="delimiter">;</span>     <span class="comment">// correct usage</span>
+  <span class="type">int64_t</span> <span class="operator">*</span><span class="variable">val_ok_ptr</span> <span class="operator">=</span> <span class="function">reinterpret_cast</span><span class="operator">&lt;</span><span class="type">int64_t</span> <span class="operator">*</span><span class="operator">&gt;</span>(<span class="operator">&amp;</span><span class="variable">some_vals</span>[<span class="number">1</span>])<span class="delimiter">;</span> <span class="comment">// correct usage</span>
+  <span class="function">usage_ptr</span>(<span class="variable">val_ok_ptr</span>)<span class="delimiter">;</span>
+  <span class="function">usage_ptr</span>(<span class="operator">&amp;</span><span class="variable">val_mcpy</span>)<span class="delimiter">;</span> <span class="comment">// necessary temporary copy hopefully elided</span>
+  <span class="keyword">if</span> (<span class="variable">val_ok</span> <span class="operator">!=</span> <span class="variable">INT64_MIN</span>)
+    <span class="keyword">return</span> <span class="number">1</span><span class="delimiter">;</span>
+  <span class="keyword">return</span> <span class="number">0</span><span class="delimiter">;</span>
+}
+</code></pre>
+<figcaption>reinterpret_cast_ts.cpp</figcaption></figure></li><li>C++ conversion string to int is worse without boost, so use C’s strtol.</li><li>Checking, if typename is a string is complex (even with C++17 extension). <figure><pre><code class="cpp"><span class="keyword">#include</span> <span class="string">&lt;string&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;vector&gt;</span>
+<span class="keyword">template</span><span class="operator">&lt;</span><span class="keyword">typename</span> <span class="type">STR</span><span class="operator">&gt;</span> <span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="type">bool</span> <span class="variable">is_string_class_decayed</span> <span class="operator">=</span> false<span class="delimiter">;</span>
+<span class="keyword">template</span><span class="operator">&lt;</span><span class="keyword">typename</span>... <span class="type">STR</span><span class="operator">&gt;</span> <span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="type">bool</span> <span class="function">is_string_class_decayed</span><span class="operator">&lt;</span><span class="type">std</span>::<span class="type">basic_string</span><span class="operator">&lt;</span><span class="type">STR</span>...<span class="operator">&gt;</span><span class="operator">&gt;</span> <span class="operator">=</span> true<span class="delimiter">;</span>
+<span class="comment">// decay_t will remove const, &amp; and volatile from the type</span>
+<span class="keyword">template</span><span class="operator">&lt;</span><span class="keyword">typename</span> <span class="type">STR</span><span class="operator">&gt;</span>
+<span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="type">bool</span> <span class="variable">is_string_class</span> <span class="operator">=</span>
+    <span class="variable">is_string_class_decayed</span><span class="operator">&lt;</span><span class="type">std</span>::<span class="function">decay_t</span><span class="operator">&lt;</span><span class="type">STR</span><span class="operator">&gt;</span><span class="operator">&gt;</span> <span class="keyword">template</span><span class="operator">&lt;</span><span class="keyword">typename</span> <span class="variable">TChar</span>, <span class="keyword">typename</span> <span class="variable">TString</span><span class="operator">&gt;</span>
+    <span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="type">bool</span> <span class="variable">is_string</span> <span class="operator">=</span> <span class="type">is_string_class</span><span class="operator">&lt;</span><span class="type">TString</span><span class="operator">&gt;</span> <span class="operator">&amp;&amp;</span> <span class="variable">std</span>::<span class="function">is_same_v</span><span class="operator">&lt;</span><span class="type">TChar</span>, <span class="keyword">typename</span> <span class="type">TString</span>::<span class="type">value_type</span><span class="operator">&gt;</span><span class="delimiter">;</span>
+static_assert(<span class="function">is_string_class</span><span class="operator">&lt;</span><span class="type">std</span>::<span class="type">string</span><span class="operator">&gt;</span>)<span class="delimiter">;</span>
+static_assert(<span class="function">is_string_class</span><span class="operator">&lt;</span><span class="type">std</span>::<span class="type">wstring</span> <span class="keyword">const</span> <span class="operator">&amp;</span><span class="operator">&gt;</span>)<span class="delimiter">;</span> <span class="comment">// that&apos;s why decay_t is needed</span>
+static_assert(!<span class="function">is_string_class</span><span class="operator">&lt;</span><span class="type">int</span><span class="operator">&gt;</span>)<span class="delimiter">;</span>
+static_assert(!<span class="function">is_string_class</span><span class="operator">&lt;</span><span class="type">double</span> <span class="keyword">const</span><span class="operator">&gt;</span>)<span class="delimiter">;</span>
+static_assert(!<span class="function">is_string_class</span><span class="operator">&lt;</span><span class="type">char</span> <span class="keyword">const</span> <span class="operator">*</span><span class="operator">&gt;</span>)<span class="delimiter">;</span>
+static_assert(!<span class="variable">is_string_class</span> &lt;&lt; <span class="type">std</span>::<span class="function">vector</span> <span class="operator">&lt;</span> <span class="type">char</span> <span class="operator">&gt;</span><span class="operator">&gt;</span><span class="variable"></span><span class="constant"></span>)<span class="delimiter">;</span>
+</code></pre>
+<figcaption>is_typname_string.hpp</figcaption></figure></li><li>auto does verbatim replacement of the return type, which can hide a stack-local copy or move. Only use <code>auto</code> for well-known iterators, status tuples, shared pointers etc, but never for objects and object references.</li><li>Interoperating type safe with c strings is cumbersome. <figure><pre><code class="cpp"><span class="type">void</span> <span class="function">cstring_string_interop</span>() {
+  <span class="type">char</span> <span class="keyword">const</span> <span class="operator">*</span><span class="variable">cmd</span> <span class="operator">=</span> <span class="string">&quot;ls&quot;</span><span class="delimiter">;</span>
+  <span class="type">char</span> <span class="keyword">const</span> <span class="operator">*</span><span class="variable">buffer</span>[] <span class="operator">=</span> {<span class="string">&quot;ls&quot;</span>, <span class="string">&quot;-l&quot;</span>, <span class="constant">nullptr</span>}<span class="delimiter">;</span>
+  <span class="type">char</span> <span class="operator">*</span><span class="keyword">const</span> <span class="operator">*</span><span class="variable">argv</span> <span class="operator">=</span> <span class="function">const_cast</span><span class="operator">&lt;</span><span class="type">char</span> <span class="operator">*</span><span class="keyword">const</span> <span class="operator">*</span><span class="operator">&gt;</span>(<span class="variable">buffer</span>)<span class="delimiter">;</span>
+  <span class="type">int</span> <span class="variable">execed</span> <span class="operator">=</span> <span class="function">execve</span>(<span class="variable">cmd</span>, <span class="variable">argv</span>, <span class="constant">nullptr</span>)<span class="delimiter">;</span>
+  (<span class="type">void</span>)<span class="variable">execed</span><span class="delimiter">;</span>
+}
+</code></pre>
+<figcaption>cstr_interop.cpp</figcaption></figure></li><li>MSVC has no reliable relative paths as macro yet (see experimental:deterministic mode). Workaround to get filename by Andry. <figure><pre><code class="cpp"><span class="keyword">#include</span> <span class="string">&lt;cstddef&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;cstdint&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;cstdio&gt;</span>
+<span class="keyword">template</span><span class="operator">&lt;</span><span class="keyword">typename</span> <span class="type">T</span>, <span class="type">size_t</span> <span class="variable">S</span><span class="operator">&gt;</span> <span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="type">size_t</span> <span class="function">fname_offs</span>(<span class="type">T</span> <span class="keyword">const</span> (<span class="operator">&amp;</span><span class="variable">str</span>)[<span class="variable">S</span>], <span class="type">size_t</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">S</span> <span class="operator">-</span> <span class="number">1</span>) {
+  <span class="keyword">return</span> (<span class="variable">str</span>[<span class="variable">i</span>] <span class="operator">==</span> <span class="number">&apos;/&apos;</span> <span class="operator">||</span> <span class="variable">str</span>[<span class="variable">i</span>] <span class="operator">==</span> <span class="number">&apos;\\&apos;</span>) ? <span class="variable">i</span> <span class="operator">+</span> <span class="number">1</span> : (<span class="variable">i</span> <span class="operator">&gt;</span> <span class="number">0</span> ? <span class="function">fname_offs</span>(<span class="variable">str</span>, <span class="variable">i</span> <span class="operator">-</span> <span class="number">1</span>) : <span class="number">0</span>)<span class="delimiter">;</span>
+}
+<span class="keyword">template</span><span class="operator">&lt;</span><span class="keyword">typename</span> <span class="type">T</span><span class="operator">&gt;</span> <span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="type">size_t</span> <span class="function">fname_offs</span>(<span class="type">T</span> (<span class="operator">&amp;</span><span class="variable">str</span>)[<span class="number">1</span>]) { <span class="keyword">return</span> <span class="number">0</span><span class="delimiter">;</span> }
+<span class="keyword">namespace</span> <span class="type">util_force_const_eval</span> {
+<span class="keyword">template</span><span class="operator">&lt;</span><span class="keyword">typename</span> <span class="type">T</span>, <span class="type">T</span> <span class="variable">v</span><span class="operator">&gt;</span> <span class="keyword">struct</span> <span class="type">const_expr_value</span> {
+  <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="type">T</span> <span class="keyword">const</span> <span class="property">value</span> <span class="operator">=</span> <span class="variable">v</span><span class="delimiter">;</span>
+}<span class="delimiter">;</span>
+} <span class="comment">// namespace util_force_const_eval</span>
+<span class="keyword">#define</span> <span class="function special">FORCE_CONST_EVAL</span>(<span class="variable">exp</span>) ::util_force_const_eval::const_expr_value&lt;decltype(exp), exp&gt;::value
+<span class="keyword">#define</span> <span class="function special">LEAF</span>(<span class="variable">FN</span>) (&amp;FN[FORCE_CONST_EVAL(fname_offs(FN))])
+
+<span class="type">int</span> <span class="function">testEq</span>(<span class="type">int32_t</span> <span class="variable">a</span>, <span class="type">int32_t</span> <span class="variable">b</span>) {
+  <span class="keyword">if</span> (<span class="variable">a</span> <span class="operator">!=</span> <span class="variable">b</span>) {
+    <span class="comment">// Prefer __FILE_NAME__, which also works in C. Ideally, the compiler</span>
+    <span class="comment">// can be told to provide relative file paths.</span>
+    <span class="function">fprintf</span>(<span class="variable">stderr</span>, <span class="string">&quot;%s:%d got &apos;%d&apos; expected &apos;%d&apos;\n&quot;</span>, <span class="function">LEAF</span>(<span class="variable">__FILE__</span>), <span class="variable">__LINE__</span>, <span class="variable">a</span>, <span class="variable">b</span>)<span class="delimiter">;</span>
+    <span class="keyword">return</span> <span class="number">1</span><span class="delimiter">;</span>
+  }
+  <span class="keyword">return</span> <span class="number">0</span><span class="delimiter">;</span>
+}
+</code></pre>
+<figcaption>msvc_rel_path.cpp</figcaption></figure></li><li>Destructors of virtual classes should have lifetime annotation, unless final class. Otherwise, debugging problems will be painful, because the intended object lifetimes become ambiguous on reading the code. Consider using clang <code>-Wnon-virtual-dtor</code> or recent msvc (ca. year 2020).</li><li>Delete copy + move constructors for non-final classes with no pure-virtual methods.</li><li>Consider marking copy constructor as explicit and deleting copy assignment, if copying class is expensive. Consider providing a “clone fn” as syntactic sugar.</li><li>Do not use <code>std::vector&lt;bool&gt;</code>, because it is a dynamic bitset and has horrible naming. Accidental byte operations on it like memcpy will be UB.</li><li>Streams do not enforce C abi and are overly complex for printing memory. Further (no example here), they need to extensions to offer non-blocking reads, writes and introspection. <figure><pre><code class="cpp"><span class="keyword">#include</span> <span class="string">&lt;cstdint&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;fstream&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;iostream&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;vector&gt;</span>
+<span class="type">void</span> <span class="function">stream_cpp</span>() {
+  <span class="type">std</span>::<span class="type">vector</span><span class="operator">&lt;</span><span class="type">uint8_t</span><span class="operator">&gt;</span> <span class="variable">array</span>{<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>}<span class="delimiter">;</span>
+  <span class="type">std</span>::<span class="type">fstream</span> <span class="variable">fstream1</span>{<span class="variable">stdout</span>, <span class="type">std</span>::<span class="type">fstream</span>::<span class="variable">app</span> | <span class="type">std</span>::<span class="type">fstream</span>::<span class="variable">out</span>}<span class="delimiter">;</span>
+  <span class="type">auto</span> <span class="variable">flags</span> <span class="operator">=</span> <span class="variable">fstream1</span><span class="delimiter">.</span><span class="function">flags</span>()<span class="delimiter">;</span>
+  <span class="variable">fstream1</span> &lt;&lt; <span class="type">std</span>::<span class="variable">hex</span><span class="delimiter">;</span>
+  <span class="keyword">for</span> (<span class="type">uint32_t</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span><span class="delimiter">;</span> <span class="variable">i</span> <span class="operator">&lt;</span> <span class="variable">array</span><span class="delimiter">.</span><span class="function">size</span>()<span class="delimiter">;</span> <span class="variable">i</span> <span class="operator">+=</span> <span class="number">1</span>)
+    <span class="variable">fstream1</span> &lt;&lt; <span class="type">std</span>::<span class="variable">hex</span> &lt;&lt; <span class="variable">array</span>[<span class="variable">i</span>]<span class="delimiter">;</span>
+  <span class="variable">fstream1</span><span class="delimiter">.</span><span class="function">flags</span>(<span class="variable">flags</span>)<span class="delimiter">;</span>
+  <span class="variable">fstream1</span> &lt;&lt; <span class="string">&quot;\n&quot;</span><span class="delimiter">;</span>
+  <span class="variable">fstream1</span><span class="delimiter">.</span><span class="function">close</span>()<span class="delimiter">;</span>
+}
+<span class="type">void</span> <span class="function">fprintf_c</span>() {
+  <span class="type">std</span>::<span class="type">vector</span><span class="operator">&lt;</span><span class="type">uint8_t</span><span class="operator">&gt;</span> <span class="variable">array</span>{<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>}<span class="delimiter">;</span>
+  <span class="keyword">for</span> (<span class="type">uint32_t</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span><span class="delimiter">;</span> <span class="variable">i</span> <span class="operator">&lt;</span> <span class="variable">array</span><span class="delimiter">.</span><span class="function">size</span>()<span class="delimiter">;</span> <span class="variable">i</span> <span class="operator">+=</span> <span class="number">1</span>)
+    <span class="function">fprintf</span>(<span class="variable">stdout</span>, <span class="string">&quot;%x, &quot;</span>, <span class="variable">array</span>[<span class="variable">i</span>])<span class="delimiter">;</span>
+  <span class="function">fprintf</span>(<span class="variable">stdout</span>, <span class="string">&quot;\n&quot;</span>)<span class="delimiter">;</span>
+}
+</code></pre>
+<figcaption>streams_no_cabi.cpp</figcaption></figure></li><li>Incomplete type can not be instantiated in template:<ol><li>pull in all headers deps of headers</li><li>class forward declares may create circular dependencies</li><li>build each file individually</li><li>might be a circular dependency during template usage</li></ol></li><li>Missing virtual destructor for non-final methods in classes is technically UB. <figure><pre><code class="cpp"><span class="keyword">class</span> <span class="type">ISomeInterface</span> {
+<span class="keyword">public</span>:
+  <span class="keyword">virtual</span> <span class="type">int</span> <span class="function">SomeMethod</span>() <span class="operator">=</span> <span class="number">0</span><span class="delimiter">;</span>
+}<span class="delimiter">;</span>
+<span class="keyword">class</span> <span class="type">CSomeClass</span> : <span class="type">ISomeInterface</span> {
+  <span class="function">CSomeClass</span>()<span class="delimiter">;</span>
+
+<span class="keyword">public</span>:
+  <span class="type">int</span> <span class="function">SomeMethod</span>() <span class="keyword">override</span> { <span class="keyword">return</span> <span class="number">1</span><span class="delimiter">;</span> }
+  <span class="keyword">virtual</span> ~<span class="variable">CSomeClass</span>()<span class="delimiter">;</span> <span class="comment">// missing virtual technical UB</span>
+}<span class="delimiter">;</span>
+<span class="keyword">class</span> <span class="type">CSomeDerivedClass</span> : <span class="type">CSomeClass</span> {
+  <span class="function">CSomeDerivedClass</span>()<span class="delimiter">;</span>
+
+<span class="keyword">public</span>:
+  <span class="type">int</span> <span class="function">SomeMethod</span>() <span class="keyword">override</span> <span class="keyword">final</span> { <span class="keyword">return</span> <span class="number">2</span><span class="delimiter">;</span> }
+  <span class="keyword">virtual</span> ~<span class="variable">CSomeDerivedClass</span>()<span class="delimiter">;</span> <span class="comment">// optional virtual</span>
+}<span class="delimiter">;</span>
+</code></pre>
+<figcaption>missing_virt_destructor.cpp</figcaption></figure></li><li>Why exceptions do not scale. <figure><pre><code class="cpp"><span class="keyword">#include</span> <span class="string">&lt;cstdint&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;stdexcept&gt;</span>
+<span class="type">int</span> <span class="function">why_exceptions_dont_scale</span>(<span class="type">char</span> <span class="operator">*</span><span class="variable">errmsg_ptr</span>, <span class="type">uint32_t</span> <span class="operator">*</span><span class="variable">errmsg_len</span>) {
+  <span class="keyword">constexpr</span> <span class="type">char</span> <span class="variable">const_drivermsg</span>[] <span class="operator">=</span> <span class="string">&quot;DriverError: &quot;</span><span class="delimiter">;</span>
+  <span class="keyword">constexpr</span> <span class="type">char</span> <span class="variable">const_initmsg</span>[] <span class="operator">=</span> <span class="string">&quot;InitError: &quot;</span><span class="delimiter">;</span>
+  <span class="keyword">constexpr</span> <span class="type">char</span> <span class="variable">const_nocamfoundmsg</span>[] <span class="operator">=</span> <span class="string">&quot;NoCameraFound: &quot;</span><span class="delimiter">;</span>
+  <span class="comment">// Underlying idea: prefix exception strings with text. Below case handling</span>
+  <span class="comment">// shows how error prone this is to make runtime decisions with C abi</span>
+  <span class="comment">// compatibility across dll. And this does not cover compiler mangling and</span>
+  <span class="comment">// dependency on runtime etc.</span>
+  <span class="comment">// Further more, tooling like clangd is unable to infer all possible strings</span>
+  <span class="comment">// to enforce correct error handling of the bubbled up exceptions and not even</span>
+  <span class="comment">// all possible derived exception types.</span>
+  <span class="keyword">struct</span> <span class="type">SomeDll</span> <span class="variable">some_dll</span><span class="delimiter">;</span>
+  <span class="keyword">try</span> {
+    <span class="variable">some_dll</span><span class="delimiter">.</span><span class="function">SetupDll</span>(<span class="string">&quot;someconfig_file&quot;</span>)<span class="delimiter">;</span>
+  } <span class="keyword">catch</span> (<span class="type">std</span>::<span class="type">runtime_error</span> <span class="operator">&amp;</span><span class="variable">rt_err</span>) {
+    <span class="type">std</span>::<span class="type">string</span> <span class="variable">err</span> <span class="operator">=</span> <span class="variable">rt_err</span><span class="delimiter">.</span><span class="function">what</span>()<span class="delimiter">;</span>
+    <span class="comment">// std::string::StartsWith : err.rfind(&quot;DriverError:&quot;, 0) == 0)</span>
+    <span class="keyword">if</span> (<span class="variable">err</span><span class="delimiter">.</span><span class="function">rfind</span>(<span class="variable">const_drivermsg</span>, <span class="number">0</span>) <span class="operator">==</span> <span class="number">0</span>) {
+      <span class="type">int</span> <span class="variable">st</span> <span class="operator">=</span> <span class="function">snprintf</span>(<span class="operator">&amp;</span><span class="variable">errmsg_ptr</span>[<span class="number">0</span>], <span class="operator">*</span><span class="variable">errmsg_len</span>, <span class="string">&quot;%s&quot;</span>, <span class="operator">&amp;</span><span class="variable">err</span><span class="delimiter">.</span><span class="function">c_str</span>()[<span class="keyword">sizeof</span>(<span class="variable">const_drivermsg</span>)])<span class="delimiter">;</span>
+      <span class="keyword">if</span> (<span class="variable">st</span> &lt;= <span class="number">0</span>)
+        <span class="keyword">return</span> <span class="number">1</span><span class="delimiter">;</span> <span class="comment">// C89 allows less than 1, C99 NULL</span>
+      <span class="keyword">return</span> <span class="number">2</span><span class="delimiter">;</span>
+    } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">err</span><span class="delimiter">.</span><span class="function">rfind</span>(<span class="variable">const_initmsg</span>, <span class="number">0</span>) <span class="operator">==</span> <span class="number">0</span>) {
+      <span class="type">int</span> <span class="variable">st</span> <span class="operator">=</span> <span class="function">snprintf</span>(<span class="operator">&amp;</span><span class="variable">errmsg_ptr</span>[<span class="number">0</span>], <span class="operator">*</span><span class="variable">errmsg_len</span>, <span class="string">&quot;%s&quot;</span>, <span class="operator">&amp;</span><span class="variable">err</span><span class="delimiter">.</span><span class="function">c_str</span>()[<span class="keyword">sizeof</span>(<span class="variable">const_initmsg</span>)])<span class="delimiter">;</span>
+      <span class="keyword">if</span> (<span class="variable">st</span> &lt;= <span class="number">0</span>)
+        <span class="keyword">return</span> <span class="number">1</span><span class="delimiter">;</span>
+      <span class="keyword">return</span> <span class="number">2</span><span class="delimiter">;</span>
+    } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">err</span><span class="delimiter">.</span><span class="function">rfind</span>(<span class="variable">const_nocamfoundmsg</span>, <span class="number">0</span>) <span class="operator">==</span> <span class="number">0</span>) {
+      <span class="type">int</span> <span class="variable">st</span> <span class="operator">=</span> <span class="function">snprintf</span>(<span class="operator">&amp;</span><span class="variable">errmsg_ptr</span>[<span class="number">0</span>], <span class="operator">*</span><span class="variable">errmsg_len</span>, <span class="string">&quot;%s&quot;</span>, <span class="operator">&amp;</span><span class="variable">err</span><span class="delimiter">.</span><span class="function">c_str</span>()[<span class="keyword">sizeof</span>(<span class="variable">const_nocamfoundmsg</span>)])<span class="delimiter">;</span>
+      <span class="keyword">if</span> (<span class="variable">st</span> &lt;= <span class="number">0</span>)
+        <span class="keyword">return</span> <span class="number">1</span><span class="delimiter">;</span>
+      <span class="keyword">return</span> <span class="number">3</span><span class="delimiter">;</span>
+    }
+  } <span class="keyword">catch</span> (<span class="type">std</span>::<span class="type">exception</span> <span class="operator">&amp;</span><span class="variable">exc</span>) {
+    <span class="type">std</span>::<span class="type">string</span> <span class="variable">err</span> <span class="operator">=</span> <span class="variable">exc</span><span class="delimiter">.</span><span class="function">what</span>()<span class="delimiter">;</span>
+    <span class="type">int</span> <span class="variable">st</span> <span class="operator">=</span> <span class="function">snprintf</span>(<span class="operator">&amp;</span><span class="variable">errmsg_ptr</span>[<span class="number">0</span>], <span class="operator">*</span><span class="variable">errmsg_len</span>, <span class="string">&quot;%s&quot;</span>, <span class="operator">&amp;</span><span class="variable">err</span><span class="delimiter">.</span><span class="function">c_str</span>()[<span class="keyword">sizeof</span>(<span class="variable">const_nocamfoundmsg</span>)])<span class="delimiter">;</span>
+    <span class="keyword">if</span> (<span class="variable">st</span> &lt;= <span class="number">0</span>)
+      <span class="keyword">return</span> <span class="number">1</span><span class="delimiter">;</span>
+    <span class="keyword">return</span> <span class="number">100</span><span class="delimiter">;</span>
+  }
+  <span class="keyword">return</span> <span class="number">0</span><span class="delimiter">;</span>
+}
+</code></pre>
+<figcaption>exceptions_dont_scale.cpp</figcaption></figure></li><li><code>__STDC_VERSION__</code> is not necessary defined by C++ compilers.</li></ul></div></div>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>

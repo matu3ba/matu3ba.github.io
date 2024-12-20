@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>matu3bas Website</title>
+    <link rel="stylesheet" type="text/css" href="/normalize.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+  </head>
+  <body>
+    <div class="home_page">
+      <div class='static_grid'>
+          <div class='static_double_column1'>
+            <h1><span class="reset_a"><a href="/">Jans Website</a></span></h1>
+          </div>
+          <div class='static_double_column2'>
+            <h2>Python shennanigans.</h2>
+          </div>
+          <div class='static_double_column3'>
+            <div><div id=intro><p> The following shennanigans were collected during my work on creating a system integration library and framework for hardware and software tests including developer tasks like worktree management, building, target deployment and configuration. Therefore it should be representative for things one might want to do in absence of better tooling. The used Python version was 3.8.2, but most problems still persist.</p></div><div id=tldr><p> My <a href="#tldr"><strong>tldr;</strong></a> retrospection upfront, which you may be able to reproduce once you try to code long-running services, which recover from all failures, cleanly reset state or generally try to debug spurious problems. Please don’t.</p><p>Python on itself is great for prototyping up to a few hundred lines of code, like to quickly receive or send some json over tcp/html. <strong>However</strong>, it is unfeasible to scale, for example to use as library code. Changes in a leaf function can add exceptions to higher level code paths and handling those via exceptions for user friendly error messages, for example to collect context (information along multiple functions, for example from different combination of traversal) becomes unreasonably verbose and error prone. The alternative is to use C-like error handling, which requires to figure out all possible exceptions of Python libstd methods, which language servers do not support (as of 20240404).</p></div><div id=list_of_shennanigans><p> Aside of these more fundamental limitations, here the <a href="#list_of_shennanigans">list of shennanigans</a> I have run into:</p><ul><li><code>xml.dom.minidom</code> <a href="https://bugs.python.org/issue5752" target="_blank">breaks space and newlines</a>. Use <code>ElementTree</code>.</li><li><code>.strip()</code> is necessary after file read, because Python automatically adds <code>\n</code> and there is no way to read without newlines into a list.</li><li>Testing for subdictionaries with <code>dict</code> is unreadable, so such a method is missing <figure><pre><code class="python"><span class="keyword">def</span> <span class="function">is_subdict</span>(<span class="variable">small</span>: <span class="type">dict</span>, <span class="variable">big</span>: <span class="type">dict</span>) <span class="operator">-&gt;</span> <span class="type">bool</span>:
+    <span class="string">&quot;&quot;&quot;
+    Test, if &apos;small&apos; is subdict of &apos;big&apos;
+    Example: big = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: &apos;value2&apos;}}
+    Then small = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: &apos;value2&apos;}, &apos;otherkey&apos;..} matches,
+    but small = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: &apos;value2&apos;, &apos;otherkey&apos;..}}
+    or small = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: {&apos;value2&apos;, &apos;otherkey&apos;..}}} not.
+    &quot;&quot;&quot;</span>
+    <span class="comment"># since python3.9:</span>
+    <span class="comment"># return big | small == big</span>
+    <span class="comment"># also:</span>
+    <span class="comment"># return {**big, **small} == big</span>
+    <span class="keyword">return</span> <span class="function">dict</span>(<span class="variable">big</span>, <span class="operator">**</span><span class="variable">small</span>) <span class="operator">==</span> <span class="variable">big</span></code></pre>
+<figcaption>missing_dict_methods1.py</figcaption></figure></li><li><code>dict</code> has no method to check, if the fields of a dictionary are in another dictionary <figure><pre><code class="python"><span class="keyword">def</span> <span class="function">has_fieldsvals</span>(<span class="variable">small</span>: <span class="type">dict</span>, <span class="variable">big</span>: <span class="type">dict</span>) <span class="operator">-&gt;</span> <span class="type">bool</span>:
+    <span class="string">&quot;&quot;&quot;
+    Test, if &apos;small&apos; has all values of of &apos;big&apos;
+    Example: big = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: &apos;value2&apos;}}
+    Then small = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: &apos;value2&apos;}, &apos;otherkey&apos;..} matches,
+    small = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: &apos;value2&apos;, &apos;otherkey&apos;..}} matches,
+    and small = {&apos;pl&apos; : &apos;key1&apos;: {&apos;key2&apos;: {&apos;value2&apos;, &apos;otherkey&apos;..}}} matches.
+    &quot;&quot;&quot;</span>
+    <span class="keyword">for</span> <span class="variable">key</span>, <span class="variable">value</span> <span class="operator">in</span> <span class="variable">small</span>.<span class="function method">items</span>():
+        <span class="keyword">if</span> <span class="variable">key</span> <span class="operator">in</span> <span class="variable">big</span>:
+            <span class="keyword">if</span> <span class="function">isinstance</span>(<span class="variable">small</span>[<span class="variable">key</span>], <span class="variable">dict</span>):
+                <span class="keyword">if</span> <span class="operator">not</span> <span class="function">has_fieldsvals</span>(<span class="variable">small</span>[<span class="variable">key</span>], <span class="variable">big</span>[<span class="variable">key</span>]):
+                    <span class="keyword">return</span> <span class="constant builtin">False</span>
+                <span class="keyword">else</span>:
+                    <span class="keyword">return</span> <span class="constant builtin">True</span>
+            <span class="keyword">elif</span> <span class="variable">value</span> <span class="operator">!=</span> <span class="variable">big</span>[<span class="variable">key</span>]:
+                <span class="keyword">return</span> <span class="constant builtin">False</span>
+            <span class="keyword">else</span>:
+                <span class="keyword">return</span> <span class="constant builtin">True</span>
+        <span class="keyword">else</span>:
+            <span class="keyword">return</span> <span class="constant builtin">False</span>
+    <span class="keyword">return</span> <span class="constant builtin">True</span></code></pre>
+<figcaption>missing_dict_methods2.py</figcaption></figure></li><li><code>dict</code> has no method to check, if all fields and values of a dictionary are in another dictionary <figure><pre><code class="python"><span class="keyword">import</span> <span class="variable">copy</span>
+<span class="keyword">from</span> <span class="variable">typing</span> <span class="keyword">import</span> <span class="variable">Optional</span>, <span class="variable">List</span>
+
+
+<span class="keyword">def</span> <span class="function">merge_dicts</span>(<span class="variable">alpha</span>: <span class="type">dict</span> <span class="operator">=</span> {}, <span class="variable">beta</span>: <span class="type">dict</span> <span class="operator">=</span> {}) <span class="operator">-&gt;</span> <span class="type">dict</span>:
+  <span class="string">&quot;&quot;&quot;
+  Recursive merge dicts. Not multi-threading safe.
+  &quot;&quot;&quot;</span>
+  <span class="keyword">return</span> <span class="function">_merge_dicts_aux</span>(<span class="variable">alpha</span>, <span class="variable">beta</span>, <span class="variable">copy</span>.<span class="function method">copy</span>(<span class="variable">alpha</span>))
+
+
+<span class="keyword">def</span> <span class="function">_merge_dicts_aux</span>(<span class="variable">alpha</span>: <span class="type">dict</span> <span class="operator">=</span> {}, <span class="variable">beta</span>: <span class="type">dict</span> <span class="operator">=</span> {}, <span class="variable">result</span>: <span class="type">dict</span> <span class="operator">=</span> {}, <span class="variable">path</span>: <span class="variable">Optional</span>[<span class="variable">List</span>[<span class="type">str</span>]] <span class="operator">=</span> <span class="constant builtin">None</span>) <span class="operator">-&gt;</span> <span class="type">dict</span>:
+  <span class="keyword">if</span> <span class="variable">path</span> <span class="operator">is</span> <span class="constant builtin">None</span>:
+    <span class="variable">path</span> <span class="operator">=</span> []
+  <span class="keyword">for</span> <span class="variable">key</span> <span class="operator">in</span> <span class="variable">beta</span>:
+    <span class="keyword">if</span> <span class="variable">key</span> <span class="operator">not in</span> <span class="variable">alpha</span>:
+      <span class="variable">result</span>[<span class="variable">key</span>] <span class="operator">=</span> <span class="variable">beta</span>[<span class="variable">key</span>]
+    <span class="keyword">else</span>:
+      <span class="keyword">if</span> <span class="function">isinstance</span>(<span class="variable">alpha</span>[<span class="variable">key</span>], <span class="variable">dict</span>) <span class="operator">and</span> <span class="function">isinstance</span>(<span class="variable">beta</span>[<span class="variable">key</span>], <span class="variable">dict</span>):
+        <span class="comment"># key value is dict in A and B =&gt; merge the dicts</span>
+        <span class="function">_merge_dicts_aux</span>(<span class="variable">alpha</span>[<span class="variable">key</span>], <span class="variable">beta</span>[<span class="variable">key</span>], <span class="variable">result</span>[<span class="variable">key</span>], <span class="variable">path</span> <span class="operator">+</span> [<span class="function">str</span>(<span class="variable">key</span>)])
+      <span class="keyword">elif</span> <span class="variable">alpha</span>[<span class="variable">key</span>] <span class="operator">==</span> <span class="variable">beta</span>[<span class="variable">key</span>]:
+        <span class="comment"># key value is same in A and B =&gt; ignore</span>
+        <span class="keyword">pass</span>
+      <span class="keyword">else</span>:
+        <span class="comment"># key value differs in A and B =&gt; raise error</span>
+        <span class="variable">err</span>: <span class="type">str</span> <span class="operator">=</span> <span class="string">f&quot;Conflict at {&apos;.&apos;.join(path + [str(key)])}&quot;</span>
+        <span class="keyword">raise</span> <span class="function">Exception</span>(<span class="variable">err</span>)
+  <span class="keyword">return</span> <span class="variable">result</span>
+</code></pre>
+<figcaption>missing_dict_methods3.py</figcaption></figure></li><li>Tuples and dicts are annoying to differentiate <figure><pre><code class="python"><span class="comment"># dictionary</span>
+<span class="variable">dict1</span> <span class="operator">=</span> {<span class="string">&quot;m1&quot;</span>: <span class="string">&quot;cp&quot;</span>, <span class="string">&quot;m2&quot;</span>: <span class="string">&quot;cp&quot;</span>}
+<span class="comment"># tuple</span>
+<span class="variable">tup1</span> <span class="operator">=</span> ({<span class="string">&quot;m1&quot;</span>: <span class="string">&quot;cp&quot;</span>, <span class="string">&quot;m2&quot;</span>: <span class="string">&quot;cp&quot;</span>},)
+
+<span class="comment"># at least getting the intention correct, but python is still unhelpful with error message</span>
+<span class="variable">dict2</span> <span class="operator">=</span> <span class="function">dict</span>({<span class="string">&quot;m1&quot;</span>: <span class="string">&quot;cp&quot;</span>, <span class="string">&quot;m2&quot;</span>: <span class="string">&quot;cp&quot;</span>})
+<span class="comment"># tuple</span>
+<span class="variable">tup2</span> <span class="operator">=</span> (<span class="function">tuple</span>({<span class="string">&quot;m1&quot;</span>: <span class="string">&quot;cp&quot;</span>, <span class="string">&quot;m2&quot;</span>: <span class="string">&quot;cp&quot;</span>}),)
+</code></pre>
+<figcaption>tup_and_dicts.py</figcaption></figure></li><li>Stack trace formatting is inefficient and one can not use <code>gf</code> or <code>gF</code> vim shortcuts to jump to location function to write status + trace to variable. <figure><pre><code class="python"><span class="keyword">import</span> <span class="variable">traceback</span>
+
+
+<span class="keyword">def</span> <span class="function">getStackTrace</span>() <span class="operator">-&gt;</span> <span class="type">str</span>:
+  <span class="keyword">return</span> <span class="function">repr</span>(<span class="variable">traceback</span>.<span class="function method">format_stack</span>())</code></pre>
+<figcaption>stacktrace_fmt.py</figcaption></figure></li><li>Mixed double quote (<code>&quot;</code>) and single quote (<code>&apos;</code>) strings are invalid json <figure><pre><code class="python"><span class="comment">#!/usr/bin/env python</span>
+<span class="keyword">import</span> <span class="variable">json</span>
+
+<span class="comment"># Dict -&gt; str is inconsistent to json -&gt; str, so workaround with</span>
+<span class="comment"># dict_asjson_lower = str(dict1).replace(&quot;&apos;&quot;, &apos;&quot;&apos;)</span>
+<span class="keyword">def</span> <span class="function">combineDictsFromStr</span>() <span class="operator">-&gt;</span> <span class="constant builtin">None</span>:
+  <span class="variable">dict1</span> <span class="operator">=</span> {<span class="string">&quot;t1&quot;</span>: <span class="string">&quot;val1&quot;</span>, <span class="string">&quot;t2arr&quot;</span>: [{<span class="string">&quot;t2_int&quot;</span>: <span class="number">0</span>, <span class="string">&quot;t2_str&quot;</span>: <span class="string">&quot;12.0&quot;</span>}], <span class="string">&quot;t3int&quot;</span>: <span class="number">30</span>}
+  <span class="variable">dict1_str_raw</span> <span class="operator">=</span> <span class="function">str</span>(<span class="variable">dict1</span>)
+  <span class="variable">dict1_str</span> <span class="operator">=</span> <span class="variable">dict1_str_raw</span>.<span class="function method">replace</span>(<span class="string">&quot;&apos;&quot;</span>, <span class="string">&apos;&quot;&apos;</span>)
+  <span class="variable">dict2_str</span> <span class="operator">=</span> <span class="string">&apos;{&quot;anotherone&quot;:&quot;yes&quot;, &apos;</span>
+  <span class="variable">dict2_str</span> <span class="operator">+=</span> <span class="string">&apos;&quot;t3int&quot;:30,&quot;t4str&quot;:&apos;</span>
+  <span class="variable">dict2_str</span> <span class="operator">+=</span> <span class="variable">dict1_str</span> <span class="operator">+</span> <span class="string">&quot;}&quot;</span>
+  <span class="variable">dict2</span> <span class="operator">=</span> <span class="variable">json</span>.<span class="function method">loads</span>(<span class="variable">dict2_str</span>)
+  <span class="variable">_</span> <span class="operator">=</span> <span class="variable">dict2</span>
+</code></pre>
+<figcaption>invalid_json.py</figcaption></figure></li><li><code>os.kill()</code> does not call registered cleanup function <code>atexit.register(exit_cleanup)</code> by daemonized threads. Must store pids of child processes and clean them explicitly or signal main thread via <figure><pre><code class="python"><span class="keyword">def</span> <span class="function">signalMainThread</span>(<span class="variable">self</span>) <span class="operator">-&gt;</span> <span class="constant builtin">None</span>:
+  <span class="keyword">pass</span>
+  <span class="comment"># before Python 3.10: _thread.interrupt_main()</span>
+  <span class="comment"># since Python 3.10: _thread.interrupt_main(signum=signal.SIGKILL)</span></code></pre>
+<figcaption>signal_main_thread.py</figcaption></figure></li><li><a href="https://github.com/python/cpython/issues/51571" target="_blank">Socket timeout can cause file-like readline() method to lose data</a>, workaround<ol><li>Read from Kernel structure and append chunk-wise to buffer from socket until stop event (via select).</li><li>After each read, try to line a line from the buffer and remove the line on success (being utf-8 etc).</li><li>On failure of reading line, continue with 1.</li><li>Teardown should read socket until being empty, if a stop was obtained.</li></ol></li><li>Generic module annotation is not allowed and mypy has no explicit docs for this. The following does not work and <code>module: object</code> is the closest we can get as simple annotation. <figure><pre><code class="python"><span class="comment"># using &apos;module: ModuleType&apos; via specifying ModuleType as set of types not possible</span>
+<span class="keyword">def</span> <span class="function">check_fn</span>(<span class="variable">module</span>: <span class="type">object</span>) <span class="operator">-&gt;</span> <span class="type">int</span>:
+  <span class="keyword">if</span> <span class="function">str</span>(<span class="function">type</span>(<span class="variable">module</span>)) <span class="operator">!=</span> <span class="string">&quot;module&quot;</span>:
+    <span class="keyword">return</span> <span class="number">1</span>
+  <span class="keyword">return</span> <span class="number">0</span>
+</code></pre>
+<figcaption>module_annotation.py</figcaption></figure></li><li>There are no scheduling and watchdog methods, which makes Python thread scheduling very unreliable. Unlucky schedules may cause fatal delay for shuffling data between daemon thread and main thread. As example, an application using 1 main thread and 2 daemon threads may cause the relevant daemon thread not being scheduled for 2 seconds. Empirically 3 seconds work.</li><li>Trailing comma in dictionary or <code>json.dumps</code> generated string has silent failures, for example on parsing the output as json via php.</li></ul></div></div>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>
