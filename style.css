@@ -31,6 +31,7 @@
 
   --content_width: 1200px; /* same as @media screen */
   --content_1colof2_width: calc(var(--content_width) / 2);
+  --list_item_margin_top: 4px;
 }
 
 body {
@@ -43,6 +44,7 @@ h1 { font-size: var(--font_size_h1); }
 h2 { font-size: var(--font_size_h2); }
 h3 { font-size: var(--font_size_h3); }
 h4, h5, h6 { color: crimson; } /* dot not use h4-h6 */
+li + li { margin-top: var(--list_item_margin_top); }
 
 .reset_a a{ text-decoration: none; }
 .reset_a a:visited{ color:black; }
@@ -57,15 +59,6 @@ figcaption {
   font-size: var(--font_size_normal);
   padding-left: 5pt;
 }
-
-/* not yet working */
-/* figcaption.cap_zig { */
-/*   background: #fcdba5; */
-/* } */
-/* figcaption.cap_shell { */
-/*   background: #ccc; */
-/*   color: #000; */
-/* } */
 
 pre,
 code {
@@ -94,7 +87,7 @@ code {
   border-top-right-radius: 5px;
 }
 
-/**Treesitter grammar is uncapable to disting function within call context and
+/**Treesitter grammar is uncapable to distinguish function within call context and
  * function declaration/definition. Both example and print are identified with
  * the same span class function and thus colored with --darkred:
  * fn ->example<-() void {
