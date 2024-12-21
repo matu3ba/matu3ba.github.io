@@ -2,16 +2,16 @@
 .title = "Process semantics and abstraction problems on Linux, Windows, MacOS, Posix.",
 .description = "Personal Website",
 .author = "Jan Philipp Hafer",
-.date = @date("2024-11-10T00:00:00"),
+.date = @date("2024-06-28T00:00:00"),
 .layout = "article.shtml",
-.tags = ["article", "system", "platform", "windows", "macos", "linux", "posix", "process", "abstraction"],
+.tags = ["article", "system", "software", "design", "platform", "windows", "macos", "linux", "posix", "process", "abstraction"],
 .draft = false,
 ---
 
 This article documents process semantic differences between
 Linux, Windows, MacOS, Posix including what can be reasonably relied on and what no.
 
-TODO motivation: audience/why this is actually relevant to read, ie security. 
+TODO motivation: audience/why this is actually relevant to read, ie security.
 
     IPC.
         Signals.

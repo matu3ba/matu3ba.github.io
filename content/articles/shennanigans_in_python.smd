@@ -29,7 +29,7 @@ to collect context (information along multiple functions, for example from
 different combination of traversal) becomes unreasonably verbose and error
 prone. The alternative is to use C-like error handling, which requires to figure out
 all possible exceptions of Python libstd methods, which language servers
-do not support (as of 20240404).
+do not support (as of 2024-04-04).
 
 []($section.id("list_of_shennanigans"))
 Aside of these more fundamental limitations, here the [list of shennanigans](#list_of_shennanigans) I have run into:

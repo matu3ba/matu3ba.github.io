@@ -73,14 +73,14 @@ abbreviated via macro `NULL`.
 **The Exceptions**
 - Controlling the build system and compiler invocation to opt-out of provenance based optimizations.
   1. Clang and gcc have `-fno-strict-aliasing`, msvc and tcc do disable type-based aliasing analysis based optimizations.
-  2. As of 20240603, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).
+  2. As of 2024-06-03, there is no switch to disable provenance-based alias analysis in compilers (clang, gcc, msvc, tcc).
   3. Usage of `restrict` can be en/disabled in all compilers via `#pragma optimize("", on/off)`.
   It can also be disabled in all compilers via `#define restrict`, using an according optimization level (typical `-O1`)
   or via separating header and implementation and disabling link time optimziations.
 - Posix extension and Windows in practice enable dynamic linking via casting pointers `void *` to function pointers and
   back. This also means that `sizeof (function pointer) == sizeof (void *)` must be uphold, which is not true for
   microcontrollers with separate address space for code and data or CHERI in mixed capability mode/hybrid compilation mode.
-  Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 20240428.
+  Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 2024-04-28.
 [aliasing_exceptions_uniform_address_space.c]($code.asset('./aliasing_exceptions_uniform_address_space.c').language('c'))
 
 []($section.id("pointer_construction_requirements"))
@@ -133,7 +133,7 @@ The following special cases of pointer operations can be taken into account, whe
     and upper address bound, permissions masks, flags usable for OS or application tasks, see "Capability Hardware Enhanced RISC Instructions:
     CHERI Instruction-Set Architecture (Version 9)". Since there is no formal model on how CHERI pointer semantics work, examples are not included.
     A work in progress CHERI C is given in paper "Formal Mechanised Semantics of CHERI C: Capabilities, Undefined Behaviour, and Provenance".
-    CHERI offers (scalable) compartmentalization, spatial memory safety with opt-in temporal memory safety via runtime support mandating pointer capability revocation on freeing memory with latest example being CheriBSD experimental userspace temporal memory safety (20240602).
+    CHERI offers (scalable) compartmentalization, spatial memory safety with opt-in temporal memory safety via runtime support mandating pointer capability revocation on freeing memory with latest example being CheriBSD experimental userspace temporal memory safety (2024-06-02).
 - 7.What to expect for the future.  
     LLVM support for full restrict has been merged, but
     [it has design and quality problems](https://www.reddit.com/r/rust/comments/1ft619r/llvm_rfc_improvements_to_capture_tracking/),

@@ -1,7 +1,7 @@
 ---
 .title = "Some C++ footgun avoidance.",
 .author = "Jan Philipp Hafer",
-.date = @date("2024-04-20:00:00:00"),
+.date = @date("2024-04-15:00:00:00"),
 .layout = "article.shtml",
 .tags = ["article", "c++", "software", "design"],
 .draft = false,
@@ -19,8 +19,8 @@ consider taking a look at the
 and [preprocessor iceberg](https://github.com/JadLevesque/PPMP-Iceberg).
 
 []($section.id("cpp_review"))
-Update 20241217:
-Since the writing of this article (20240618), I did significantly
+Update 2024-12-17:
+Since the writing of this article (2024-04-15), I did significantly
 extend my CI-tested sample code on C++14, C++17, C++20 and
 C++23 and do not plan to continue to list footguns.
 My main complains about C++ are

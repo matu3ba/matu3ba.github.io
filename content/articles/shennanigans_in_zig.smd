@@ -8,7 +8,7 @@
 ---
 
 []($section.id("intro"))
-As of ~~20240404 (zig version 0.12.0-dev.3562+96bc8f17c)~~ 20240701 (zig version 0.14.0-dev.4234+1e3fb4825),
+As of ~~2024-04-04 (zig version 0.12.0-dev.3562+96bc8f17c)~~ 2024-07-01 (zig version 0.14.0-dev.4234+1e3fb4825),
 * Zig provides
   one of the best possible semantics to optimize memory details, while
   offering widely portable source code with reasonable safety in a
@@ -22,29 +22,29 @@ very flexible and cryptic syntax of C (see [preprocessor iceberg](https://github
 - Bottlenecks of array assignments not obvious via <code>@memcpy</code>:
 [perf_array_assignment.zig]($code.asset('./perf_array_assignment.zig').language('zig'))
 - Signaling: Test runner allows no signaling to <code>qemu -g
-  4242</code> (debugger mode). Qemu uses gdb server signaling, 
+  4242</code> (debugger mode). Qemu uses gdb server signaling,
   which means sending SIGKILL is necessary to kill
   the debugging server process.
-- Memory, aliasing and pointer semantics: Zig inherits from LLVM potential 
-  miscompilations due to longstanding provenance and aliasing bugs. (Updated 20240701)
+- Memory, aliasing and pointer semantics: Zig inherits from LLVM potential
+  miscompilations due to longstanding provenance and aliasing bugs. (Updated 2024-07-01)
   * [Zig upstream issue](https://github.com/ziglang/zig/issues/20198)
   * [LLVM upstream issue](https://github.com/llvm/llvm-project/issues/33896)
   * [Related Rust RFC](https://rust-lang.github.io/rfcs/3559-rust-has-provenance.html)
   * [Related gcc issue](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105294#c2)
-- Weak memory semantics: Zig inherits from LLVM the same class of problems 
-  from the C11 memory model. As of 20240701, and take below statements with a 
-  big grain of salt, since I did not check thoroughly common vendors and I do 
-  mostly rely on talks from ACM SIGPLAN FOWM'24 and "Multicore Semantics: 
-  Making Sense of Relaxed Memory". (Updated 20240701)
-  * There is nothing conclusive on how the "out of thin air problem" should be 
+- Weak memory semantics: Zig inherits from LLVM the same class of problems
+  from the C11 memory model. As of 2024-07-01, and take below statements with a
+  big grain of salt, since I did not check thoroughly common vendors and I do
+  mostly rely on talks from ACM SIGPLAN FOWM'24 and "Multicore Semantics:
+  Making Sense of Relaxed Memory". (Updated 2024-07-01)
+  * There is nothing conclusive on how the "out of thin air problem" should be
   fixed, which is problematic for reasoning with weak memory.
-  * Many hardware architectures have no sufficiently ISA-complete (and formally 
+  * Many hardware architectures have no sufficiently ISA-complete (and formally
   verified) synchronization models.
-  * There is no official test corpus to stress test architectures by vendors or 
+  * There is no official test corpus to stress test architectures by vendors or
   third parties.
-  * There is no official test corpus with code and optimization models to test 
+  * There is no official test corpus with code and optimization models to test
   formal model influence of example code.
-  * There is no debugging tooling to identify and trace or track down 
-  synchronization bugs from weak memory (in production) or vendor recommended 
-  strategies to stress test on their platforms (derived from the formal models 
+  * There is no debugging tooling to identify and trace or track down
+  synchronization bugs from weak memory (in production) or vendor recommended
+  strategies to stress test on their platforms (derived from the formal models
   of the architecture).

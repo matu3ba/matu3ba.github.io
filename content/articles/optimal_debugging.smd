@@ -1,9 +1,9 @@
 ---
 .title = "Towards optimal an optimal debugging library framework",
 .author = "Jan Philipp Hafer",
-.date = @date("2024-04-20:00:00:00"),
+.date = @date("2024-06-28:00:00:00"),
 .layout = "optimal_debugging.shtml",
-.tags = ["article", "system", "hardware", "software", "design", "debugging"],
+.tags = ["article", "system", "hardware", "software", "design", "debugging", "library"],
 .draft = false,
 ---
 
@@ -128,16 +128,16 @@ executing the source code semantics or formal verification of the compiler
 itself, which shall not be discussed here. This leaves hardware problems,
 kernel problems, resource leaks, freezes, performance problems and logic
 problems. TODO: what they have in common + motivation TODO: Uniform execution
-representation and queries over program execution. 
+representation and queries over program execution.
 
 []($section.id("abstraction_problems"))
 ### Abstraction problems during problem isolation
 
-TODO: origin detection, isolation and abstraction 
+TODO: origin detection, isolation and abstraction
 
 []($section.id("possible_implementations"))
 ### Possible implementations
 
 TODO: (query system data vs modify the system vs other) to validate approaches;
-Program modification and validation language, query language and alternatives. 
+Program modification and validation language, query language and alternatives.
 

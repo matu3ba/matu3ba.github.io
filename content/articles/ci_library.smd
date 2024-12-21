@@ -2,9 +2,9 @@
 .title = "Towards an extensible continuous integration library.",
 .description = "Personal Website",
 .author = "Jan Philipp Hafer",
-.date = @date("2024-11-10T00:00:00"),
+.date = @date("2024-06-28T00:00:00"),
 .layout = "article.shtml",
-.tags = ["home", "overview", "blog posts", "articles"],
+.tags = ["article", "system", "software", "design", "continuous integration", "library"],
 .draft = false,
 ---
 

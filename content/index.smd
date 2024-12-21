@@ -9,16 +9,16 @@
 ---
 
 ### [Articles]($section.id('home_left'))
-* 20240420 - [Python shennanigans.](./articles/shennanigans_in_python)
-* 20240420 - [Zig shennanigans.](./articles/shennanigans_in_zig)
-* 20240415 - [Some C++ footgun avoidance.](./articles/shennanigans_in_cpp)
-* 20240428 - [C shennanigans: Pointers, sequence points and bit fields.](./articles/shennanigans_in_c)
-* 20240628 - [Towards an optimal debugging framework library.](./articles/optimal_debugging)
+* 2024-04-20 - [Python shennanigans.](./articles/shennanigans_in_python)
+* 2024-04-20 - [Zig shennanigans.](./articles/shennanigans_in_zig)
+* 2024-04-15 - [Some C++ footgun avoidance.](./articles/shennanigans_in_cpp)
+* 2024-04-28 - [C shennanigans: Pointers, sequence points and bit fields.](./articles/shennanigans_in_c)
+* 2024-06-28 - [Towards an optimal debugging framework library.](./articles/optimal_debugging)
   - wip practice, uniform execution representations, abstraction problems, implementation options
-* 20240628 - [Process semantics and abstraction problems on Linux, Windows, MacOS, Posix.](./articles/process_behavior)
+* 2024-06-28 - [Process semantics and abstraction problems on Linux, Windows, MacOS, Posix.](./articles/process_behavior)
   - wip IPC, security, process groups, abstraction problems
-* 20240628 - [Towards an extensible continuous integration library.](./articles/ci_library)
+* 2024-06-28 - [Towards an extensible continuous integration library.](./articles/ci_library)
   - wip motivation, maintenance, security, remote debugging, untrusted OSes
 
 ### [Posts]($section.id('home_right'))
-* 20241219 - [Using zine.](./articles/using_zine)
+* 2024-12-19 - [Using zine.](./articles/using_zine)
