@@ -49,7 +49,7 @@
                 and many performance tradeoffs, they are hard to fuzz test.
               </li>
               <li> <a id ="detectable_ub"><b>Detectable Undefined Behavior</b></a>
-                TODO make table of tools
+                TODO make table of tools, C,C++,zig -OReleaseSafe
               </li>
               <li> <a id ="undetectable_ub"><b>Undetectable Undefined Behavior</b></a>
                 Staring at source code, backend intermediate representation like LLVM
@@ -75,18 +75,46 @@
                 - 8.data races sanitizer
               </li>
               <li> <a id ="resource_leaks"><b>Resource leaks (Freestanding/Kernel)</b></a>
-                TODO sanitizers
+                TODO sanitizers (valgrind etc)
               </li>
               <li> <a id ="freezes"><b>Freezes (deadlocks, softlocks, signal safety, unbounded loops etc)</b></a>
                 TODO sanitizer, validator, stepping
               </li>
               <li> <a id ="perf_problems"><b>Performance problems</b></a>
-                TODO
+                TODO simulator, tracer
               </li>
               <li> <a id ="logic_problems"><b>Logic problems</b></a>
-                TODO
+                Logic problems of software systems can be described as problems
+                related to incorrectly applied logic of how the code is solving the
+                intended and follow-up problems ignoring hardware problems, kernel
+                problems, different types of UB, miscompilations, memory problems,
+                resource leaks, freezes and performance issues. <br>
+                This typically includes
+                <ol>
+                  <li>software requirements or their handling</li>
+                  <li>(temporary) inconstency of state (relations)</li>
+                  <li>incorrect math, for example not covering edge cases</li>
+                  <li>incorrect modeling of external and internal state and synchronization</li>
+                  <li>incorrect protocol handling</li>
+                </ol>
+                and is usually caused by
+                <ol>
+                  <li> incorrect constrains on the design, meaning how the different
+                    parts should interact and work towards the goals for the use
+                    cases</li>
+                  <li> unclear, unspecified or incorrectly assumed hardware or software
+                    guarantees by components </li>
+                  <li> implementation oversights, unintended use cases, unfeasibility
+                    of a general solution due to constrains like time, money etc</li>
+                </ol>
               </li>
             </ol>
+            Ideally, only the system behavior and interactions with domain and
+            use-case specific parts (<b>2. Kernel and platform problems</b>,
+            <b>10. Logic problems</b>) need cognitive load from the programmer, whereas
+            the other error classes should have standard approaches to isolate and eliminate.
+            Unifying debug tooling simplifies usage for bigger developer productivity
+            and exposing as library allows to automate this process.
           </div>
       </div>
     </div>
