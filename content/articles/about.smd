@@ -1,0 +1,24 @@
+---
+.title = "About",
+.author = "Jan Philipp Hafer",
+.date = @date("2025-01-03:00:00:00"),
+.layout = "about.shtml",
+.tags = ["about", "overview", "blog"],
+.draft = false,
+---
+
+### Content
+- The purpose of the website is improving the state of the art
+with current focus on debugging (not making bugs or removing them).
+- Articles are of technical nature with focus of overview and user perspective
+and are aimed towards readers with technical background. Articles may be work in process (wip).
+- Posts are usually experience reports too short and not in-depth enough for articles.
+
+### Author
+- My name is Jan Philipp Hafer and my hobby is system analysis with current
+focus on debugging.
+- So far I have done various hardware and software things on embedded and desktop
+including the full development pipeline.
+- One side effect is that I have the habit of asking authors of
+projects debugging and design questions, if such information is missing,
+and collect best practices and semantics including trade-offs for various systems.

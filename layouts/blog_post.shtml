@@ -10,7 +10,7 @@
     <div class="home_page">
       <div class='static_grid'>
           <div class='static_double_column1'>
-            <h1><span class="reset_a"><a href="/">Jans Website</a></span></h1>
+            <h1><span class="reset_a"><a href="/">Jans Website.</a></span> <span class="reset_a"><a href="/articles/about/">About.</a></span></h1>
           </div>
           <div class='static_double_column2'>
             <h2 :text="$page.title"></h2>
