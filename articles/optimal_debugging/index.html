@@ -16,9 +16,111 @@
             <h2>Towards optimal an optimal debugging library framework</h2>
           </div>
           <div class='static_double_column3'>
-            <div><div id=intro><p> This article is intended as overview of debugging techniques and motivation for uniform execution representation and setup to efficiently mix and match the appropriate technique for system level debugging with focus on statically optimizing compiler languages to keep complexity and scope limited. The author accepts the irony of such statements by “C having no ABI”/many systems in practice having no ABI, but reality is in this text simplified for brevity and sanity.</p><ul><li>1.<a href="#theory">Theory of debugging</a></li><li>2.<a href="#practice">Practical methods with tradeoffs</a></li><li>3.<a href="#uniform_execution_representation">Uniform execution representation</a></li><li>4.<a href="#abstraction_problems">Abstraction problems during problem isolation</a></li><li>5.<a href="#possible_implementations">Possible implementations</a></li></ul></div></div>
-            <div><div id=theory><h3>Theory of debugging</h3><p>A program <a href="https://gu.outerproduct.net/debug.html" target="_blank">can be represented as (often non-deterministic) state machine</a>, such that a <strong>bug</strong> is a <strong>bad transition rule</strong> between those states. It is usually assumed that the developer/user knows correct and incorrect (bad) system states and the code represents a somewhat correct model of the intended semantics. Then an execution witness are the states and state transitions encountered on a specific program run. If the execution witness shows a “bad state”, then there must be a bug. Thus a <strong>debugger</strong> can be seen <strong>as query engine over states and transitions of a buggy execution witness.</strong><br>Frequent operations are bug source isolation to deterministic components, where encapsulation of non-determinism usually simplifies the process. In contrast to that, concurrent code is tricky to debug, because one needs to trace multiple execution flows to estimate where the origin of the incorrect state is.</p><p>One can generally categorize methods into the following list (<strong>asoul</strong>) <strong>a</strong>utomate, <strong>s</strong>implify, <strong>o</strong>bserve, understand, learn)</p><ul><li><strong>a</strong>utomate the process to minimize errors/oversights during debugging, against probabilistic errors, document the process etc</li><li><strong>s</strong>implify and isolate system components and changes over time</li><li><strong>o</strong>bserve the system while running it to <em>trace state or state changes</em></li><li><strong>u</strong>nderstand the expected and actual code semantics to the degree necessary</li><li><strong>l</strong>earn, extend and ensure how and which system invariants are satisfied necessary from <em>of the involved systems</em>, for example userspace processes, kernel, build system, compiler, source code, linker, object code, assembly, hardware etc</li></ul><p>with the fundamental constrains being (<strong>feel</strong>)</p><ul><li><strong>f</strong>inding out correct system components semantics</li><li><strong>ee</strong>nsuring deterministic reproducibility of the problem</li><li><strong>l</strong>imited time and effort</li></ul><p>Common debugging methods to <strong>feel a soul</strong> with various tradeoffs from compile-time to runtime debugging and less to more run-time data collection are:</p><ul><li><strong>Formal Verification</strong> as ahead or compile-time invariant resolving.</li><li><strong>Validation</strong> as runtime invariant checks.</li><li><strong>Testing</strong> as sample based runtime invariant checks.</li><li><strong>Stepping</strong> via “classical debugger” to manipulate task execution context, manipulate memory optionally via source code location translation via REPL commands, graphically, scripting or (rarely) freely programmable.</li><li><strong>Logging</strong> as dumping (a simplification of) state with context from bugs (usually timestamps in production systems).</li><li><strong>Tracing</strong> as dumping (a simplification of) runtime behavior via temporal relations (usually timestamps).</li><li><strong>Recording</strong> Encoded dumping of runtime to replay runtime with before specified time and state determinism.</li></ul><p>Simplification and isolation means to apply the meaning of both words on all potential sub-components including, but not limited to hardware, code versioning including dependencies, source system, compiler framework and target system. Typical methods are</p><ul><li><strong>Bisection</strong> via git or the actual binaries</li><li><strong>Reduction</strong> via rmeoval of system parts or trying to reproduce with (a minimal) example.</li><li><strong>Statistical analysis</strong> from collected data on how the problem manifests on given environment(s) etc.</li></ul><p><strong>Debugging</strong> is domain- and design-specific and <strong>relies on</strong> core component(s) of <strong>the to be debugged system to provide necessary debug functionality</strong>. For example, software based hardware debugging relies on interfaces to the hardware like JTAG, Kernel debugging on Kernel compilation or configuration and elevated (user), userspace debugging on process and user permissions, system configuration or a child process to be debugged on Posix systems via ptrace.</p></div></div>
-            <div><div id=practice><h3>Practical methods with tradeoffs</h3><p>Usually semantics are not “set into stone” inclusive or do not offer sufficient tradeoffs, so formal verification is rarely an option aside of usage of models as design and planning tool. Depending on the domain and environment, problematic behavior of hardware or software components must be to be more or less 1. avoided and 2. traceable and there exist various (domain) metrics as decision helper. Very well designed systems explain users how to debug bugs regarding to <strong>functional behavior</strong>, <strong>time behavior</strong> with <strong>internal and external system resources</strong> up to the degree the system usage and task execution correctness is intended. Access restrictions limit or rule out stepping, whereas storage limitations limit or rule out logging, tracing and recording.</p></div></div>
+            <div><div id=intro><p> This article is intended as overview of debugging techniques and motivation for uniform execution representation and setup to efficiently mix and match the appropriate technique for system level debugging with focus on statically optimizing compiler languages to keep complexity and scope limited. The author accepts the irony of such statements by “C having no ABI”/many systems in practice having no ABI, but reality is in this text simplified for brevity and sanity.</p><ul><li>1.<a href="#theory">Theory of debugging</a></li><li>2.<a href="#practice">Practical methods with trade-offs</a></li><li>3.<a href="#uniform_execution_representation">Uniform execution representation</a></li><li>4.<a href="#abstraction_problems">Abstraction problems during problem isolation</a></li><li>5.<a href="#possible_implementations">Possible implementations</a></li></ul></div></div>
+            <div><div id=theory><h3>Theory of debugging</h3><p>A program <a href="https://gu.outerproduct.net/debug.html" target="_blank">can be represented as (often non-deterministic) state machine</a>, such that a <strong>bug</strong> is a <strong>bad transition rule</strong> between those states. It is usually assumed that the developer/user knows correct and incorrect (bad) system states and the code represents a somewhat correct model of the intended semantics. Then an execution witness are the states and state transitions encountered on a specific program run. If the execution witness shows a “bad state”, then there must be a bug. Thus a <strong>debugger</strong> can be seen <strong>as query engine over states and transitions of a buggy execution witness.</strong><br>In more simple terms, <strong>debugging is not making bugs or removing them</strong>.<br>Frequent operations are bug source isolation to deterministic components, where encapsulation of non-determinism usually simplifies the process. In contrast to that, concurrent code is tricky to debug, because one needs to trace multiple execution flows to estimate where the origin of the incorrect state is.</p><p>The process of debugging means to use static and dynamic program analysis and its automation and adaption to speed up bug (classes) elimination for the (classes of) target systems.</p><p>One can generally categorize methods into the following list (<strong>asoul</strong>) <strong>a</strong>utomate, <strong>s</strong>implify, <strong>o</strong>bserve, <strong>u</strong>nderstand, <strong>l</strong>earn)</p><ul><li><strong>a</strong>utomate the process to minimize errors/oversights during debugging, against probabilistic errors, document the process etc</li><li><strong>s</strong>implify and isolate system components and changes over time</li><li><strong>o</strong>bserve the system while running it to <em>trace state or state changes</em></li><li><strong>u</strong>nderstand the expected and actual code semantics to the degree necessary</li><li><strong>l</strong>earn, extend and ensure how and which system invariants are satisfied necessary from <em>of the involved systems</em>, for example user-space processes, kernel, build system, compiler, source code, linker, object code, assembly, hardware etc</li></ul><p>with the fundamental constrains being (<strong>feel</strong>)</p><ul><li><strong>f</strong>inding out correct system components semantics</li><li><strong>ee</strong>nsuring deterministic reproducibility of the problem</li><li><strong>l</strong>imited time and effort</li></ul><p>Common static and dynamic program analysis methods to <strong>run the system</strong> to <strong>feel a soul</strong> for the purpose of eliminating the bug (classes) are:</p><ul><li><strong>Specification</strong> meaning to “compare/get/write the details”.</li><li><strong>Formal Verification</strong> as ahead or compile-time invariant resolving.</li><li><strong>Validation</strong> as runtime invariant checks. Sanitizers as compiler runtime checks are common tools.</li><li><strong>Testing</strong> as sample based runtime invariant checks. Coverage based fuzzers are common tools.</li><li><strong>Stepping</strong> via “classical debugger” to manipulate task execution context, manipulate memory optionally via source code location translation via REPL commands, graphically, scripting or (rarely) freely programmable.</li><li><strong>Logging</strong> as dumping (a simplification of) state with context from bugs (usually timestamps in production systems).</li><li><strong>Tracing</strong> as dumping (a simplification of) runtime behavior via temporal relations (usually timestamps).</li><li><strong>Recording</strong> Encoded dumping of runtime to replay runtime with before specified time and state determinism.</li></ul><p>The core ideas for <strong>what software system to run</strong> based on code with its semantics are then typically a mix of</p><ul><li><strong>Machine code</strong> execution on the actual hardware to get hardware and timing behavior.</li><li><strong>Simulation</strong> as <strong>partial or full execution</strong> on a simplified, imitative representation of the target hardware to get information for the simplified model.</li><li><strong>Virtualisation</strong> as <strong>isolation or simplification</strong> of a hardware- or software subsystem to reduce system complexity.</li></ul><p>Isolation and simplification are typically applied on all potential sub-components including, but not limited to hardware, code versioning including dependencies, source system, compiler framework and target system. Typical methods are</p><ul><li><strong>Bisection</strong> via git or the actual binaries.</li><li><strong>Reduction</strong> via removal of system parts or trying to reproduce with (a minimal) example.</li><li><strong>Statistical analysis</strong> from collected data on how the problem manifests on given environment(s) etc.</li></ul><p><strong>Debugging</strong> is domain- and design-specific and <strong>relies on</strong> core component(s) of <strong>the to be debugged system to provide necessary debug functionality</strong>. For example, software based hardware debugging relies on interfaces to the hardware like JTAG, Kernel debugging on Kernel compilation or configuration and elevated (user), user-space debugging on process and user permissions, system configuration or a child process to be debugged on Posix systems via <code>ptrace</code>.</p><p>It depends on many factors, for example bug classes and target systems, to what degree the process of debugging can and should be automated or optimized.</p></div></div>
+            <div><div id=practice><h3>Practical methods with tradeoffs</h3><p>Usually semantics are not “set into stone” inclusive or do not offer sufficient tradeoffs, so formal verification is rarely an option aside of usage of models as design and planning tool or for fail-safe program functionality. Depending on the domain and environment, problematic behavior of hardware or software components must be more or less 1. avoided and 2. traceable and there exist various (domain) metrics as decision helper. Very well designed systems explain users how to debug bugs regarding to <strong>functional behavior</strong>, <strong>time behavior</strong> with <strong>internal and external system resources</strong> up to the degree the system usage and task execution correctness is intended. Access restrictions limit or rule out stepping, whereas storage limitations limit or rule out logging, tracing and recording.</p><p><strong>Sanitizers</strong> are the most efficient and simplest debugging tools for C and C++, whereas Zig implements them, besides thread sanitizer, as allocator and safety mode. Instrumented sanitizers have a 2x-4x slowdown vs dynamic ones with 20x-50x slowdown.</p><table>
+<thead>
+<tr>
+<th>Nr</th>
+<th>Clang usage</th>
+<th>Zig usage</th>
+<th>Memory</th>
+<th>Runtime</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>-fsanitize=address</td>
+<td>alloc + safety</td>
+<td>1x (3x stack)</td>
+<td>2x</td>
+<td>Clang 16+ TB of virt mem</td>
+</tr>
+<tr>
+<td>2</td>
+<td>-fsanitize=leak</td>
+<td>allocator</td>
+<td>1x</td>
+<td>1x</td>
+<td>on exit ?x? more mem+time</td>
+</tr>
+<tr>
+<td>3</td>
+<td>-fsanitize=memory</td>
+<td>unimplemented</td>
+<td>2-3x</td>
+<td>3x</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td>-fsanitize=thread</td>
+<td>-fsanitize=thread</td>
+<td>5-10x+1MB/thread</td>
+<td>5-15x</td>
+<td>Clang ?x? (“lots of”) virt mem</td>
+</tr>
+<tr>
+<td>5</td>
+<td>-fsanitize=type</td>
+<td>unimplemented</td>
+<td>?</td>
+<td>?</td>
+<td>not enough data</td>
+</tr>
+<tr>
+<td>6</td>
+<td>-fsanitize=undefined</td>
+<td>safety mode</td>
+<td>1x</td>
+<td>~1x</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td>-fsanitize=dataflow</td>
+<td>unimplemented</td>
+<td>1-2x?</td>
+<td>1-4x?</td>
+<td>wip, get variable dependencies</td>
+</tr>
+<tr>
+<td>8</td>
+<td>-fsanitize=memtag</td>
+<td>unimplemented</td>
+<td>~1.0Yx?</td>
+<td>~1.0Yx?</td>
+<td>wip, address cheri-like ptr tagging</td>
+</tr>
+<tr>
+<td>9</td>
+<td>-fsanitize=cfi</td>
+<td>unimplemented</td>
+<td>1x</td>
+<td>~1x</td>
+<td>forward edge ctrl flow protection</td>
+</tr>
+<tr>
+<td>10</td>
+<td>-fsanitize=safe-stack</td>
+<td>unimplemented</td>
+<td>1x</td>
+<td>~1x</td>
+<td>backward edge ctrl flow protection</td>
+</tr>
+<tr>
+<td>11</td>
+<td>-fsanitize=shadow-call-stack</td>
+<td>unimplemented</td>
+<td>1x</td>
+<td>~1x</td>
+<td>backward edge ctrl flow protection</td>
+</tr>
+</tbody>
+</table>
+<p>Sanitizers 1-6 are recommended for testing purpose and 7-11 for production by LLVM. Memory and slowdown numbers are only reported for LLVM sanitizers. Zig does not report own numbers yet (2025-01-11). Slowdown for dynamic sanitizer versions increases by a factor of 10x in contrast to the listed static usage costs. The leak sanitizer does only check for memory leaks, not other system resources. Besides various Kernel specific tools to track system resources, Valgrind can be used on Posix systems for non-memory resources and Application Verifier for Windows. Address and thread sanitizers can not be combined in Clang and combined usage of the Zig implementation is limited by virtual memory usage. In Zig, aliasing can currently not be sanitized against, whereas in Clang only typed based aliasing can be sanitized without any numbers reported by LLVM yet.</p></div></div>
             <!--<div :html="$page.content()"></div>-->
             <ol>
               <li> <a id ="hardware_problems"><b>Hard(ware) problems</b></a>
@@ -43,45 +145,87 @@
                 tool" and for 3. open source "adjust the source and stare at kernel
                 dumps/use debugger".
                 Kernels are rarely designed for tracing, recording, formal
-                verification due to internal complexity and virtualization is slow and
+                verification due to internal complexity and virtualisation is slow and
                 hides many classes of synchronization bugs.
                 Due to being complex, moving targets, having no library design, having design flaws
-                and many performance tradeoffs, they are hard to fuzz test.
+                and many performance tradeoffs, Kernels are hard to fuzz test.
               </li>
               <li> <a id ="detectable_ub"><b>Detectable Undefined Behavior</b></a>
-                TODO make table of tools, C,C++,zig -OReleaseSafe
+                `clang -Werror -Weverything -fsanitize="undefined,type"`, `zig -OReleaseSafe`, `zig -ODebug`
               </li>
               <li> <a id ="undetectable_ub"><b>Undetectable Undefined Behavior</b></a>
                 Staring at source code, backend intermediate representation like LLVM
                 IR and reducing the problem or resulting assembly. Unfortunately the
                 backend optimizers like LLVM do not offer frontend language writers
                 debug APIs and related tooling due to not being designed for that
-                purpose.
+                purpose, so one has to manually invoke the optimizations to reproduce
+                the problem. A bespoke debug api would allow recording, replaying and
+                tracing IR of each optimization step.
+                Getting unoptimized LLVM IR via `zig --verbose-llvm-ir test.zig`
+                (so far without an option to store LTO artifacts)
+                and `clang -O3 -Xclang -disable-llvm-optzns -emit-llvm -S test.c`
+                with (if needed) LTO artifact storing via `-plugin-opt=save-temps`.
+                Getting optimized LLVM IR works via `clang -O3 -emit-llvm -S test.c`
+                and `zig -femit-llvm-ir test.zig`.
               </li>
               <li> <a id ="miscomplations"><b>Miscompilations</b></a>
                 Tools like Miri or Cerberus run the program in an interpreter,
                 but may not cover all possible program semantics due to ambiguity
-                and may not be feasible, so the only good chance is to reduce it.
+                and may not be feasible, so the only good chance is to reduce it
+                as in <b>Undetectable Undefined Behavior</b>.
               </li>
               <li> <a id ="memory_problems"><b>Memory problems</b></a>
-                sanitizers, validators, simulator, tracers: TODO table with configs and costs
-                - 1.out-of-bounds access sanitizer
-                - 2.null pointer dereference sanitizer
-                - 3.type confusion sanitizer
-                - 4.integer overflow sanitizer
-                - 5.use after free sanitizer
-                - 6.invalid stack access sanitizer
-                - 7.usage of uninitialized memory sanitizer
-                - 8.data races sanitizer
+                <ol>
+                  <li>Out-of-bounds (OOB) <code>clang -fsanitize=address</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Null pointer dereference <code>clang -fsanitize=address</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Type confusion <code>clang -fsanitize="address,undefined</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Integer overflow <code>clang -fsanitize=undefined</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Use after free <code>clang -fsanitize=address</code>, Zig allocator configuration</li>
+                  <li>Invalid stack access <code>clang -fsanitize=address</code> and <code>ASAN_OPTIONS=detect_stack_use_after_return=1</code>
+                  with 1.3-2x runtime and 11MB fake stack per thread, unimplemented in Zig.
+                  </li>
+                  <li>Usage of uninitialized memory (UUM) <code>clang -fsanitize=memory</code>,
+                  unimplemented in Zig for partial initialization
+                  (implementation only checks against any initialization, if
+                  value is used in branch and only if memory is not coerced to
+                  different types).
+                  </li>
+                  <li>Data races can be sanitized in Clang and Zig via <code>-fsanitize=thread</code>, but Zig offers no
+                  annotation for "intentionally racy reads and writes" via <code>__attribute__((no_sanitize("thread")))</code>.
+                  </li>
+                  <li>Illegal aliasing can only be checked for typed aliasing with <code>clang -fsanitize=type</code>,
+                  unimplemented in Zig.
+                  </li>
+                </ol>
               </li>
               <li> <a id ="resource_leaks"><b>Resource leaks (Freestanding/Kernel)</b></a>
-                TODO sanitizers (valgrind etc)
+                Valgrind on Posix systems and Application Verifier for Windows is th simplest to use solution,
+                but does not cover many resources.
+                Using <code>/proc/PID_OF_PROCESS</code> on many Posix systems, <code>NtQuerySystemInformation</code>
+                with <code>SYSTEM_HANDLE_INFORMATION</code> and <code>SYSTEM_HANDLE_TABLE_ENTRY_INFO</code> on Windows are some
+                options, BSDs have <code>sysctl</code>, <code>kvm</code>, <code>procmap</code> and there are various other trace options.
+                TODO tools for memory leaks.
               </li>
               <li> <a id ="freezes"><b>Freezes (deadlocks, softlocks, signal safety, unbounded loops etc)</b></a>
-                TODO sanitizer, validator, stepping
+                LLVM has a not well-documented deadlock sanitizer option <code>TSAN_OPTIONS=detect_deadlocks=1:second_deadlock_stack=1</code>.
+                Livelock detection like infinitive loop detection would need
+                annotation of progress and a step or time limit.
+                So one good option is to time or progress simulation in the testing build mode
+                and do runtime-validation in intermediate steps.
+                The same strategy can be applied to unbounded loops.
+                Signal safety requires fail-safe programming, especially on Posix,
+                and would be another article also covering process group semantics.
+                <code>ptrace(GETSIGINFO, ..)</code> , <code>WaitForDebugEvent</code> are options to trace signals
+                besides kernel tracers like ktrace, dtrace or on Windows ETW, but usually simpler is
+                to reproduce the behavior in a debugger with simplified code.
               </li>
               <li> <a id ="perf_problems"><b>Performance problems</b></a>
-                TODO simulator, tracer
+                Extrapolation across multiple target hardware is unfeasible to do automatically.
+                Simulation of CPU cache behavior of target hardware from any host hardware works via Valgrinds Cachegrind with
+                Valgrinds Callgrind adding call graph information. Callgrind visualization exists for every platform.
+                Accurate results on target hardware can be obtained based on hardware counters via Windows Event Tracing,
+                Linux perf (perf_event_open), Darwin kperf (kpc_get_thread_counters), Event Trace for Windows (ETW) (StartTraceW)
+                with Darwin having (yet) no cli api and gui.
               </li>
               <li> <a id ="logic_problems"><b>Logic problems</b></a>
                 Logic problems of software systems can be described as problems
@@ -91,7 +235,7 @@
                 resource leaks, freezes and performance issues. <br>
                 This typically includes
                 <ol>
-                  <li>software requirements or their handling</li>
+                  <li>software requirements or their handling, TODO better phrase requirements and specification?</li>
                   <li>(temporary) inconstency of state (relations)</li>
                   <li>incorrect math, for example not covering edge cases</li>
                   <li>incorrect modeling of external and internal state and synchronization</li>
@@ -99,14 +243,45 @@
                 </ol>
                 and is usually caused by
                 <ol>
-                  <li> incorrect constrains on the design, meaning how the different
+                  <li>incorrect constrains on the design, meaning how the different
                     parts should interact and work towards the goals for the use
                     cases</li>
-                  <li> unclear, unspecified or incorrectly assumed hardware or software
-                    guarantees by components </li>
-                  <li> implementation oversights, unintended use cases, unfeasibility
+                  <li>unclear, unspecified or incorrectly assumed hardware or software
+                    guarantees by components</li>
+                  <li>implementation oversights, unintended use cases, unfeasibility
                     of a general solution due to constrains like time, money etc</li>
                 </ol>
+
+                Those problems may be solved in the following ways
+                <ol>
+                  <li>
+                    <b>Software requirements</b> typically depend on the hardware and software
+                    platforms to specify the system type (how distributed,
+                    event handling idea like state machine or query system), the
+                    used protocols, platform requirements and provided functionality
+                    with assurences (more rare are guarantees).
+                    TODO rephrase
+                    Those are typically written in UML, which is very inflexible
+                    in contrast to an arbitrary graph for modeling system behavior.
+                    Mermaid for UML looks nice, but has scalability issues on bigger drawings.
+                    PlantUML does not look nice, but just works. draw.io for non-UML
+                    is unnecessary complex, offers no data annotation and no sane
+                    export format to reuse the graph in other tools (did not check
+                    underlying representation) besides being not open source.
+                    So in short terms, any tool with graph output will do, since
+                    none is good, and for smaller models ascii/utf8 drawings work
+                    fine.<br>
+                    <b>Handling</b> means to track progress, for which time
+                    feasibility and getting feasible design is essential.
+                    TODO prototype, debugging and other things.
+                  </li>
+                  <li>(temporary) inconstency of state (relations) TODO</li>
+                  <li>incorrect math, for example not covering edge cases TODO</li>
+                  <li>incorrect modeling of external and internal state and synchronization TODO</li>
+                  <li>incorrect protocol handling TODO</li>
+
+                </ol>
+
               </li>
             </ol>
             Ideally, only the system behavior and interactions with domain and
