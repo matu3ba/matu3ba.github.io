@@ -43,45 +43,87 @@
                 tool" and for 3. open source "adjust the source and stare at kernel
                 dumps/use debugger".
                 Kernels are rarely designed for tracing, recording, formal
-                verification due to internal complexity and virtualization is slow and
+                verification due to internal complexity and virtualisation is slow and
                 hides many classes of synchronization bugs.
                 Due to being complex, moving targets, having no library design, having design flaws
-                and many performance tradeoffs, they are hard to fuzz test.
+                and many performance tradeoffs, Kernels are hard to fuzz test.
               </li>
               <li> <a id ="detectable_ub"><b>Detectable Undefined Behavior</b></a>
-                TODO make table of tools, C,C++,zig -OReleaseSafe
+                `clang -Werror -Weverything -fsanitize="undefined,type"`, `zig -OReleaseSafe`, `zig -ODebug`
               </li>
               <li> <a id ="undetectable_ub"><b>Undetectable Undefined Behavior</b></a>
                 Staring at source code, backend intermediate representation like LLVM
                 IR and reducing the problem or resulting assembly. Unfortunately the
                 backend optimizers like LLVM do not offer frontend language writers
                 debug APIs and related tooling due to not being designed for that
-                purpose.
+                purpose, so one has to manually invoke the optimizations to reproduce
+                the problem. A bespoke debug api would allow recording, replaying and
+                tracing IR of each optimization step.
+                Getting unoptimized LLVM IR via `zig --verbose-llvm-ir test.zig`
+                (so far without an option to store LTO artifacts)
+                and `clang -O3 -Xclang -disable-llvm-optzns -emit-llvm -S test.c`
+                with (if needed) LTO artifact storing via `-plugin-opt=save-temps`.
+                Getting optimized LLVM IR works via `clang -O3 -emit-llvm -S test.c`
+                and `zig -femit-llvm-ir test.zig`.
               </li>
               <li> <a id ="miscomplations"><b>Miscompilations</b></a>
                 Tools like Miri or Cerberus run the program in an interpreter,
                 but may not cover all possible program semantics due to ambiguity
-                and may not be feasible, so the only good chance is to reduce it.
+                and may not be feasible, so the only good chance is to reduce it
+                as in <b>Undetectable Undefined Behavior</b>.
               </li>
               <li> <a id ="memory_problems"><b>Memory problems</b></a>
-                sanitizers, validators, simulator, tracers: TODO table with configs and costs
-                - 1.out-of-bounds access sanitizer
-                - 2.null pointer dereference sanitizer
-                - 3.type confusion sanitizer
-                - 4.integer overflow sanitizer
-                - 5.use after free sanitizer
-                - 6.invalid stack access sanitizer
-                - 7.usage of uninitialized memory sanitizer
-                - 8.data races sanitizer
+                <ol>
+                  <li>Out-of-bounds (OOB) <code>clang -fsanitize=address</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Null pointer dereference <code>clang -fsanitize=address</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Type confusion <code>clang -fsanitize="address,undefined</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Integer overflow <code>clang -fsanitize=undefined</code>, <code>zig -ODebug/-OReleaseSafe</code></li>
+                  <li>Use after free <code>clang -fsanitize=address</code>, Zig allocator configuration</li>
+                  <li>Invalid stack access <code>clang -fsanitize=address</code> and <code>ASAN_OPTIONS=detect_stack_use_after_return=1</code>
+                  with 1.3-2x runtime and 11MB fake stack per thread, unimplemented in Zig.
+                  </li>
+                  <li>Usage of uninitialized memory (UUM) <code>clang -fsanitize=memory</code>,
+                  unimplemented in Zig for partial initialization
+                  (implementation only checks against any initialization, if
+                  value is used in branch and only if memory is not coerced to
+                  different types).
+                  </li>
+                  <li>Data races can be sanitized in Clang and Zig via <code>-fsanitize=thread</code>, but Zig offers no
+                  annotation for "intentionally racy reads and writes" via <code>__attribute__((no_sanitize("thread")))</code>.
+                  </li>
+                  <li>Illegal aliasing can only be checked for typed aliasing with <code>clang -fsanitize=type</code>,
+                  unimplemented in Zig.
+                  </li>
+                </ol>
               </li>
               <li> <a id ="resource_leaks"><b>Resource leaks (Freestanding/Kernel)</b></a>
-                TODO sanitizers (valgrind etc)
+                Valgrind on Posix systems and Application Verifier for Windows is th simplest to use solution,
+                but does not cover many resources.
+                Using <code>/proc/PID_OF_PROCESS</code> on many Posix systems, <code>NtQuerySystemInformation</code>
+                with <code>SYSTEM_HANDLE_INFORMATION</code> and <code>SYSTEM_HANDLE_TABLE_ENTRY_INFO</code> on Windows are some
+                options, BSDs have <code>sysctl</code>, <code>kvm</code>, <code>procmap</code> and there are various other trace options.
+                TODO tools for memory leaks.
               </li>
               <li> <a id ="freezes"><b>Freezes (deadlocks, softlocks, signal safety, unbounded loops etc)</b></a>
-                TODO sanitizer, validator, stepping
+                LLVM has a not well-documented deadlock sanitizer option <code>TSAN_OPTIONS=detect_deadlocks=1:second_deadlock_stack=1</code>.
+                Livelock detection like infinitive loop detection would need
+                annotation of progress and a step or time limit.
+                So one good option is to time or progress simulation in the testing build mode
+                and do runtime-validation in intermediate steps.
+                The same strategy can be applied to unbounded loops.
+                Signal safety requires fail-safe programming, especially on Posix,
+                and would be another article also covering process group semantics.
+                <code>ptrace(GETSIGINFO, ..)</code> , <code>WaitForDebugEvent</code> are options to trace signals
+                besides kernel tracers like ktrace, dtrace or on Windows ETW, but usually simpler is
+                to reproduce the behavior in a debugger with simplified code.
               </li>
               <li> <a id ="perf_problems"><b>Performance problems</b></a>
-                TODO simulator, tracer
+                Extrapolation across multiple target hardware is unfeasible to do automatically.
+                Simulation of CPU cache behavior of target hardware from any host hardware works via Valgrinds Cachegrind with
+                Valgrinds Callgrind adding call graph information. Callgrind visualization exists for every platform.
+                Accurate results on target hardware can be obtained based on hardware counters via Windows Event Tracing,
+                Linux perf (perf_event_open), Darwin kperf (kpc_get_thread_counters), Event Trace for Windows (ETW) (StartTraceW)
+                with Darwin having (yet) no cli api and gui.
               </li>
               <li> <a id ="logic_problems"><b>Logic problems</b></a>
                 Logic problems of software systems can be described as problems
@@ -91,7 +133,7 @@
                 resource leaks, freezes and performance issues. <br>
                 This typically includes
                 <ol>
-                  <li>software requirements or their handling</li>
+                  <li>software requirements or their handling, TODO better phrase requirements and specification?</li>
                   <li>(temporary) inconstency of state (relations)</li>
                   <li>incorrect math, for example not covering edge cases</li>
                   <li>incorrect modeling of external and internal state and synchronization</li>
@@ -99,14 +141,45 @@
                 </ol>
                 and is usually caused by
                 <ol>
-                  <li> incorrect constrains on the design, meaning how the different
+                  <li>incorrect constrains on the design, meaning how the different
                     parts should interact and work towards the goals for the use
                     cases</li>
-                  <li> unclear, unspecified or incorrectly assumed hardware or software
-                    guarantees by components </li>
-                  <li> implementation oversights, unintended use cases, unfeasibility
+                  <li>unclear, unspecified or incorrectly assumed hardware or software
+                    guarantees by components</li>
+                  <li>implementation oversights, unintended use cases, unfeasibility
                     of a general solution due to constrains like time, money etc</li>
                 </ol>
+
+                Those problems may be solved in the following ways
+                <ol>
+                  <li>
+                    <b>Software requirements</b> typically depend on the hardware and software
+                    platforms to specify the system type (how distributed,
+                    event handling idea like state machine or query system), the
+                    used protocols, platform requirements and provided functionality
+                    with assurences (more rare are guarantees).
+                    TODO rephrase
+                    Those are typically written in UML, which is very inflexible
+                    in contrast to an arbitrary graph for modeling system behavior.
+                    Mermaid for UML looks nice, but has scalability issues on bigger drawings.
+                    PlantUML does not look nice, but just works. draw.io for non-UML
+                    is unnecessary complex, offers no data annotation and no sane
+                    export format to reuse the graph in other tools (did not check
+                    underlying representation) besides being not open source.
+                    So in short terms, any tool with graph output will do, since
+                    none is good, and for smaller models ascii/utf8 drawings work
+                    fine.<br>
+                    <b>Handling</b> means to track progress, for which time
+                    feasibility and getting feasible design is essential.
+                    TODO prototype, debugging and other things.
+                  </li>
+                  <li>(temporary) inconstency of state (relations) TODO</li>
+                  <li>incorrect math, for example not covering edge cases TODO</li>
+                  <li>incorrect modeling of external and internal state and synchronization TODO</li>
+                  <li>incorrect protocol handling TODO</li>
+
+                </ol>
+
               </li>
             </ol>
             Ideally, only the system behavior and interactions with domain and

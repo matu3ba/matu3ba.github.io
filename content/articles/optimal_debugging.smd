@@ -17,7 +17,7 @@ practice having no ABI, but reality is in this text simplified for brevity and
 sanity.
 
 - 1.[Theory of debugging](#theory)
-- 2.[Practical methods with tradeoffs](#practice)
+- 2.[Practical methods with trade-offs](#practice)
 - 3.[Uniform execution representation](#uniform_execution_representation)
 - 4.[Abstraction problems during problem isolation](#abstraction_problems)
 - 5.[Possible implementations](#possible_implementations)
@@ -35,14 +35,19 @@ on a specific program run. If the execution witness shows a "bad state",
 then there must be a bug.
 Thus a **debugger** can be seen **as query engine over states and transitions of
 a buggy execution witness.**  
+In more simple terms, **debugging is not making bugs or removing them**.  
 Frequent operations are bug source isolation to deterministic components,
 where encapsulation of non-determinism usually simplifies the process.
 In contrast to that, concurrent code is tricky to debug, because one
 needs to trace multiple execution flows to estimate where the origin of the
 incorrect state is.
 
+The process of debugging means to use static and dynamic program analysis
+and its automation and adaption to speed up bug (classes) elimination for the
+(classes of) target systems.
+
 One can generally categorize methods into the following list (**asoul**)
-**a**utomate, **s**implify, **o**bserve, understand, learn)
+**a**utomate, **s**implify, **o**bserve, **u**nderstand, **l**earn)
 - **a**utomate the process to minimize errors/oversights during debugging,
   against probabilistic errors, document the process etc
 - **s**implify and isolate system components and changes over time
@@ -50,7 +55,7 @@ One can generally categorize methods into the following list (**asoul**)
 - **u**nderstand the expected and actual code semantics to the degree necessary
 - **l**earn, extend and ensure how and which system invariants are satisfied
   necessary from *of the involved systems*,
-  for example userspace processes, kernel, build system, compiler, source code, linker,
+  for example user-space processes, kernel, build system, compiler, source code, linker,
   object code, assembly, hardware etc
 
 with the fundamental constrains being (**feel**)
@@ -58,11 +63,13 @@ with the fundamental constrains being (**feel**)
 - **ee**nsuring deterministic reproducibility of the problem
 - **l**imited time and effort
 
-Common debugging methods to **feel a soul** with various tradeoffs from compile-time
-to runtime debugging and less to more run-time data collection are:
+Common static and dynamic program analysis methods to
+**run the system** to **feel a soul** for the purpose of eliminating the bug
+(classes) are:
+- **Specification** meaning to "compare/get/write the details".
 - **Formal Verification** as ahead or compile-time invariant resolving.
-- **Validation** as runtime invariant checks.
-- **Testing** as sample based runtime invariant checks.
+- **Validation** as runtime invariant checks. Sanitizers as compiler runtime checks are common tools.
+- **Testing** as sample based runtime invariant checks. Coverage based fuzzers are common tools.
 - **Stepping** via "classical debugger" to manipulate task execution
   context, manipulate memory optionally via source code location translation
   via REPL commands, graphically, scripting or (rarely) freely programmable.
@@ -73,12 +80,20 @@ to runtime debugging and less to more run-time data collection are:
 - **Recording** Encoded dumping of runtime to replay runtime with
   before specified time and state determinism.
 
-Simplification and isolation means to apply the meaning of both words on
-all potential sub-components including, but not limited to
-hardware, code versioning including dependencies, source system,
-compiler framework and target system. Typical methods are
-- **Bisection** via git or the actual binaries
-- **Reduction** via rmeoval of system parts or trying to reproduce with
+The core ideas for **what software system to run** based on code with its
+semantics are then typically a mix of
+- **Machine code** execution on the actual hardware to get hardware and timing behavior.
+- **Simulation** as **partial or full execution** on a simplified, imitative
+  representation of the target hardware to get information for the simplified model.
+- **Virtualisation** as **isolation or simplification** of a hardware- or software
+  subsystem to reduce system complexity.
+
+Isolation and simplification are typically applied on all potential
+sub-components including, but not limited to hardware, code versioning
+including dependencies, source system, compiler framework and target system.
+Typical methods are
+- **Bisection** via git or the actual binaries.
+- **Reduction** via removal of system parts or trying to reproduce with
   (a minimal) example.
 - **Statistical analysis** from collected data on how the problem
   manifests on given environment(s) etc.
@@ -87,18 +102,21 @@ compiler framework and target system. Typical methods are
 of **the to be debugged system to provide necessary debug functionality**.
 For example, software based hardware debugging relies on interfaces to
 the hardware like JTAG, Kernel debugging on Kernel compilation or
-configuration and elevated (user), userspace debugging on process and
+configuration and elevated (user), user-space debugging on process and
 user permissions, system configuration or a child process to be debugged
-on Posix systems via ptrace.
+on Posix systems via `ptrace`.
+
+It depends on many factors, for example bug classes and target systems, to what degree the process of
+debugging can and should be automated or optimized.
 
 []($section.id("practice"))
 ### Practical methods with tradeoffs
 
 Usually semantics are not "set into stone" inclusive or do not offer
 sufficient tradeoffs, so formal verification is rarely an option aside of
-usage of models as design and planning tool.
+usage of models as design and planning tool or for fail-safe program functionality.
 Depending on the domain and environment, problematic behavior of hardware
-or software components must be to be more or less 1. avoided and 2. traceable
+or software components must be more or less 1. avoided and 2. traceable
 and there exist various (domain) metrics as decision helper.
 Very well designed systems explain users how to debug bugs regarding to
 **functional behavior**, **time behavior** with **internal and
@@ -107,12 +125,41 @@ task execution correctness is intended.
 Access restrictions limit or rule out stepping, whereas storage limitations
 limit or rule out logging, tracing and recording.
 
+**Sanitizers** are the most efficient and simplest debugging tools for C and C++,
+whereas Zig implements them, besides thread sanitizer, as allocator and safety mode.
+Instrumented sanitizers have a 2x-4x slowdown vs dynamic ones with 20x-50x slowdown.
+
+Nr | Clang usage                  | Zig usage         | Memory           | Runtime  | Comments                            |
+-- | ---------------------------- | ----------------- | ---------------- | -------- | ----------------------------------- |
+1  | -fsanitize=address           | alloc + safety    | 1x (3x stack)    | 2x       | Clang 16+ TB of virt mem            |
+2  | -fsanitize=leak              | allocator         | 1x               | 1x       | on exit ?x? more mem+time           |
+3  | -fsanitize=memory            | unimplemented     | 2-3x             | 3x       |                                     |
+4  | -fsanitize=thread            | -fsanitize=thread | 5-10x+1MB/thread | 5-15x    | Clang ?x? ("lots of") virt mem      |
+5  | -fsanitize=type              | unimplemented     | ?                | ?        | not enough data                     |
+6  | -fsanitize=undefined         | safety mode       | 1x               | ~1x      |                                     |
+7  | -fsanitize=dataflow          | unimplemented     | 1-2x?            | 1-4x?    | wip, get variable dependencies      |
+8  | -fsanitize=memtag            | unimplemented     | ~1.0Yx?          | ~1.0Yx?  | wip, address cheri-like ptr tagging |
+9  | -fsanitize=cfi               | unimplemented     | 1x               | ~1x      | forward edge ctrl flow protection   |
+10 | -fsanitize=safe-stack        | unimplemented     | 1x               | ~1x      | backward edge ctrl flow protection  |
+11 | -fsanitize=shadow-call-stack | unimplemented     | 1x               | ~1x      | backward edge ctrl flow protection  |
+
+Sanitizers 1-6 are recommended for testing purpose and 7-11 for production by LLVM.
+Memory and slowdown numbers are only reported for LLVM sanitizers. Zig does not
+report own numbers yet (2025-01-11). Slowdown for dynamic sanitizer versions
+increases by a factor of 10x in contrast to the listed static usage costs.
+The leak sanitizer does only check for memory leaks, not other system resources.
+Besides various Kernel specific tools to track system resources,
+Valgrind can be used on Posix systems for non-memory resources and
+Application Verifier for Windows.
+Address and thread sanitizers can not be combined in Clang and combined usage
+of the Zig implementation is limited by virtual memory usage.
+In Zig, aliasing can currently not be sanitized against, whereas in Clang only
+typed based aliasing can be sanitized without any numbers reported by LLVM yet.
+
 [TODO: requirements on system design for formal verification vs debugging.]::
 [no surprise rule: core system enabling debugging (in any form) must be correct]::
 [to the degree necessary.]::
-
 [TODO: good argumentation on ignoring linker speak, language footguns etc.]::
-
 [1.Bugs related to functional behavior.]::
 [2.Bugs related to time behavior.]::
 [3.Internal and external system resources.]::
