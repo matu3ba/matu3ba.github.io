@@ -47,9 +47,21 @@
                 hides many classes of synchronization bugs.
                 Due to being complex, moving targets, having no library design, having design flaws
                 and many performance tradeoffs, Kernels are hard to fuzz test.
+                <br>
+                Non-micro kernels use the process as fundamental abstraction model,
+                but no widely used Kernel has a formal process group model.
+                Since there is no api to communicate from child to parent
+                process initialization status and since signaling is racy,
+                testing process groups is error-prone and a reliable testing
+                setup is complex. Race conditions during read and write access
+                to kernel objects like shared memory or file access (flush
+                semantics) are the most common problems besides general
+                reliance on any on timing of actions without handling the
+                timeout path or resource over-saturation path (for example on
+                high system load).
               </li>
               <li> <a id ="detectable_ub"><b>Detectable Undefined Behavior</b></a>
-                `clang -Werror -Weverything -fsanitize="undefined,type"`, `zig -OReleaseSafe`, `zig -ODebug`
+                <code>clang -Werror -Weverything -fsanitize="undefined,type"</code>, <code>zig -OReleaseSafe</code>, <code>zig -ODebug</code>
               </li>
               <li> <a id ="undetectable_ub"><b>Undetectable Undefined Behavior</b></a>
                 Staring at source code, backend intermediate representation like LLVM
@@ -58,13 +70,14 @@
                 debug APIs and related tooling due to not being designed for that
                 purpose, so one has to manually invoke the optimizations to reproduce
                 the problem. A bespoke debug api would allow recording, replaying and
-                tracing IR of each optimization step.
-                Getting unoptimized LLVM IR via `zig --verbose-llvm-ir test.zig`
+                tracing IR of each optimization step, ideally via reversal computing
+                for optimal performance.
+                Getting unoptimized LLVM IR via <code>zig --verbose-llvm-ir test.zig</code>
                 (so far without an option to store LTO artifacts)
-                and `clang -O3 -Xclang -disable-llvm-optzns -emit-llvm -S test.c`
-                with (if needed) LTO artifact storing via `-plugin-opt=save-temps`.
-                Getting optimized LLVM IR works via `clang -O3 -emit-llvm -S test.c`
-                and `zig -femit-llvm-ir test.zig`.
+                and <code>clang -O3 -Xclang -disable-llvm-optzns -emit-llvm -S test.c</code>
+                with (if needed) LTO artifact storing via <code>-plugin-opt=save-temps</code>.
+                Getting optimized LLVM IR works via <code>clang -O3 -emit-llvm -S test.c</code>
+                and <code>zig -femit-llvm-ir test.zig</code>.
               </li>
               <li> <a id ="miscomplations"><b>Miscompilations</b></a>
                 Tools like Miri or Cerberus run the program in an interpreter,
@@ -94,36 +107,76 @@
                   <li>Illegal aliasing can only be checked for typed aliasing with <code>clang -fsanitize=type</code>,
                   unimplemented in Zig.
                   </li>
+                  <li>
+                    Stack overflow from recursions or during the call chain of the program.
+                    TODO list tooling to over-approximate stack usage upfront.
+                    TODO list tooling to measure stack usage.
+                  </li>
                 </ol>
               </li>
-              <li> <a id ="resource_leaks"><b>Resource leaks (Freestanding/Kernel)</b></a>
-                Valgrind on Posix systems and Application Verifier for Windows is th simplest to use solution,
-                but does not cover many resources.
-                Using <code>/proc/PID_OF_PROCESS</code> on many Posix systems, <code>NtQuerySystemInformation</code>
-                with <code>SYSTEM_HANDLE_INFORMATION</code> and <code>SYSTEM_HANDLE_TABLE_ENTRY_INFO</code> on Windows are some
-                options, BSDs have <code>sysctl</code>, <code>kvm</code>, <code>procmap</code> and there are various other trace options.
-                TODO tools for memory leaks.
+              <li> <a id ="resource_leaks"><b>Resource leaks (freestanding/kernel)</b></a>
+                Only process-based resources are considered here, which are accessible by the process as
+                <ol>
+                  <li>memory (stack is covered in <b>Memory problems</b>, heap)</li>
+                  <li>handles/file descriptors</li>
+                  <li>child processes (without ownership delegation)</li>
+                </ol>
+                There may be an association between 2. handles/file descriptors and 3. child processes
+                (ie pidfd/GetProcessId, process group handles etc) xor 1. memory (ie on usage of mmap)
+                or there may be none. There exists no tooling to check for point 3 and explaining the process group model
+                with edge cases would make this article too long.
+                <br>
+                1. Automatic tools for memory leak detection are Valgrind MassIf (does not work on Windows) or using custom
+                allocators with such functionality (or any of below for checking/proviling/tracing).
+                Posix systems have for memory profiling Valgrind MassIf (<code>valgrind --tool=massif prog; ms_print massif.out.12345</code>),
+                for memory checks Valgrind MemCheck (<code>valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose prog</code>),
+                for memory analysis at runtime <code>gdb</code> with <code>pwndbg</code> (for example using <code>vmmap</code>)
+                or memory analysis after runtime using coredumps, meaning <code>gcore -o $TMPDIR/process $PID</code>,
+                <code>cat /proc/$pid/smaps > $TMPDIR/TimeMemAction.txt</code> or
+                <code>gdb -p $pid; dump memory memory.dump 0xSTART 0xEND; hexdump -C memory.dump</code>.
+                Windows systems have for memory profiling VMMap (graphical), for memory checks
+                but there is also  with a bunch of tooling
+                Windows has for memory profiling VMMap and RAMMap, DrMemory as graphical tools, for memory leaks UMDH
+                <code>gflags /i prog.exe +ust; $Env=_NT_EXECUTABLE_IMAGE_PATH="url_ms_sym_server"; umdh -p:$PID -f:b4leak.log; umdh b4leak.log afterleak.log > res.diff</code>,
+                DrMemory, for memory analysis at runtime Visual Studio (Code) with "Memory Usage"
+                and analysis after runtime with windbg
+                <code>gflags /i prog.exe +ust; WinDbgX.exe prog.exe; .dump /ma b4leak.dmp;</code>
+                <code>.opendump leak.dmp; f5; ||1s; ||.; !heap -s;</code>
+                <code>!heap -h HANDLE; !heap -p -a ADDRESS; !heap -flt s SIZE</code> (find stack to allocation).
+                <br>
+                File descriptor/handle leaks can be automatically detected on Posix with Valgrind <code>valgrind --track-fds=yes prog</code>
+                and on Windows with manually checking Handle, ProcessExplorer, ETW traces or automatically with proprietary solutions.
+                <br>
+                Examples for more direct access and control are on many Poxis systems
+                <code>/proc/PID_OF_PROCESS</code>, on Windows <code>NtQuerySystemInformation</code>
+                with <code>SYSTEM_HANDLE_INFORMATION</code> and <code>SYSTEM_HANDLE_TABLE_ENTRY_INFO</code>,
+                on BSDs <code>sysctl</code>, <code>kvm</code>, <code>procmap</code> and there exist various other
+                kernel specific trace options.
               </li>
-              <li> <a id ="freezes"><b>Freezes (deadlocks, softlocks, signal safety, unbounded loops etc)</b></a>
+              <li> <a id ="freezes"><b>Freezes (deadlocks, livelock, signal safety, unbounded loops etc)</b></a>
                 LLVM has a not well-documented deadlock sanitizer option <code>TSAN_OPTIONS=detect_deadlocks=1:second_deadlock_stack=1</code>.
+                <br>
                 Livelock detection like infinitive loop detection would need
                 annotation of progress and a step or time limit.
-                So one good option is to time or progress simulation in the testing build mode
+                So one good option is to do time or progress simulation in the testing build mode
                 and do runtime-validation in intermediate steps.
                 The same strategy can be applied to unbounded loops.
+                <br>
                 Signal safety requires fail-safe programming, especially on Posix,
                 and would be another article also covering process group semantics.
                 <code>ptrace(GETSIGINFO, ..)</code> , <code>WaitForDebugEvent</code> are options to trace signals
-                besides kernel tracers like ktrace, dtrace or on Windows ETW, but usually simpler is
+                besides kernel tracers like ktrace, dtrace or on Windows ETW, but usually it is simpler
                 to reproduce the behavior in a debugger with simplified code.
               </li>
               <li> <a id ="perf_problems"><b>Performance problems</b></a>
                 Extrapolation across multiple target hardware is unfeasible to do automatically.
                 Simulation of CPU cache behavior of target hardware from any host hardware works via Valgrinds Cachegrind with
                 Valgrinds Callgrind adding call graph information. Callgrind visualization exists for every platform.
-                Accurate results on target hardware can be obtained based on hardware counters via Windows Event Tracing,
+                Accurate tracing on target hardware can be obtained based on hardware counters via Windows Event Tracing,
                 Linux perf (perf_event_open), Darwin kperf (kpc_get_thread_counters), Event Trace for Windows (ETW) (StartTraceW)
                 with Darwin having (yet) no cli api and gui.
+                There are many approaches to do profiling of various program aspects
+                with less accuracy and less space usage too long to list here.
               </li>
               <li> <a id ="logic_problems"><b>Logic problems</b></a>
                 Logic problems of software systems can be described as problems
@@ -177,6 +230,10 @@
                   <li>incorrect math, for example not covering edge cases TODO</li>
                   <li>incorrect modeling of external and internal state and synchronization TODO</li>
                   <li>incorrect protocol handling TODO</li>
+
+                  <!--[1.Bugs related to functional behavior.]::-->
+                  <!--[2.Bugs related to time behavior.]::-->
+                  <!--[3.Internal and external system resources.]::-->
 
                 </ol>
 

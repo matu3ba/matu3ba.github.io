@@ -11,10 +11,23 @@
 This article is intended as overview of debugging techniques and motivation for
 uniform execution representation and setup to efficiently mix and match the
 appropriate technique for system level debugging with focus on statically
-optimizing compiler languages to keep complexity and scope limited. The author
-accepts the irony of such statements by "C having no ABI"/many systems in
+optimizing compiler languages to keep complexity and scope limited.
+The reader may notice that there are several documented deficits
+across platforms and tooling on documentation or functionality, which will be improved.
+The author accepts the irony of such statements by "C having no ABI"/many systems in
 practice having no ABI, but reality is in this text simplified for brevity and
 sanity.
+
+Section 1 (theory) feels complete, but are planned to be more dense to
+become an appropriate definition for bug, debugging and debugging process.
+Section 2 (practical) is tailored towards non micro Kernels, which are based
+on process abstraction, but is currently missing content and scalability numbers
+for tooling.
+The idea is to provide understanding and numbers to estimate for system design,
+1 if formal proof of correctness is feasible and on what parts,
+2 problems and methods applicable for dynamic program analysis.
+Followup sections will be on speculative and more advanced ideas, which
+should be feasible based on numbers.
 
 - 1.[Theory of debugging](#theory)
 - 2.[Practical methods with trade-offs](#practice)
@@ -46,8 +59,7 @@ The process of debugging means to use static and dynamic program analysis
 and its automation and adaption to speed up bug (classes) elimination for the
 (classes of) target systems.
 
-One can generally categorize methods into the following list (**asoul**)
-**a**utomate, **s**implify, **o**bserve, **u**nderstand, **l**earn)
+One can generally categorize methods into the following list [**a**utomate, **s**implify, **o**bserve, **u**nderstand, **l**earn] (**asoul**)
 - **a**utomate the process to minimize errors/oversights during debugging,
   against probabilistic errors, document the process etc
 - **s**implify and isolate system components and changes over time
@@ -58,7 +70,7 @@ One can generally categorize methods into the following list (**asoul**)
   for example user-space processes, kernel, build system, compiler, source code, linker,
   object code, assembly, hardware etc
 
-with the fundamental constrains being (**feel**)
+with the fundamental constrains being [**f**inding, **ee**nsuring, **l**imited] (**feel**)
 - **f**inding out correct system components semantics
 - **ee**nsuring deterministic reproducibility of the problem
 - **l**imited time and effort
@@ -88,10 +100,10 @@ semantics are then typically a mix of
 - **Virtualisation** as **isolation or simplification** of a hardware- or software
   subsystem to reduce system complexity.
 
-Isolation and simplification are typically applied on all potential
+Further, isolation and simplification are typically applied on all potential
 sub-components including, but not limited to hardware, code versioning
 including dependencies, source system, compiler framework and target system.
-Typical methods are
+Methods are usually
 - **Bisection** via git or the actual binaries.
 - **Reduction** via removal of system parts or trying to reproduce with
   (a minimal) example.
@@ -101,22 +113,27 @@ Typical methods are
 **Debugging** is domain- and design-specific and **relies on** core component(s)
 of **the to be debugged system to provide necessary debug functionality**.
 For example, software based hardware debugging relies on interfaces to
-the hardware like JTAG, Kernel debugging on Kernel compilation or
+the hardware like JTAG, kernel debugging on kernel compilation or
 configuration and elevated (user), user-space debugging on process and
 user permissions, system configuration or a child process to be debugged
 on Posix systems via `ptrace`.
 
-It depends on many factors, for example bug classes and target systems, to what degree the process of
-debugging can and should be automated or optimized.
+Without costly hardware devices to trace and physical access to the computing unit
+for exact recording of the system behavior including time information,
+dynamic program analysis (to run the system) requires trade-offs on what
+program parts and aspects to inspect and collect data from.
+Therefore, it depends on many factors, for example bug classes and target
+systems, to what degree the process of debugging can and should be automated or
+optimized.
 
 []($section.id("practice"))
-### Practical methods with tradeoffs
+### Practical methods with trade-offs
 
 Usually semantics are not "set into stone" inclusive or do not offer
-sufficient tradeoffs, so formal verification is rarely an option aside of
+sufficient trade-offs, so formal verification is rarely an option aside of
 usage of models as design and planning tool or for fail-safe program functionality.
 Depending on the domain and environment, problematic behavior of hardware
-or software components must be more or less 1. avoided and 2. traceable
+or software components must be more or less 1 avoided and 2 traceable
 and there exist various (domain) metrics as decision helper.
 Very well designed systems explain users how to debug bugs regarding to
 **functional behavior**, **time behavior** with **internal and
@@ -148,7 +165,7 @@ Memory and slowdown numbers are only reported for LLVM sanitizers. Zig does not
 report own numbers yet (2025-01-11). Slowdown for dynamic sanitizer versions
 increases by a factor of 10x in contrast to the listed static usage costs.
 The leak sanitizer does only check for memory leaks, not other system resources.
-Besides various Kernel specific tools to track system resources,
+Besides various kernel specific tools to track system resources,
 Valgrind can be used on Posix systems for non-memory resources and
 Application Verifier for Windows.
 Address and thread sanitizers can not be combined in Clang and combined usage
@@ -156,26 +173,47 @@ of the Zig implementation is limited by virtual memory usage.
 In Zig, aliasing can currently not be sanitized against, whereas in Clang only
 typed based aliasing can be sanitized without any numbers reported by LLVM yet.
 
-[TODO: requirements on system design for formal verification vs debugging.]::
-[no surprise rule: core system enabling debugging (in any form) must be correct]::
-[to the degree necessary.]::
-[TODO: good argumentation on ignoring linker speak, language footguns etc.]::
-[1.Bugs related to functional behavior.]::
-[2.Bugs related to time behavior.]::
-[3.Internal and external system resources.]::
+Besides adjusting source code semantics via 1 sanitizers, one can do 2 own dynamic
+source code adjustments or use 3 tooling that use kernel APIs to trace and optionally
+3.1 run-time check information or 3.2 run-time check kernel APIs and with underlying state.
+Kernels further may simplify access to information, for example the `proc` file 
+system simplifies access to process information.
+
+TODO list standard Kernel tracing tooling, focus on dtrace
+and drawback of no "works for all kernels" "trace processes"
+
+TODO list standard Kernel tooling for tracing
+TODO 3.1 list standard tooling for checking traced information
+
+The following is a list of typical problems with simple solution tactics.
+For simplicity no virtual machine/emulator approaches are listed, since they
+also affect performance and run-time behavior leading (likely) to more complex
+dynamic program analysis.
 
 []($section.id("uniform_execution_representation"))
 ### Uniform execution representation
 
 As it was shown before, modern languages simplify detection or elimination of
 memory problems and runtime detectable undefined behavior. So far undetectable
-undefined behavior may be detected, if backend optimizers are redesignede with
-according APIs. Detecting miscompilations requires strict formal reasoning of
-executing the source code semantics or formal verification of the compiler
-itself, which shall not be discussed here. This leaves hardware problems,
-kernel problems, resource leaks, freezes, performance problems and logic
-problems. TODO: what they have in common + motivation TODO: Uniform execution
-representation and queries over program execution.
+undefined behavior may be automatically reduced, if backend optimizers are
+redesigned with according reduction APIs.
+Detecting miscompilations requires strict formal reasoning of executing the
+source code semantics or formal verification of the compiler itself,
+which shall not be discussed here.
+This leaves hardware problems, kernel problems, resource leaks, freezes,
+performance problems and logic problems.
+
+1. leave hardware problems out for simplicity.
+2. resource leaks are a special case of platform problems, because platform
+provides resources.
+Automatically tracking resource leaks requires Valgrind logic over all
+memory operations, reduction requires (limited) kernel object tracing.
+Tracing platform solutions will always have trade-offs. 
+Complete solution tracing user process and related kernel logic is only
+available as dtrace with non-optimal performance.
+
+TODO: (currently unused) what they have in common + motivation
+TODO: Uniform execution representation and queries over program execution.
 
 []($section.id("abstraction_problems"))
 ### Abstraction problems during problem isolation
@@ -185,6 +223,7 @@ TODO: origin detection, isolation and abstraction
 []($section.id("possible_implementations"))
 ### Possible implementations
 
-TODO: (query system data vs modify the system vs other) to validate approaches;
+TODO: (currently unused)
+query system data vs modify the system vs other to validate approaches;
 Program modification and validation language, query language and alternatives.
 
