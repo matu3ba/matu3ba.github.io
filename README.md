@@ -1,6 +1,6 @@
 ### Usage
 
-../zig-linux-x86_64-0.13.0/zig build serve
+../zig-linux-x86_64-0.14.0/zig build serve
 
 ### Markdown languages
 
