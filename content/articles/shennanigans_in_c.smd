@@ -12,7 +12,7 @@ This article focuses on some of the non-obvious and easy to make mistakes
 non-experienced C programmers are likely to make and are/can not completely
 be covered by tooling without going into edge cases relevant to performance
 and covering the most simple and conservative approach:
-- 1.[Pointer semantics](#pointer_semantics)
+- 1.[Pointer semantics]($link.unsafeRef('pointer_semantics'))
 - 2.[Sequence points](#seq_pts)
 - 3.[Bit-fields](#bitfields)
 
@@ -57,17 +57,17 @@ abbreviated via macro `NULL`.
 []($section.id("pointer_access_practice"))
 **Pointer access** in **practice**.
 - Provenance as regions pointer is allowed to point to for access.
-[provenance.c]($code.asset('./provenance.c').language('c'))
+[provenance.c]($code.asset('provenance.c').language('c'))
 - Copy around some bytes from not overlapping regions (otherwise use memmove).
-[copy_bytes.c]($code.asset('./copy_bytes.c').language('c'))
+[copy_bytes.c]($code.asset('copy_bytes.c').language('c'))
 - Correct alignment of pointers with temporary, when necessary.
-[correct_alignment.c]($code.asset('./correct_alignment.c').language('c'))
+[correct_alignment.c]($code.asset('correct_alignment.c').language('c'))
 - Ensure correct storage and padding size for pointers via sizeof.
-[storage_padding.c]($code.asset('./storage_padding.c').language('c'))
+[storage_padding.c]($code.asset('storage_padding.c').language('c'))
 - Allowed aliasing of pointers (type-based aliasing analysis)
-[allowed_aliasing.c]($code.asset('./allowed_aliasing.c').language('c'))
+[allowed_aliasing.c]($code.asset('allowed_aliasing.c').language('c'))
 - Non-allowed aliasing of pointers (type-based aliasing analysis)
-[non_allowed_aliasing.c]($code.asset('./non_allowed_aliasing.c').language('c'))
+[non_allowed_aliasing.c]($code.asset('non_allowed_aliasing.c').language('c'))
 
 []($section.id("pointer_exceptions"))
 **The Exceptions**
@@ -81,7 +81,7 @@ abbreviated via macro `NULL`.
   back. This also means that `sizeof (function pointer) == sizeof (void *)` must be uphold, which is not true for
   microcontrollers with separate address space for code and data or CHERI in mixed capability mode/hybrid compilation mode.
   Address space annotations are mandatory for this to work and it is unfortunate that standards do not reflect this as of 2024-04-28.
-[aliasing_exceptions_uniform_address_space.c]($code.asset('./aliasing_exceptions_uniform_address_space.c').language('c'))
+[aliasing_exceptions_uniform_address_space.c]($code.asset('aliasing_exceptions_uniform_address_space.c').language('c'))
 
 []($section.id("pointer_construction_requirements"))
 **Pointer construction requirements** are unspecified in all C standards with potentially some hints and nothing
@@ -154,12 +154,12 @@ Other more elaborative examples can be seen in the github gist "What is the Stri
 
 []($section.id("opaque"))
 Opaque type idiom.
-[opaque.h]($code.asset('./opaque.h').language('c'))
-[opaque.c]($code.asset('./opaque.c').language('c'))
+[opaque.h]($code.asset('opaque.h').language('c'))
+[opaque.c]($code.asset('opaque.c').language('c'))
 
 []($section.id("ptrintconv"))
 Pointer to integer and integer to pointer conversion.
-[ptrtoint_inttoptr.c]($code.asset('./ptrtoint_inttoptr.c').language('c'))
+[ptrtoint_inttoptr.c]($code.asset('ptrtoint_inttoptr.c').language('c'))
 
 []($section.id("lto"))
 Link time optimization (LTO) usage and problems. One can use `ptrtoint_inttoptr.c` with flags for strong LTO
@@ -172,16 +172,16 @@ compiler automatically do runtime selection of the best SIMD routine instead of 
 is vectorized and one has to check for example via `clang -O3 -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize`
 or `gcc -O3 -ftree-vectorizer-verbose=3` and use [clang extensions](https://clang.llvm.org/docs/LanguageExtensions.html)
 and [gcc extensions](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html) like `__builtin_assume_aligned`.
-[extern_avx.h]($code.asset('./extern_avx.h').language('c'))
-[extern_avx.c]($code.asset('./extern_avx.c').language('c'))
-[memcpy_avx.c]($code.asset('./memcpy_avx.c').language('c'))
+[extern_avx.h]($code.asset('extern_avx.h').language('c'))
+[extern_avx.c]($code.asset('extern_avx.c').language('c'))
+[memcpy_avx.c]($code.asset('memcpy_avx.c').language('c'))
 
 []($section.id("cerberus"))
 Checking C code validity with Cerberus does not imply absence of compiler miscompilations.
-[cerberus_install.sh]($code.asset('./cerberus_install.sh').language('bash'))
-[extern_miscompilation.h]($code.asset('./extern_miscompilation.h').language('c'))
-[extern_miscompilation.c]($code.asset('./extern_miscompilation.c').language('c'))
-[ptr_provenance_miscompilation.c]($code.asset('./ptr_provenance_miscompilation.c').language('c'))
+[cerberus_install.sh]($code.asset('cerberus_install.sh').language('bash'))
+[extern_miscompilation.h]($code.asset('extern_miscompilation.h').language('c'))
+[extern_miscompilation.c]($code.asset('extern_miscompilation.c').language('c'))
+[ptr_provenance_miscompilation.c]($code.asset('ptr_provenance_miscompilation.c').language('c'))
 
 []($section.id("cheri"))
 CHERI usage is left as task for the reader. Useful links are `https://github.com/CTSRD-CHERI/cheribuild`,
@@ -189,7 +189,7 @@ CHERI usage is left as task for the reader. Useful links are `https://github.com
 
 []($section.id("seq_pts"))
 **Sequence Points** in simple case and with storage lifetime extension.
-[sequence_points.c]($code.asset('./sequence_points.c').language('c'))
+[sequence_points.c]($code.asset('sequence_points.c').language('c'))
 
 []($section.id("bitfields"))
 **Bit-fields** should not be used unless for non-portable code regarding

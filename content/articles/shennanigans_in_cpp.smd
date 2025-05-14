@@ -48,7 +48,7 @@ has no static analysis to reduce transition efforts from C++.
   via iterator or use emplace, because there is no check for the elements
   existence or (typically raw C) values of members can remain undefined after
   object creation due to implicit default constructor.
-[hashmap_simple_ub.cpp]($code.asset('./hashmap_simple_ub.cpp').language('cpp'))
+[hashmap_simple_ub.cpp]($code.asset('hashmap_simple_ub.cpp').language('cpp'))
 - Providing const char * to a function with reference will use the stack-local
   memory instead of using a copy. If further, `c_str()` is used to emplace into a
   `std::map`, this leads to UB due to usage of invalid memory once the stack
@@ -61,18 +61,18 @@ has no static analysis to reduce transition efforts from C++.
 - There is no type safety in `reinterpret_cast` usage, which is worse than
   memcpy. However, the prevention of another temporary for portable code may be
   worth it.
-[reinterpret_cast_ts.cpp]($code.asset('./reinterpret_cast_ts.cpp').language('cpp'))
+[reinterpret_cast_ts.cpp]($code.asset('reinterpret_cast_ts.cpp').language('cpp'))
 - C++ conversion string to int is worse without boost, so use C's strtol.
 - Checking, if typename is a string is complex (even with C++17 extension).
-[is_typname_string.hpp]($code.asset('./is_typname_string.hpp').language('cpp'))
+[is_typname_string.hpp]($code.asset('is_typname_string.hpp').language('cpp'))
 - auto does verbatim replacement of the return type, which can hide a
   stack-local copy or move. Only use `auto` for well-known iterators, status
   tuples, shared pointers etc, but never for objects and object references.
 - Interoperating type safe with c strings is cumbersome.
-[cstr_interop.cpp]($code.asset('./cstr_interop.cpp').language('cpp'))
+[cstr_interop.cpp]($code.asset('cstr_interop.cpp').language('cpp'))
 - MSVC has no reliable relative paths as macro yet (see
   experimental:deterministic mode). Workaround to get filename by Andry.
-[msvc_rel_path.cpp]($code.asset('./msvc_rel_path.cpp').language('cpp'))
+[msvc_rel_path.cpp]($code.asset('msvc_rel_path.cpp').language('cpp'))
 - Destructors of virtual classes should have lifetime annotation, unless final
   class. Otherwise, debugging problems will be painful, because the intended
   object lifetimes become ambiguous on reading the code. Consider using clang
@@ -85,14 +85,14 @@ has no static analysis to reduce transition efforts from C++.
 - Streams do not enforce C abi and are overly complex for printing memory.
   Further (no example here), they need to extensions to offer non-blocking
   reads, writes and introspection.
-[streams_no_cabi.cpp]($code.asset('./streams_no_cabi.cpp').language('cpp'))
+[streams_no_cabi.cpp]($code.asset('streams_no_cabi.cpp').language('cpp'))
 - Incomplete type can not be instantiated in template:
   1. pull in all headers deps of headers
   2. class forward declares may create circular dependencies
   3. build each file individually
   4. might be a circular dependency during template usage
 - Missing virtual destructor for non-final methods in classes is technically UB.
-[missing_virt_destructor.cpp]($code.asset('./missing_virt_destructor.cpp').language('cpp'))
+[missing_virt_destructor.cpp]($code.asset('missing_virt_destructor.cpp').language('cpp'))
 - Why exceptions do not scale.
-[exceptions_dont_scale.cpp]($code.asset('./exceptions_dont_scale.cpp').language('cpp'))
+[exceptions_dont_scale.cpp]($code.asset('exceptions_dont_scale.cpp').language('cpp'))
 - `__STDC_VERSION__` is not necessary defined by C++ compilers.

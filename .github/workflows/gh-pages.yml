@@ -1,28 +1,71 @@
+# adjusted from https://zine-ssg.io/docs/deploying/github-pages/
 name: github pages
 
 on:
   push:
     branches:
       - master
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy:
     timeout-minutes: 20
     runs-on: "ubuntu-latest"
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # steps:
+    #   - name: Checkout
+    #     uses: actions/checkout@v4
+    #     with:
+    #       fetch-depth: 0  # Change if you need git info
+
+    #   - name: Setup Zig
+    #     uses: mlugg/setup-zig@v1
+    #     with:
+    #       version: 0.14.0
+
+    #   - name: Build
+    #     run: zig build --summary new
+
+    #   - name: Deploy
+    #     uses: JamesIves/github-pages-deploy-action@v4
+    #     with:
+    #       folder: ./zig-out
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Change if you need git info
 
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v1
+      - name: Setup Zine
+        uses: kristoff-it/setup-zine@v1
         with:
-          version: 0.14.0
+          version: v0.10.2
 
-      - name: Build
-        run: zig build --summary new
+      - name: Release
+        run: zine release
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: ./zig-out
+          path: 'public'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

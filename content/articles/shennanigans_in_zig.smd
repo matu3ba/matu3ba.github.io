@@ -20,7 +20,7 @@ As of ~~2024-04-04 (zig version 0.12.0-dev.3562+96bc8f17c)~~ 2024-07-01 (zig ver
 The rest of the language feels very smooth to me in contrast to the potential
 very flexible and cryptic syntax of C (see [preprocessor iceberg](https://github.com/JadLevesque/PPMP-Iceberg)).
 - Bottlenecks of array assignments not obvious via <code>@memcpy</code>:
-[perf_array_assignment.zig]($code.asset('./perf_array_assignment.zig').language('zig'))
+[perf_array_assignment.zig]($code.asset('perf_array_assignment.zig').language('zig'))
 - Signaling: Test runner allows no signaling to <code>qemu -g
   4242</code> (debugger mode). Qemu uses gdb server signaling,
   which means sending SIGKILL is necessary to kill

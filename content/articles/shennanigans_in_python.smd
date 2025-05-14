@@ -37,22 +37,22 @@ Aside of these more fundamental limitations, here the [list of shennanigans](#li
 - `.strip()` is necessary after file read, because Python automatically adds
   `\n` and there is no way to read without newlines into a list.
 - Testing for subdictionaries with `dict` is unreadable, so such a method is missing
-[missing_dict_methods1.py]($code.asset('./missing_dict_methods1.py').language('python'))
+[missing_dict_methods1.py]($code.asset('missing_dict_methods1.py').language('python'))
 - `dict` has no method to check, if the fields of a dictionary are in another dictionary
-[missing_dict_methods2.py]($code.asset('./missing_dict_methods2.py').language('python'))
+[missing_dict_methods2.py]($code.asset('missing_dict_methods2.py').language('python'))
 - `dict` has no method to check, if all fields and values of a dictionary are in another dictionary
-[missing_dict_methods3.py]($code.asset('./missing_dict_methods3.py').language('python'))
+[missing_dict_methods3.py]($code.asset('missing_dict_methods3.py').language('python'))
 - Tuples and dicts are annoying to differentiate
-[tup_and_dicts.py]($code.asset('./tup_and_dicts.py').language('python'))
+[tup_and_dicts.py]($code.asset('tup_and_dicts.py').language('python'))
 - Stack trace formatting is inefficient and one can not use <code>gf</code> or <code>gF</code> vim shortcuts to jump to location
   function to write status + trace to variable.
-[stacktrace_fmt.py]($code.asset('./stacktrace_fmt.py').language('python'))
+[stacktrace_fmt.py]($code.asset('stacktrace_fmt.py').language('python'))
 - Mixed double quote (`"`) and single quote (`'`) strings are invalid json
-[invalid_json.py]($code.asset('./invalid_json.py').language('python'))
+[invalid_json.py]($code.asset('invalid_json.py').language('python'))
 - `os.kill()` does not call registered cleanup function
   `atexit.register(exit_cleanup)` by daemonized threads. Must store pids of
   child processes and clean them explicitly or signal main thread via
-[signal_main_thread.py]($code.asset('./signal_main_thread.py').language('python'))
+[signal_main_thread.py]($code.asset('signal_main_thread.py').language('python'))
 - [Socket timeout can cause file-like readline() method to lose data](https://github.com/python/cpython/issues/51571), workaround
   1. Read from Kernel structure and append chunk-wise to buffer from socket until stop event (via select).
   2. After each read, try to line a line from the buffer and remove the line on success (being utf-8 etc).
@@ -61,7 +61,7 @@ Aside of these more fundamental limitations, here the [list of shennanigans](#li
 - Generic module annotation is not allowed and mypy has no explicit docs for
   this. The following does not work and `module: object` is the closest we can
   get as simple annotation.
-[module_annotation.py]($code.asset('./module_annotation.py').language('python'))
+[module_annotation.py]($code.asset('module_annotation.py').language('python'))
 - There are no scheduling and watchdog methods, which makes Python thread
   scheduling very unreliable. Unlucky schedules may cause fatal delay for
   shuffling data between daemon thread and main thread. As example, an

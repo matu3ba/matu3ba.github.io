@@ -1,6 +1,13 @@
 ### Usage
 
+```
 ../zig-linux-x86_64-0.14.0/zig build serve
+zig build serve
+zine
+
+zine release
+git diff --word-diff=color --no-index zig-out public
+```
 
 ### Markdown languages
 
@@ -24,3 +31,26 @@ So one has to workaround this via
 </pre>
 ```
 or including sections into the item.
+
+Work around unchecked references
+```
+content/articles/shennanigans_in_c.smd:16:5: error: unknown ref
+|    - 1.[Pointer semantics](#pointer_semantics)
+|        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+```
+via
+```
+- 1.[Pointer semantics]($link.unsafeRef('pointer_semantics'))
+```
+
+### Comments
+
+- shtml
+```
+<!--<div :html="$page.content()"></div>-->
+```
+- smd
+```
+(empty line)
+[This is a comment]::
+```
