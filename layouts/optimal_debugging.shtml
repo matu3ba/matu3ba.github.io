@@ -40,7 +40,7 @@
                 have each their own debugging infrastructure and methods.
                 Generally, working with (introspection-restricted) platforms requires
                 1. reverse engineering and "trying to find info" and/or 2. "use some tracing
-                tool" and for 3. open source "adjust the source and stare at kernel
+                tool" and 3. for open source "adjust the source and stare at kernel
                 dumps/use debugger".
                 Kernels are rarely designed for tracing, recording, formal
                 verification due to internal complexity and virtualisation is slow and

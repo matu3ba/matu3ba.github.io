@@ -8,26 +8,28 @@
 ---
 
 []($section.id("intro"))
-This article is intended as overview of debugging techniques and motivation for
+This article is intended as overview of software based debugging techniques and motivation for
 uniform execution representation and setup to efficiently mix and match the
 appropriate technique for system level debugging with focus on statically
 optimizing compiler languages to keep complexity and scope limited.
 The reader may notice that there are several documented deficits
 across platforms and tooling on documentation or functionality, which will be improved.
 The author accepts the irony of such statements by "C having no ABI"/many systems in
-practice having no ABI, but reality is in this text simplified for brevity and
-sanity.
+practice having no stable or formally specified ABI, but reality is in this text simplified
+for brevity and sanity.
 
-Section 1 (theory) feels complete, but are planned to be more dense to
-become an appropriate definition for bug, debugging and debugging process.
+Section 1 (theory) feels complete aside of simulation and hard-/software replacement
+techniques and are good first drafts for bug, debugging and debugging process.
 Section 2 (practical) is tailored towards non micro Kernels, which are based
 on process abstraction, but is currently missing content and scalability numbers
 for tooling.
 The idea is to provide understanding and numbers to estimate for system design,
 1 if formal proof of correctness is feasible and on what parts,
-2 problems and methods applicable for dynamic program analysis.
-Followup sections will be on speculative and more advanced ideas, which
-should be feasible based on numbers.
+2 problems and methods applicable for dynamic system analysis.
+Section 3 (future) will be on speculative and more advanced ideas, which should
+be feasible based on numbers. They are planned to be about how to design
+systems for rewriting and debugging using formal methods, compilers and
+code synthesis.
 
 - 1.[Theory of debugging](#theory)
 - 2.[Practical methods with trade-offs](#practice)
@@ -38,7 +40,7 @@ should be feasible based on numbers.
 []($section.id("theory"))
 ### Theory of debugging
 
-A program [can be represented as (often non-deterministic) state machine](https://gu.outerproduct.net/debug.html),
+A (software) system [can be represented as (often non-deterministic) state machine](https://gu.outerproduct.net/debug.html),
 such that a **bug** is a **bad transition rule** between those states.
 It is usually assumed that the developer/user knows correct and incorrect
 (bad) system states and the code represents a somewhat correct model of
@@ -55,7 +57,7 @@ In contrast to that, concurrent code is tricky to debug, because one
 needs to trace multiple execution flows to estimate where the origin of the
 incorrect state is.
 
-The process of debugging means to use static and dynamic program analysis
+The process of debugging means to use static and dynamic (software) system analysis
 and its automation and adaption to speed up bug (classes) elimination for the
 (classes of) target systems.
 
@@ -75,11 +77,13 @@ with the fundamental constrains being [**f**inding, **ee**nsuring, **l**imited] 
 - **ee**nsuring deterministic reproducibility of the problem
 - **l**imited time and effort
 
-Common static and dynamic program analysis methods to
+Common static and dynamic (software) system analysis methods to
 **run the system** to **feel a soul** for the purpose of eliminating the bug
 (classes) are:
-- **Specification** meaning to "compare/get/write the details".
+- **Specification** meaning to "compare/get/write the details", possibly formally, possibly for (software) system synthesis.
 - **Formal Verification** as ahead or compile-time invariant resolving.
+  May be superflous by (software) system synthesis based on **Specification** or unfeasible
+  due to complexity or non-formal specification.
 - **Validation** as runtime invariant checks. Sanitizers as compiler runtime checks are common tools.
 - **Testing** as sample based runtime invariant checks. Coverage based fuzzers are common tools.
 - **Stepping** via "classical debugger" to manipulate task execution
@@ -88,9 +92,19 @@ Common static and dynamic program analysis methods to
 - **Logging** as dumping (a simplification of) state with context
   from bugs (usually timestamps in production systems).
 - **Tracing** as dumping (a simplification of) runtime behavior
-  via temporal relations (usually timestamps).
+  via temporal relations (usually timestamps). Can be immediate or sampled.
 - **Recording** Encoded dumping of runtime to replay runtime with
   before specified time and state determinism.
+- **Scheduling** meaning to do logical or time-relation based scheduling of
+  process or threads. Typical use cases are undo "thread fuzzing", rr "chaos
+  mode", using the kernel scheduler API or bounded model checking.
+- **Reversal computing** meaning to reverse execute some code to (partial) reset
+  the system to a previous state without **Recording** and replaying.
+  Typically used in simulations and pure logic functionality of languages and
+  corresponds to applying some bijective function.
+- **Time-reversal computing** to do **Reversal computing** with tracked time.
+  Mostly used in simulations, because (if used) source code to assembly
+  relation and (assembly) instruction time must be fixed and known.
 
 The core ideas for **what software system to run** based on code with its
 semantics are then typically a mix of
@@ -120,7 +134,7 @@ on Posix systems via `ptrace`.
 
 Without costly hardware devices to trace and physical access to the computing unit
 for exact recording of the system behavior including time information,
-dynamic program analysis (to run the system) requires trade-offs on what
+dynamic (software) system analysis (to run the system) requires trade-offs on what
 program parts and aspects to inspect and collect data from.
 Therefore, it depends on many factors, for example bug classes and target
 systems, to what degree the process of debugging can and should be automated or
@@ -129,21 +143,56 @@ optimized.
 []($section.id("practice"))
 ### Practical methods with trade-offs
 
-Usually semantics are not "set into stone" inclusive or do not offer
-sufficient trade-offs, so formal verification is rarely an option aside of
-usage of models as design and planning tool or for fail-safe program functionality.
 Depending on the domain and environment, problematic behavior of hardware
-or software components must be more or less 1 avoided and 2 traceable
+or software components must be (more or less) 1 avoided or 2 traceable
 and there exist various (domain) metrics as decision helper.
-Very well designed systems explain users how to debug bugs regarding to
+Very well designed systems explain users how to debug regarding to
 **functional behavior**, **time behavior** with **internal and
 external system resources** up to the degree the system usage and
 task execution correctness is intended.
 Access restrictions limit or rule out stepping, whereas storage limitations
 limit or rule out logging, tracing and recording.
 
-**Sanitizers** are the most efficient and simplest debugging tools for C and C++,
-whereas Zig implements them, besides thread sanitizer, as allocator and safety mode.
+Formal methods, **Specification**, (software) system synthesis and **Formal Verification**
+
+(Highly) safety-critical systems or hardware are typically created from formal **Specification**
+by (software) system synthesis or, when (full) synthesis is unfeasible, implementations are formally verified.
+To my knowledge no standards for (highly) security-critical systems exist,
+which require formal **Specification** and **Formal Verification** or synthesis (2025-05-16).
+
+For non safety- or security-critical or hardware (sub)systems, usually
+semantics are not "set into stone", so **Formal Verification** or (software) system
+synthesis is rarely an option.
+Formal models and (semi-)formal specifications are however commonly used for
+design, planning, testing, review and validation of fail-safe or core (software) system
+functionality.
+
+Typical used models for C, C++, Zig and compiler backends are
+Integer Arithmetic, Modular Arithmetic, Saturation Arithmetic for integers and
+Floating point arithmetic (with possible rough edge cases like signaling NaN propagation),
+Fixed-Point Arithmetic for real numbers.
+(Simplified) instances of Separation Logic may be used to model and check
+pointers and resources, for example Safe Rust uses separation logic with
+lifetime inference and user annotations based on strict aliasing of Unsafe Rust.
+
+Typical relevant unsolved or incomplete models for compilers are
+1. hardware semantics, specifically around timing behavior and (if used) weak memory
+2. memory synchronization semantics for weak memory systems with ideas from
+"Relaxed Memory Concurrency Re-executed" and suggested model looking promising
+3. SIMD with specifically floating point NaN propagation
+4. pointer semantics, specifically in object code (initialization), se- and deserialization,
+  construction, optimizations on pointers with arithmetic, tagging
+5. constant time code semantics, for example how to ensure data stays in L1, L2 cache
+  and operations have constant time
+6. ABI semantics, since specifications are not formal
+
+and typical problems more related to platforms like Kernels are
+1. resource (tracking) semantics, for example how to track resources in a process group
+2. security semantics, for example how to model process group permissions.
+
+For **Validation**, **Sanitizers** are typically used as the most efficient and simplest
+debugging tools for C and C++, whereas Zig implements them, besides thread
+sanitizer, as allocator and safety mode.
 Instrumented sanitizers have a 2x-4x slowdown vs dynamic ones with 20x-50x slowdown.
 
 Nr | Clang usage                  | Zig usage         | Memory           | Runtime  | Comments                            |
@@ -176,19 +225,62 @@ typed based aliasing can be sanitized without any numbers reported by LLVM yet.
 Besides adjusting source code semantics via 1 sanitizers, one can do 2 own dynamic
 source code adjustments or use 3 tooling that use kernel APIs to trace and optionally
 3.1 run-time check information or 3.2 run-time check kernel APIs and with underlying state.
-Kernels further may simplify access to information, for example the `proc` file 
+Kernels further may simplify access to information, for example the `proc` file
 system simplifies access to process information.
 
-TODO list standard Kernel tracing tooling, focus on dtrace
-and drawback of no "works for all kernels" "trace processes"
+**Testing** is very context and use-case dependent with
+typical separations being between pure/impure, time-invariant/variant,
+accurate/approximate, hardware/software (sub)system separation from simple
+unit tests up to integration and end to end tests based on
+statistical/probability analysis and system intuition on determinstic expected
+behavior based on explicit or implicit requirements.
+TODO tools, hardware, software, mixed hw/sw examples
 
-TODO list standard Kernel tooling for tracing
-TODO 3.1 list standard tooling for checking traced information
+**Stepping**
+* TODO time costs, sync options, etc
+
+**Logging**
+* TODO
+
+**Tracing**
+* TODO
+  - [ ] "Debugging And Profiling .NET Core Apps on Linux"
+  - [ ] https://github.com/goldshtn/linux-tracing-workshop
+  - [ ] CPU sampling linux perf, bcc; win ETW; macos; macos instruments dtrace
+  - [ ] dynamic tracing linux perf, systemtap, bcc; win nothing; macos dtrace
+  - [ ] static tracing linux LTTng, win ETW, macos nothing
+  - [ ] dump gen linux core_pattern, gcore; win procdump, WER; macos kern.corefile, gcore
+  - [ ] dump analysis gdb,lldb; visual studio, windbg, gdb,lldb
+  - [ ] lwn.net Unifying kernel tracing
+  - [ ] https://github.com/goldshtn/linux-tracing-workshop
+  - [ ] babeltrace https://babeltrace.org/
+  - [ ] There are no "works for all kernels" and "trace specific (group of) processes" solutions,
+  - [ ] so one has to do specific queries to constrain what data should be collected.
+  - [ ] For low latency overhead analysis, dtrace or inspired systems like bpftrace,
+  - [ ] bcc and systemtap can be used.
+  - [ ] ETW allows complete user-space captures
+  - [ ] Most related solutions use dtrace or
+  - [ ] TODO
+  - [ ] * list standard Kernel tracing tooling,
+  - [ ] * focus on dtrace and drawback of no "works for all kernels" "trace processes"
+  - [ ] * standard tooling for checking traced information
+  - [ ] * Tracers: dtrace, bpftrace, bcc, systemtap, ETW, darwin/macos?, other posix tools?
+  - [ ]   - TODO memory/runtime/latency overhead etc
+
+**Recording**
+* TODO requirements: eliminate non-deterministic choices for replaying, others
+
+**Scheduling**
+* TODO requirements: simplification methods, practicality
+
+**Reversal computing**
+* TODO how and when to write bijective code to simplify debugging
+
+**Time-reversal computing**
+* TODO use cases
 
 The following is a list of typical problems with simple solution tactics.
-For simplicity no virtual machine/emulator approaches are listed, since they
-also affect performance and run-time behavior leading (likely) to more complex
-dynamic program analysis.
+To keep analysis simple, no virtual machine/emulator and simulation approaches are given.
 
 []($section.id("uniform_execution_representation"))
 ### Uniform execution representation
@@ -208,7 +300,7 @@ performance problems and logic problems.
 provides resources.
 Automatically tracking resource leaks requires Valgrind logic over all
 memory operations, reduction requires (limited) kernel object tracing.
-Tracing platform solutions will always have trade-offs. 
+Tracing platform solutions will always have trade-offs.
 Complete solution tracing user process and related kernel logic is only
 available as dtrace with non-optimal performance.
 
