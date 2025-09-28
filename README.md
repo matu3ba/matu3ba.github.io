@@ -1,7 +1,7 @@
 ### Usage
 
 ```
-../zig-linux-x86_64-0.14.0/zig build serve
+../zig-x86_64-linux-0.15.1/zig build serve
 zig build serve
 zine
 

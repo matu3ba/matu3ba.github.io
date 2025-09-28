@@ -1,13 +1,13 @@
 .{
     .name = .website,
     .version = "0.0.0",
-    .minimum_zig_version = "0.14.0",
+    .minimum_zig_version = "0.15.0",
     .fingerprint = 0x476f5de784f36e94,
 
     .dependencies = .{
         .zine = .{
-            .url = "git+https://github.com/kristoff-it/zine?ref=v0.10.2#122be41ecc4f2f3a56ad3568dd5a8a0ad93de050",
-            .hash = "1220e93519a9ac531a02b5f79bf69a11ab2bfffd28ff90e95fb486cd5a1c4ae54e62",
+            .url = "git+https://github.com/kristoff-it/zine?ref=v0.11.1#b96e930630f8237aa4927fe14b9cb227061155d3",
+            .hash = "12201a61e3d3ca24f6fff7e419535f22630e9e973fc4a357b18a4515d906e55bdce3",
         },
     },
     .paths = .{"."},

@@ -245,6 +245,7 @@
             the other error classes should have standard approaches to isolate and eliminate.
             Unifying debug tooling simplifies usage for bigger developer productivity
             and exposing as library allows to automate this process.
+            <div :html="$page.contentSection('wrapup_future')"></div>
           </div>
       </div>
     </div>

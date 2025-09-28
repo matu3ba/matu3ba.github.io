@@ -1,5 +1,5 @@
 ---
-.title = "Towards optimal an optimal debugging library framework",
+.title = "Towards optimal debugging and related system design.",
 .author = "Jan Philipp Hafer",
 .date = @date("2024-06-28:00:00:00"),
 .layout = "optimal_debugging.shtml",
@@ -8,10 +8,9 @@
 ---
 
 []($section.id("intro"))
-This article is intended as overview of software based debugging techniques and motivation for
-uniform execution representation and setup to efficiently mix and match the
-appropriate technique for system level debugging with focus on statically
-optimizing compiler languages to keep complexity and scope limited.
+This article is intended as overview of software based debugging techniques to
+efficiently mix and match the appropriate technique for system level debugging
+with focus on statically optimizing compiler languages to keep complexity and scope limited.
 The reader may notice that there are several documented deficits
 across platforms and tooling on documentation or functionality, which will be improved.
 The author accepts the irony of such statements by "C having no ABI"/many systems in
@@ -21,21 +20,21 @@ for brevity and sanity.
 Section 1 (theory) feels complete aside of simulation and hard-/software replacement
 techniques and are good first drafts for bug, debugging and debugging process.
 Section 2 (practical) is tailored towards non micro Kernels, which are based
-on process abstraction, but is currently missing content and scalability numbers
-for tooling.
+on process abstraction, but is currently missing some content and
+scalability numbers for tooling.
 The idea is to provide understanding and numbers to estimate for system design,
 1 if formal proof of correctness is feasible and on what parts,
 2 problems and methods applicable for dynamic system analysis.
-Section 3 (future) will be on speculative and more advanced ideas, which should
-be feasible based on numbers. They are planned to be about how to design
+Section 3 (future) will wrap-up practical problems of what is currently not
+well to use or possible in Section 2 and speculate about more advanced ideas
+for brevity without numbers.
+Those ideas are planned to be towards how to design
 systems for rewriting and debugging using formal methods, compilers and
 code synthesis.
 
 - 1.[Theory of debugging](#theory)
 - 2.[Practical methods with trade-offs](#practice)
-- 3.[Uniform execution representation](#uniform_execution_representation)
-- 4.[Abstraction problems during problem isolation](#abstraction_problems)
-- 5.[Possible implementations](#possible_implementations)
+- 3.[Wrap-up and future](#wrapup_future)
 
 []($section.id("theory"))
 ### Theory of debugging
@@ -157,8 +156,10 @@ Formal methods, **Specification**, (software) system synthesis and **Formal Veri
 
 (Highly) safety-critical systems or hardware are typically created from formal **Specification**
 by (software) system synthesis or, when (full) synthesis is unfeasible, implementations are formally verified.
-To my knowledge no standards for (highly) security-critical systems exist,
-which require formal **Specification** and **Formal Verification** or synthesis (2025-05-16).
+Standards for (highly) security-critical systems (like Creative Commons Evaluation Assurance Levels)
+provide customer assurances of the security policy according to the specification
+and are to my knowledge typically realized via **Specification** and **Formal Verification**
+without synthesis (2025-09-28).
 
 For non safety- or security-critical or hardware (sub)systems, usually
 semantics are not "set into stone", so **Formal Verification** or (software) system
@@ -228,62 +229,126 @@ source code adjustments or use 3 tooling that use kernel APIs to trace and optio
 Kernels further may simplify access to information, for example the `proc` file
 system simplifies access to process information.
 
+TODO proper benchmarks
+
 **Testing** is very context and use-case dependent with
 typical separations being between pure/impure, time-invariant/variant,
-accurate/approximate, hardware/software (sub)system separation from simple
+accurate/approximate, hardware/simulation/software (sub)system separation from simple
 unit tests up to integration and end to end tests based on
 statistical/probability analysis and system intuition on determinstic expected
 behavior based on explicit or implicit requirements.
+
 TODO tools, hardware, software, mixed hw/sw examples
 
 **Stepping**
-* TODO time costs, sync options, etc
+Stepping is generally based on temporary substitution of the debugger target
+assembly with interrupt instructions (`INT` on x86).
+Typically, afterwards and simplifying here for brevity, control is then switched
+by the Kernel to the debugger to do interrupt logic execution like conditional
+breakpoint, other logical checks or querying registers, variables based on
+debug information, resuming execution or dumping the complete program state.
+However, Kernels abstract access, typically restrict one debugger per
+debugee process, add custom events and make things much slower
+due to Interrupt Routine execution and Kernel logic execution for data flow
+instead of either read/write buffers and asynchronous execution done from within
+the debuggee and debugger as fast path (also called non-stop debugging) or
+instruction emulation for tracing use cases.
+Fast-paths via "soft interrupts" at user-specified program states and/or timeouts
+or cycle detection.
+Customization (for user-implemented **Recording** etc), visualization and
+automation of the control logic and information is in the process of implementation
+by RAD Debugger without tackling the core bottlenecks yet (2025-09-27).
+Other implementations like gdb or lldb focus on functionality, like remote debugging,
+portability and utilities (record and replay, etc), over performance.
 
-**Logging**
-* TODO
+TODO potential hardware improvements based on simulation
 
-**Tracing**
-* TODO
-  - [ ] "Debugging And Profiling .NET Core Apps on Linux"
-  - [ ] https://github.com/goldshtn/linux-tracing-workshop
-  - [ ] CPU sampling linux perf, bcc; win ETW; macos; macos instruments dtrace
-  - [ ] dynamic tracing linux perf, systemtap, bcc; win nothing; macos dtrace
-  - [ ] static tracing linux LTTng, win ETW, macos nothing
-  - [ ] dump gen linux core_pattern, gcore; win procdump, WER; macos kern.corefile, gcore
-  - [ ] dump analysis gdb,lldb; visual studio, windbg, gdb,lldb
-  - [ ] lwn.net Unifying kernel tracing
-  - [ ] https://github.com/goldshtn/linux-tracing-workshop
-  - [ ] babeltrace https://babeltrace.org/
-  - [ ] There are no "works for all kernels" and "trace specific (group of) processes" solutions,
-  - [ ] so one has to do specific queries to constrain what data should be collected.
-  - [ ] For low latency overhead analysis, dtrace or inspired systems like bpftrace,
-  - [ ] bcc and systemtap can be used.
-  - [ ] ETW allows complete user-space captures
-  - [ ] Most related solutions use dtrace or
-  - [ ] TODO
-  - [ ] * list standard Kernel tracing tooling,
-  - [ ] * focus on dtrace and drawback of no "works for all kernels" "trace processes"
-  - [ ] * standard tooling for checking traced information
-  - [ ] * Tracers: dtrace, bpftrace, bcc, systemtap, ETW, darwin/macos?, other posix tools?
-  - [ ]   - TODO memory/runtime/latency overhead etc
+**Logging and Tracing**
+Logging is typically applied to resolve problems of long-running and (intentional)
+hard to introspect systems and used via persistent or temporary storage.
+Logging does typically follow a log level convention with compile-time and/or
+run-time configuration.  
+Tracers are used, where more user control or logic is needed, to track down
+problematic behavior and for short-running and (intentional) easy to introspect systems.
+dtrace is closest to being a cross-platform tracing solution via binary instrumentation
+based on debug information, but does not handle virtualization use cases yet.
+babeltrace is closest to being a unified (Linux) Kernel tracing solution.
+Accurate hardware based tracing can be done via CPU sampling used by Linux
+perf, Windows ETW, Macos dtrace or on barebone via frequency control and doing
+the respective assembly instructions.
+General Kernel space (less overhead or more flexible) tracing solutions are inspired
+by dtrace like systemtap, bcc and bpftrace and Kernels have lots of specialized
+tracing solutions to observe specific subsystems efficiently with a variety
+of application interfaces.
+OpenTelemetry can be used for logging, tracing and metrics of (cloud) distributed
+applications without storage, performance and network bandwidth concerns due to
+(very) verbose JSON without compression offering neither human readability nor
+high information density.  
+To my knowledge, no structured encoding of system log, trace or metrics via ontologies
+or based on time synchronization models (for distributed systems) exists (2025-09-25).
+
+TODO proof read tooling, + typical memory,runtime,latency overhead
+https://www.blackhat.com/presentations/bh-europe-08/Beauchamp-Weston/Presentation/bh-eu-08-beauchamp-weston.pdf
 
 **Recording**
-* TODO requirements: eliminate non-deterministic choices for replaying, others
+Recording is typically applied to investigate and eliminate problem causes
+of a system and realized via 1 state snapshots based on upper bound states reachability
+in case of non-determinism and/or 2 elimination of non-determinism via 2.1 logging
+non-deterministic choices and/or 2.2 logging/pre-selection of choices.
+Typical examples are user input recording (gui, keyboard)
+and Kernel input/output recording (rr, time travel debugging).
+One excellent example, which utilizes recording, incremental compilation and live patching, is
+[Tomorrow Corporation Tech Demo](https://www.youtube.com/watch?v=72y2EC5fkcE).
 
 **Scheduling**
-* TODO requirements: simplification methods, practicality
+Scheduling to debug requires sufficient control over the scheduler and typically
+simplification methods meaning to extend time duration of synchronization areas,
+to simplify state like testing a sub-system with edge cases and/or
+using artifical synchronization between operations and/or extracting or specifying
+synchronization and timing relations based on scheduler configuration, hardware
+and empiric observations.
+Debuggers like gdb, lldb, WinDbg provide very clumsy and insufficiently slow ways
+for such functionality.
+To my knowledge, no models or standards for synchronization, timing relations,
+scheduler configuration exist or project attempting a type 1 hypervisor similar
+to what a SPS allows with API for debugging purposes or project to annotate and
+extract synchronization and timing relations between tasks for optimizing scheduler
+decisions and (formal) model generation (2025-09-27).
 
 **Reversal computing**
-* TODO how and when to write bijective code to simplify debugging
+Reversal computing is a typical explicit tactic in programs on error paths to undo the
+operation and usually fairly simple without Kernel/external input/output.
+When Kernel/external input/output is involved, high performance code uses batching
+and users of more "safety"-aware languages typically utilize type system
+(linear/affine types in C++/Rust) or verify cleanup (frama-c in C),
+but usually this only covers memory and not other effects.
+
+TODO check database integrity + kernel/database security (integrity) strategies
+before making baseless claims. also check "let it crash"/actor systems
+To my knowledge, no widely aware strategy of "in-between cleanups"
+besides controlled shutdown via linear setup and teardown has been proposed
+(2025-09-27).
+
+TODO complexity comparison
+* how to get to snapshot design + testing
+* error path system reset: how to test that erro path does correct reset of system?
+* how to do distributed system sync for reversal computing? shared log + log ops with second log?
 
 **Time-reversal computing**
-* TODO use cases
+  - time capturing during computing
+  - assembly time capturing during computing, must ensure no data stalls may happen
+  - fgpa or ASIC likely candidates
+
+TODO
+* how to get to snapshot design + testing
+* error path system reset: how to test that erro path does correct reset of system?
+* how to do distributed system sync for reversal computing?
 
 The following is a list of typical problems with simple solution tactics.
 To keep analysis simple, no virtual machine/emulator and simulation approaches are given.
 
-[]($section.id("uniform_execution_representation"))
-### Uniform execution representation
+[]($section.id("wrapup_future"))
+### Wrap-up and future
 
 As it was shown before, modern languages simplify detection or elimination of
 memory problems and runtime detectable undefined behavior. So far undetectable
@@ -304,18 +369,8 @@ Tracing platform solutions will always have trade-offs.
 Complete solution tracing user process and related kernel logic is only
 available as dtrace with non-optimal performance.
 
-TODO: (currently unused) what they have in common + motivation
-TODO: Uniform execution representation and queries over program execution.
-
-[]($section.id("abstraction_problems"))
-### Abstraction problems during problem isolation
-
-TODO: origin detection, isolation and abstraction
-
-[]($section.id("possible_implementations"))
-### Possible implementations
-
-TODO: (currently unused)
-query system data vs modify the system vs other to validate approaches;
-Program modification and validation language, query language and alternatives.
-
+TODO check
+* query system data vs modify the system vs other to validate approaches;
+* Program modification and validation language, query language and alternatives.
+* Uniform execution representation and queries over program execution.
+* origin detection, isolation and abstraction

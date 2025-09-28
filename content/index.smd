@@ -2,7 +2,7 @@
 .title = "Overview",
 .description = "Personal Website",
 .author = "Jan Philipp Hafer",
-.date = @date("2024-11-10T00:00:00"),
+.date = @date("2025-09-28T00:00:00"),
 .layout = "home.shtml",
 .tags = ["home", "index", "overview", "blog", "articles", "posts"],
 .draft = false,
@@ -13,12 +13,8 @@
 * 2024-04-20 - [Zig shennanigans.](./articles/shennanigans_in_zig)
 * 2024-04-15 - [Some C++ footgun avoidance.](./articles/shennanigans_in_cpp)
 * 2024-04-28 - [C shennanigans: Pointers, sequence points and bit fields.](./articles/shennanigans_in_c)
-* 2024-06-28 - [Towards an optimal debugging framework library.](./articles/optimal_debugging)
-  - wip practice, uniform execution representations, abstraction problems, implementation options
-* 2024-06-28 - [Process semantics and abstraction problems on Linux, Windows, MacOS, Posix.](./articles/process_behavior)
-  - wip IPC, security, process groups, abstraction problems
-* 2024-06-28 - [Towards an extensible continuous integration library.](./articles/ci_library)
-  - wip motivation, maintenance, security, remote debugging, untrusted OSes
+* 2025-09-24 - [Towards optimal debugging and related system design.](./articles/optimal_debugging)
+  - wip: rephrase theory, practice polishing, wrapup + future
 
 ### [Posts]($section.id('home_right'))
 * 2024-12-19 - [Using zine.](./articles/using_zine)
